@@ -1,4 +1,6 @@
 import React from 'react';
+import { Link } from '@inertiajs/react';
+import { route } from 'ziggy-js';
 
 const Register = () => {
     return (
@@ -11,7 +13,7 @@ const Register = () => {
                             <div className="p-3 p-lg-5">
                                 <div className="text-center">
                                     <h2 className="fw-bold">Chào mừng đến với cộng đồng lớn nhất của chúng tôi</h2>
-                                    <p className="mb-0 h6 fw-light">Hôm nay chúng ta hãy học điều gì đó mới nhé!</p>
+                                    <p className="mb-0 h6 fw-light">Chỉ vài bước để mở khóa kho tàng kiến thức!</p>
                                 </div>
                                 <img src="/assets/images/element/02.svg" className="mt-5" alt="" />
                             </div>
@@ -84,7 +86,7 @@ const Register = () => {
                                     </form>
                                     <div className="mt-4 text-center">
                                         <span>
-                                            Đã có tài khoản?<a href="/sign-in"> Đăng nhập tại đây</a>
+                                            Đã có tài khoản?<Link href={route('login')}> Đăng nhập tại đây</Link>
                                         </span>
                                     </div>
                                 </div>

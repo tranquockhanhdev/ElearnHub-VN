@@ -11,7 +11,7 @@ const ForgotPassword = () => {
                             <div className="p-3 p-lg-5">
                                 <div className="text-center">
                                     <h2 className="fw-bold">Chào mừng đến với cộng đồng lớn nhất của chúng tôi</h2>
-                                    <p className="mb-0 h6 fw-light">Hãy cùng học điều gì đó mới mẻ ngay hôm nay!</p>
+                                    <p className="mb-0 h6 fw-light">Không sao đâu, ai cũng có lúc quên. Cùng lấy lại mật khẩu nhé!</p>
                                 </div>
                                 <img src="/assets/images/element/02.svg" className="mt-5" alt="" />
                             </div>

@@ -1,5 +1,6 @@
 import React from 'react';
-
+import { Link } from '@inertiajs/react';
+import { route } from 'ziggy-js';
 const Login = () => {
     return (
         <main>
@@ -11,7 +12,7 @@ const Login = () => {
                             <div className="p-3 p-lg-5">
                                 <div className="text-center">
                                     <h2 className="fw-bold">Chào mừng đến với cộng đồng lớn nhất của chúng tôi</h2>
-                                    <p className="mb-0 h6 fw-light">Hãy cùng học điều gì đó mới mẻ ngay hôm nay!</p>
+                                    <p className="mb-0 h6 fw-light">Mỗi lần đăng nhập là một bước tiến đến thành công!</p>
                                 </div>
                                 <img src="/assets/images/element/02.svg" className="mt-5" alt="" />
                             </div>
@@ -35,6 +36,7 @@ const Login = () => {
                                                     className="form-control border-0 bg-light rounded-end ps-1"
                                                     placeholder="E-mail"
                                                     id="exampleInputEmail1"
+                                                    autocomplete="email"
                                                 />
                                             </div>
                                         </div>
@@ -49,6 +51,7 @@ const Login = () => {
                                                     className="form-control border-0 bg-light rounded-end ps-1"
                                                     placeholder="password"
                                                     id="inputPassword5"
+                                                    autocomplete="current-password"
                                                 />
                                             </div>
                                             <div id="passwordHelpBlock" className="form-text">
@@ -63,9 +66,9 @@ const Login = () => {
                                                 </label>
                                             </div>
                                             <div className="text-primary-hover">
-                                                <a href="/forgot-password" className="text-secondary">
+                                                <Link href={route('forgot-password')} className="text-secondary">
                                                     <u>Quên mật khẩu?</u>
-                                                </a>
+                                                </Link>
                                             </div>
                                         </div>
                                         <div className="align-items-center mt-0">
@@ -78,7 +81,7 @@ const Login = () => {
                                     </form>
                                     <div className="mt-4 text-center">
                                         <span>
-                                            Bạn chưa có tài khoản? <a href="/sign-up">Đăng ký tại đây</a>
+                                            Bạn chưa có tài khoản? <Link href={route('register')}>Đăng ký tại đây</Link>
                                         </span>
                                     </div>
                                 </div>
