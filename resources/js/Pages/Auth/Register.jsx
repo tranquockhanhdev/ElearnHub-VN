@@ -1,10 +1,33 @@
-import React from 'react';
-import { Link } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 
 const Register = () => {
+    const { errors, success } = usePage().props
+
+    const [values, setValues] = useState({
+        name: '',
+        email: '',
+        password: '',
+        password_confirmation: '',
+    });
+
+    function handleChange(e) {
+        const { id, value } = e.target;
+        setValues((prevValues) => ({
+            ...prevValues,
+            [id]: value,
+        }));
+    }
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        router.post(route('register.store'), values);
+    }
+
     return (
         <main>
+            {success && <div className="alert alert-success">{success}</div>}
             <section className="p-0 d-flex align-items-center position-relative overflow-hidden">
                 <div className="container-fluid">
                     <div className="row">
@@ -19,54 +42,60 @@ const Register = () => {
                             </div>
                         </div>
                         {/* Right */}
-                        <div className="col-12 col-lg-6 m-auto">
-                            <div className="row my-5">
-                                <div className="col-sm-10 col-xl-8 m-auto">
+                        <div className="col-12 col-lg-6 m-auto " >
+                            <div className="row my-5" >
+                                <div className="col-sm-10 col-xl-8 m-auto" >
                                     <img src="/assets/images/element/03.svg" className="h-40px mb-2" alt="" />
                                     <h2>Đăng ký tài khoản của bạn!</h2>
                                     <p className="lead mb-4">Rất vui được gặp bạn! Vui lòng đăng ký bằng tài khoản của bạn.</p>
-                                    <form>
+                                    <form onSubmit={handleSubmit}>
                                         <div className="mb-4">
-                                            <label htmlFor="exampleInputEmail1" className="form-label">Email *</label>
-                                            <div className="input-group input-group-lg">
-                                                <span className="input-group-text bg-light rounded-start border-0 text-secondary px-3">
-                                                    <i className="bi bi-envelope-fill"></i>
-                                                </span>
-                                                <input
-                                                    type="email"
-                                                    className="form-control border-0 bg-light rounded-end ps-1"
-                                                    placeholder="E-mail"
-                                                    id="exampleInputEmail1"
-                                                />
-                                            </div>
+                                            <label htmlFor="name" className="form-label">Họ và tên *</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                id="name"
+                                                value={values.name}
+                                                onChange={handleChange}
+                                                placeholder="Nhập họ và tên của bạn"
+                                            />
+                                            {errors.name && <div className='text-red-600'>{errors.name}</div>}
                                         </div>
                                         <div className="mb-4">
-                                            <label htmlFor="inputPassword5" className="form-label">Mật khẩu *</label>
-                                            <div className="input-group input-group-lg">
-                                                <span className="input-group-text bg-light rounded-start border-0 text-secondary px-3">
-                                                    <i className="fas fa-lock"></i>
-                                                </span>
-                                                <input
-                                                    type="password"
-                                                    className="form-control border-0 bg-light rounded-end ps-1"
-                                                    placeholder="*********"
-                                                    id="inputPassword5"
-                                                />
-                                            </div>
+                                            <label htmlFor="email" className="form-label">Email *</label>
+                                            <input
+                                                type="email"
+                                                className="form-control"
+                                                id="email"
+                                                value={values.email}
+                                                onChange={handleChange}
+                                                placeholder="Nhập email của bạn"
+                                            />
+                                            {errors.email && <div className='text-red-600'>{errors.email}</div>}
                                         </div>
                                         <div className="mb-4">
-                                            <label htmlFor="inputPassword6" className="form-label">Xác nhận mật khẩu *</label>
-                                            <div className="input-group input-group-lg">
-                                                <span className="input-group-text bg-light rounded-start border-0 text-secondary px-3">
-                                                    <i className="fas fa-lock"></i>
-                                                </span>
-                                                <input
-                                                    type="password"
-                                                    className="form-control border-0 bg-light rounded-end ps-1"
-                                                    placeholder="*********"
-                                                    id="inputPassword6"
-                                                />
-                                            </div>
+                                            <label htmlFor="password" className="form-label">Mật khẩu *</label>
+                                            <input
+                                                type="password"
+                                                className="form-control"
+                                                id="password"
+                                                value={values.password}
+                                                onChange={handleChange}
+                                                placeholder="Nhập mật khẩu"
+                                            />
+                                            {errors.password && <div className='text-red-600'>{errors.password}</div>}
+                                        </div>
+                                        <div className="mb-4">
+                                            <label htmlFor="password_confirmation" className="form-label">Xác nhận mật khẩu *</label>
+                                            <input
+                                                type="password"
+                                                className="form-control"
+                                                id="password_confirmation"
+                                                value={values.password_confirmation}
+                                                onChange={handleChange}
+                                                placeholder="Nhập lại mật khẩu"
+                                            />
+                                            {errors.password_confirmation && <div className='text-red-600'>{errors.password_confirmation}</div>}
                                         </div>
                                         <div className="mb-4">
                                             <div className="form-check">
@@ -78,7 +107,7 @@ const Register = () => {
                                         </div>
                                         <div className="align-items-center mt-0">
                                             <div className="d-grid">
-                                                <button className="btn btn-primary mb-0" type="button">
+                                                <button className="btn btn-primary mb-0" type="submit">
                                                     Đăng Ký
                                                 </button>
                                             </div>
