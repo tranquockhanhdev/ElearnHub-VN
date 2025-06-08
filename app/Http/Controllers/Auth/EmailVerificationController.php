@@ -24,7 +24,13 @@ class EmailVerificationController extends Controller
                 'flash_error' => 'Xác minh không hợp lệ',
             ]);
         }
-        Auth::login($user);
-        return Inertia::location(route('student.dashboard'));
+        return match ((int) $user->role_id) {
+            1 => Inertia::location(route('admin.dashboard')),
+            2 => Inertia::location(route('instructor.dashboard')),
+            3 => Inertia::location(route('student.dashboard')),
+            default => Inertia::render('Auth/Login', [
+                'flash_error' => 'Vai trò không hợp lệ.',
+            ]),
+        };
     }
 }

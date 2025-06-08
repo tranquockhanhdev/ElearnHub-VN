@@ -1,9 +1,30 @@
-import React from 'react';
-import { Link } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 const Login = () => {
+    const { errors, flash_success, flash_error } = usePage().props
+
+    const [values, setValues] = useState({
+        email: '',
+        password: '',
+    });
+    function handleChange(e) {
+        const { id, value } = e.target;
+        setValues((prevValues) => ({
+            ...prevValues,
+            [id]: value,
+        }));
+    }
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        router.post(route('login.store'), values);
+    }
+
     return (
         <main>
+            {flash_error && <div className="alert alert-danger">{flash_error}</div>}
+            {flash_success && <div className="alert alert-success">{flash_success}</div>}
             <section className="p-0 d-flex align-items-center position-relative overflow-hidden">
                 <div className="container-fluid">
                     <div className="row">
@@ -24,9 +45,9 @@ const Login = () => {
                                     <span className="mb-0 fs-1">👋</span>
                                     <h1 className="fs-2">ĐĂNG NHẬP!</h1>
                                     <p className="lead mb-4">Rất vui được gặp bạn! Vui lòng đăng nhập bằng tài khoản của bạn.</p>
-                                    <form>
+                                    <form onSubmit={handleSubmit}>
                                         <div className="mb-4">
-                                            <label htmlFor="exampleInputEmail1" className="form-label">Email *</label>
+                                            <label htmlFor="email" className="form-label">Email *</label>
                                             <div className="input-group input-group-lg">
                                                 <span className="input-group-text bg-light rounded-start border-0 text-secondary px-3">
                                                     <i className="bi bi-envelope-fill"></i>
@@ -35,10 +56,14 @@ const Login = () => {
                                                     type="email"
                                                     className="form-control border-0 bg-light rounded-end ps-1"
                                                     placeholder="E-mail"
-                                                    id="exampleInputEmail1"
+                                                    name="email"
+                                                    id="email"
+                                                    value={values.email}
+                                                    onChange={handleChange}
                                                     autocomplete="email"
                                                 />
                                             </div>
+                                            {errors.email && <div className='text-red-600'>{errors.email}</div>}
                                         </div>
                                         <div className="mb-4">
                                             <label htmlFor="inputPassword5" className="form-label">Mật khẩu *</label>
@@ -50,10 +75,14 @@ const Login = () => {
                                                     type="password"
                                                     className="form-control border-0 bg-light rounded-end ps-1"
                                                     placeholder="password"
-                                                    id="inputPassword5"
+                                                    id="password"
+                                                    name="password"
+                                                    value={values.password}
+                                                    onChange={handleChange}
                                                     autocomplete="current-password"
                                                 />
                                             </div>
+                                            {errors.password && <div className='text-red-600'>{errors.password}</div>}
                                             <div id="passwordHelpBlock" className="form-text">
                                                 Mật khẩu của bạn phải có ít nhất 8 ký tự
                                             </div>
@@ -73,7 +102,7 @@ const Login = () => {
                                         </div>
                                         <div className="align-items-center mt-0">
                                             <div className="d-grid">
-                                                <button className="btn btn-primary mb-0" type="button">
+                                                <button className="btn btn-primary mb-0" type="submit">
                                                     Đăng Nhập
                                                 </button>
                                             </div>

@@ -22,10 +22,11 @@ class RegisterController extends Controller
     }
     public function store(AuthRequest $request)
     {
-        $this->AuthService->registerUser($request->only(['name', 'email', 'password']));
+        $result = $this->AuthService->registerUser($request->only(['name', 'email', 'password']));
 
         return Inertia::render('Auth/Register', [
-            'success' => 'Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.',
+            'flash_success' => $result['success'] ? $result['message'] : null,
+            'flash_error' => !$result['success'] ? $result['error'] : null,
         ]);
     }
 }

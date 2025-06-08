@@ -3,7 +3,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 
 const Register = () => {
-    const { errors, success } = usePage().props
+    const { errors, flash_success, flash_error } = usePage().props
 
     const [values, setValues] = useState({
         name: '',
@@ -27,7 +27,8 @@ const Register = () => {
 
     return (
         <main>
-            {success && <div className="alert alert-success">{success}</div>}
+            {flash_success && <div className="alert alert-success">{flash_success}</div>}
+            {flash_error && <div className="alert alert-danger">{flash_error}</div>}
             <section className="p-0 d-flex align-items-center position-relative overflow-hidden">
                 <div className="container-fluid">
                     <div className="row">
@@ -55,6 +56,8 @@ const Register = () => {
                                                 type="text"
                                                 className="form-control"
                                                 id="name"
+                                                name="name"
+                                                autoComplete="name"
                                                 value={values.name}
                                                 onChange={handleChange}
                                                 placeholder="Nhập họ và tên của bạn"
@@ -67,9 +70,11 @@ const Register = () => {
                                                 type="email"
                                                 className="form-control"
                                                 id="email"
+                                                name="email"
                                                 value={values.email}
                                                 onChange={handleChange}
                                                 placeholder="Nhập email của bạn"
+                                                autoComplete="email"
                                             />
                                             {errors.email && <div className='text-red-600'>{errors.email}</div>}
                                         </div>
@@ -79,9 +84,11 @@ const Register = () => {
                                                 type="password"
                                                 className="form-control"
                                                 id="password"
+                                                name="password"
                                                 value={values.password}
                                                 onChange={handleChange}
                                                 placeholder="Nhập mật khẩu"
+                                                autoComplete="new-password"
                                             />
                                             {errors.password && <div className='text-red-600'>{errors.password}</div>}
                                         </div>
@@ -91,15 +98,17 @@ const Register = () => {
                                                 type="password"
                                                 className="form-control"
                                                 id="password_confirmation"
+                                                name="password_confirmation"
                                                 value={values.password_confirmation}
                                                 onChange={handleChange}
                                                 placeholder="Nhập lại mật khẩu"
+                                                autoComplete="new-password"
                                             />
                                             {errors.password_confirmation && <div className='text-red-600'>{errors.password_confirmation}</div>}
                                         </div>
                                         <div className="mb-4">
                                             <div className="form-check">
-                                                <input type="checkbox" className="form-check-input" id="checkbox-1" />
+                                                <input type="checkbox" className="form-check-input" id="checkbox-1" required />
                                                 <label className="form-check-label" htmlFor="checkbox-1">
                                                     Bằng cách đăng ký, bạn đồng ý với các <a href="#">điều khoản dịch vụ</a>
                                                 </label>

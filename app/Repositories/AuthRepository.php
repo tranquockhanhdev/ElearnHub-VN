@@ -19,6 +19,12 @@ class AuthRepository
     {
         return User::where('email', $email)->first();
     }
+
+    public function findById(int $id)
+    {
+        return User::find($id);
+    }
+
     public function createUser(array $data)
     {
         $data['role_id'] = 3;
@@ -34,14 +40,24 @@ class AuthRepository
 
     public function sendMailVerify(User $user)
     {
-        EmailVerificationToken::where('user_id', $user->id)->delete();
-        $token = Str::random(60);
-        EmailVerificationToken::create([
-            'user_id'    => $user->id,
-            'token'      => hash('sha256', $token),
-            'expires_at' => now()->addMinutes(5),
-        ]);
-        Mail::to($user->email)->queue(new VerifyEmail($user, $token));
+        try {
+            EmailVerificationToken::where('user_id', $user->id)->delete();
+
+            $token = Str::random(60);
+
+            EmailVerificationToken::create([
+                'user_id'    => $user->id,
+                'token'      => hash('sha256', $token),
+                'expires_at' => now()->addMinutes(5),
+            ]);
+
+            Mail::to($user->email)->queue(new VerifyEmail($user, $token));
+
+            return true;
+        } catch (\Throwable $e) {
+            logger()->error('Lỗi gửi mail xác minh: ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function verifyUserEmail(string $id, string $token)
@@ -77,5 +93,16 @@ class AuthRepository
             DB::rollback();
             throw new Exception('Error creating variant: ' . $e->getMessage());
         }
+    }
+
+    public function getUserByCredentials(array $credentials)
+    {
+        $user = User::where('email', $credentials['email'])->first();
+
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            return null;
+        }
+
+        return $user;
     }
 }

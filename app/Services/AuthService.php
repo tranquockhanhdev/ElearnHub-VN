@@ -6,6 +6,7 @@ namespace App\Services;
 use App\Repositories\AuthRepository;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Jobs\SendResetPasswordEmail;
 
@@ -21,28 +22,50 @@ class AuthService
     public function registerUser(array $data)
     {
         $user =  $this->AuthRepository->createUser($data);
-        $this->AuthRepository->sendMailVerify($user);
+        $sendMail = $this->AuthRepository->sendMailVerify($user);
+        dump($sendMail);
+        if (!$sendMail) {
+            return [
+                'success' => false,
+                'error' => 'Không thể gửi email xác nhận. Vui lòng thử lại sau.',
+            ];
+        }
+        return [
+            'success' => true,
+            'message' => 'Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.',
+        ];
     }
 
     public function loginUser(array $credentials)
     {
-        $user = $this->AuthRepository->findByEmail($credentials['email']);
+        $user = $this->AuthRepository->getUserByCredentials($credentials);
 
-        if (!$user || !Hash::check($credentials['password'], $user->password)) {
-            return null;
+        if (!$user) {
+            return [
+                'success' => false,
+                'error' => 'Email hoặc mật khẩu không đúng.',
+            ];
         }
 
-        if (!$user->email_verified_at) {
-            return 'unverified';
-        }
+        Auth::login($user);
 
-        return $user->createToken('api-token')->plainTextToken;
+        return [
+            'success' => true,
+            'redirect' => match ((int) $user->role_id) {
+                1 => route('admin.dashboard'),
+                2 => route('instructor.dashboard'),
+                3 => route('student.dashboard'),
+                default => route('login'),
+            },
+        ];
     }
 
     public function verifyEmail(string $id, string $hash)
     {
         $token = hash('sha256', $hash);
-        return $this->AuthRepository->verifyUserEmail($id, $token);
+        $user =  $this->AuthRepository->verifyUserEmail($id, $token);
+        Auth::login($user);
+        return $user;
     }
 
     public function forgotPassword(string $email)

@@ -7,13 +7,13 @@ const dashboard = () => {
 
     return (
         <div className="flex flex-col items-center justify-center h-screen">
-            <h1 className="text-4xl font-bold mb-4">Student Dashboard</h1>
+            <h1 className="text-4xl font-bold mb-4">Admin Dashboard</h1>
             {auth.user ? (
                 <div className="text-lg">
                     <p><strong>ID:</strong> {auth.user.id}</p>
                     <p><strong>Name:</strong> {auth.user.name}</p>
                     <p><strong>Email:</strong> {auth.user.email}</p>
-                    <p><strong>Role:</strong> {auth.user.role === 3 ? 'Students' : 'Unknown'}</p>
+                    <p><strong>Role:</strong> {auth.user.role === 1 ? 'Admin' : 'Unknown'}</p>
                 </div>
             ) : (
                 <p className="text-red-500">No user information available.</p>
