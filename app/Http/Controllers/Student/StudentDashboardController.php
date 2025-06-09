@@ -12,4 +12,8 @@ class StudentDashboardController extends Controller
     {
         return Inertia::render('Students/Dashboard');
     }
+    public function course()
+    {
+        return Inertia::render('Students/CourseList');
+    }
 }
