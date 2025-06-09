@@ -23,7 +23,7 @@ Route::controller(RegisterController::class)->group(function () {
 
 Route::controller(ForgotPasswordController::class)->group(function () {
     Route::get('/forgot-password', 'view')->name('forgot-password');
-    Route::post('/forgot-password', 'store')->name('password.email');
+    Route::post('/forgot-password', 'store')->name('forgot-password.store');
 });
 
 Route::controller(ResetPasswordController::class)->group(function () {

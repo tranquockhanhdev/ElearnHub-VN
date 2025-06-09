@@ -73,21 +73,29 @@ class AuthService
         $user = $this->AuthRepository->findByEmail($email);
 
         if (!$user) {
-            return null;
+            return [
+                'success' => false,
+                'error' => 'Email không tồn tại.',
+            ];
         }
 
-        dispatch(new SendResetPasswordEmail($email))->onQueue('emails');
+        dispatch(new SendResetPasswordEmail($email));
 
-        return true;
+        return [
+            'success' => true,
+            'message' => 'Đã gửi email đặt lại mật khẩu. Vui lòng kiểm tra hộp thư của bạn.',
+        ];
     }
 
     public function resetPassword(array $data)
     {
-        return Password::reset(
+        $status = Password::reset(
             $data,
             function ($user, $password) {
                 $this->AuthRepository->updatePassword($user, $password);
             }
         );
+
+        return $status === Password::PASSWORD_RESET;
     }
 }

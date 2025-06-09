@@ -80,19 +80,12 @@ class AuthRepository
 
     public function updatePassword(User $user, string $password)
     {
-        DB::beginTransaction();
-
-        try {
-            $user->password = Hash::make($password);
-            if (!$user->email_verified_at) {
-                $user->email_verified_at = now();
-            }
-            $user->save();
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollback();
-            throw new Exception('Error creating variant: ' . $e->getMessage());
+        $user->password = Hash::make($password);
+        if (!$user->email_verified_at) {
+            $user->email_verified_at = now();
         }
+        $user->save();
+        return true;
     }
 
     public function getUserByCredentials(array $credentials)

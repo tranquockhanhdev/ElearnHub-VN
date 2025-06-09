@@ -1,8 +1,60 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { router, usePage } from '@inertiajs/react';
+import { route } from 'ziggy-js';
 
 const ForgotPassword = () => {
+    const { errors, flash_success, flash_error } = usePage().props;
+
+    const [values, setValues] = useState({
+        email: '',
+    });
+
+    const [countdown, setCountdown] = useState(0);
+    const [isDisabled, setIsDisabled] = useState(false);
+
+    function handleChange(e) {
+        const { id, value } = e.target;
+        setValues((prevValues) => ({
+            ...prevValues,
+            [id]: value,
+        }));
+    }
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        router.post(route('forgot-password.store'), values);
+        setCountdown(30);
+        setIsDisabled(true);
+    }
+
+    function handleResend() {
+        router.post(route('forgot-password.store'), values);
+        setCountdown(30);
+        setIsDisabled(true);
+    }
+
+    useEffect(() => {
+        if (countdown > 0) {
+            const timer = setInterval(() => {
+                setCountdown((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(timer);
+                        setIsDisabled(false);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+
+            return () => clearInterval(timer);
+        }
+    }, [countdown]);
+
     return (
         <main>
+            {flash_error && <div className="alert alert-danger">{flash_error}</div>}
+            {flash_success && <div className="alert alert-success">{flash_success}</div>}
+
             <section className="p-0 d-flex align-items-center position-relative overflow-hidden">
                 <div className="container-fluid">
                     <div className="row">
@@ -25,7 +77,7 @@ const ForgotPassword = () => {
                                     <h5 className="fw-light mb-4">
                                         Để nhận mật khẩu mới, hãy nhập địa chỉ email của bạn bên dưới.
                                     </h5>
-                                    <form>
+                                    <form onSubmit={handleSubmit}>
                                         <div className="mb-4">
                                             <label htmlFor="exampleInputEmail1" className="form-label">Email address *</label>
                                             <div className="input-group input-group-lg">
@@ -36,16 +88,41 @@ const ForgotPassword = () => {
                                                     type="email"
                                                     className="form-control border-0 bg-light rounded-end ps-1"
                                                     placeholder="E-mail"
-                                                    id="exampleInputEmail1"
+                                                    name="email"
+                                                    id="email"
+                                                    value={values.email}
+                                                    onChange={handleChange}
+                                                    autoComplete="email"
                                                 />
                                             </div>
+                                            {errors.email && <div className="text-red-600">{errors.email}</div>}
+                                            {countdown > 0 && (
+                                                <div className="text-red-500 mt-2">
+                                                    Vui lòng chờ {countdown} giây...
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="align-items-center">
                                             <div className="d-grid">
-                                                <button className="btn btn-primary mb-0" type="button">
+                                                <button
+                                                    className="btn btn-primary mb-0"
+                                                    type="submit"
+                                                    disabled={isDisabled}
+                                                >
                                                     Đặt lại mật khẩu
                                                 </button>
                                             </div>
+                                            {countdown === 0 && (
+                                                <div className="mt-3 text-center">
+                                                    <button
+                                                        className="btn btn-link text-primary p-0"
+                                                        type="button"
+                                                        onClick={handleResend}
+                                                    >
+                                                        Không thấy mã? Nhấn gửi lại
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </form>
                                 </div>
