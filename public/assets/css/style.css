@@ -20052,6 +20052,8 @@ html[data-theme="dark"] body {
 html[data-theme="dark"] .bg-light,
 html[data-theme="dark"] .bg-body,
 html[data-theme="dark"] .card,
+html[data-theme="dark"] .card-body,
+html[data-theme="dark"] .card-header,
 html[data-theme="dark"] .shadow,
 html[data-theme="dark"] .navbar,
 html[data-theme="dark"] .footer,
@@ -20059,10 +20061,11 @@ html[data-theme="dark"] .dropdown-menu,
 html[data-theme="dark"] section,
 html[data-theme="dark"] .container,
 html[data-theme="dark"] .modal-content,
-html[data-theme="dark"] .form-control {
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] .choices__inner{
   background-color: #1f1f1f !important;
   color: #f1f1f1 !important;
-}
+} 
 
 /* Text chuyển sang sáng */
 html[data-theme="dark"] .text-dark,
