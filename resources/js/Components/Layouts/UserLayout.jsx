@@ -12,10 +12,10 @@ const UserLayout = ({ children }) => {
 				<nav className="navbar navbar-expand-xl">
 					<div className="container">
 						{/* Logo START */}
-						<Link className="navbar-brand" href="/">
+						<div className="navbar-brand">
 							<img className="light-mode-item navbar-brand-item" src="/assets/images/logo.svg" alt="logo" />
 							<img className="dark-mode-item navbar-brand-item" src="/assets/images/logo-light.svg" alt="logo" />
-						</Link>
+						</div>
 						{/* Logo END */}
 
 						{/* Responsive navbar toggler */}
@@ -37,21 +37,18 @@ const UserLayout = ({ children }) => {
 
 						{/* Nav Main menu START */}
 						<ul className="navbar-nav navbar-nav-scroll mx-auto">
-							<li className="nav-item">
-								<Link className="nav-link" href="/">Trang Chủ</Link>
-							</li>
-							<li className="nav-item">
-								<Link className="nav-link" href="/about">Giới Thiệu</Link>
-							</li>
-							<li className="nav-item">
-								<Link className="nav-link" href="/courses">Khóa Học</Link>
-							</li>
-							{auth.user ? (
-								<li className="nav-item">
-									<Link className="nav-link" href="/student/courses">Khóa Học Của Tôi</Link>
-								</li>
-							) : (
+							{/* Hiển thị cho người dùng chưa đăng nhập */}
+							{!auth.user && (
 								<>
+									<li className="nav-item">
+										<Link className="nav-link" href="/">Trang Chủ</Link>
+									</li>
+									<li className="nav-item">
+										<Link className="nav-link" href="/about">Giới Thiệu</Link>
+									</li>
+									<li className="nav-item">
+										<Link className="nav-link" href="/courses">Khóa Học</Link>
+									</li>
 									<li className="nav-item">
 										<Link className="nav-link" href="/login">Đăng Nhập</Link>
 									</li>
@@ -60,28 +57,51 @@ const UserLayout = ({ children }) => {
 									</li>
 								</>
 							)}
+
+							{/* Hiển thị cho học viên (role 3) */}
+							{auth.user?.role === 3 && (
+								<>
+									<li className="nav-item">
+										<Link className="nav-link" href="/">Trang Chủ</Link>
+									</li>
+									<li className="nav-item">
+										<Link className="nav-link" href="/about">Giới Thiệu</Link>
+									</li>
+									<li className="nav-item">
+										<Link className="nav-link" href="/courses">Khóa Học</Link>
+									</li>
+									<li className="nav-item">
+										<Link className="nav-link" href="/student/courselist">Khóa Học Của Tôi</Link>
+									</li>
+								</>
+							)}
+
+							{/* Ẩn tất cả cho giảng viên (role 2) */}
+							{auth.user?.role === 2 && null}
 						</ul>
 						{/* Nav Main menu END */}
 
 						{/* Nav Search START */}
-						<div className="nav my-3 my-xl-0 px-4 flex-nowrap align-items-center">
-							<div className="nav-item w-100">
-								<form className="position-relative">
-									<input
-										className="form-control pe-5 bg-transparent"
-										type="search"
-										placeholder="Search"
-										aria-label="Search"
-									/>
-									<button
-										className="btn bg-transparent px-2 py-0 position-absolute top-50 end-0 translate-middle-y"
-										type="submit"
-									>
-										<i className="fas fa-search fs-6"></i>
-									</button>
-								</form>
+						{auth.user?.role !== 2 && (
+							<div className="nav my-3 my-xl-0 px-4 flex-nowrap align-items-center">
+								<div className="nav-item w-100">
+									<form className="position-relative">
+										<input
+											className="form-control pe-5 bg-transparent"
+											type="search"
+											placeholder="Search"
+											aria-label="Search"
+										/>
+										<button
+											className="btn bg-transparent px-2 py-0 position-absolute top-50 end-0 translate-middle-y"
+											type="submit"
+										>
+											<i className="fas fa-search fs-6"></i>
+										</button>
+									</form>
+								</div>
 							</div>
-						</div>
+						)}
 						{/* Nav Search END */}
 
 						{/* Profile START */}

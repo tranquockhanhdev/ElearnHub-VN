@@ -50,9 +50,6 @@ const StudentDashboard = () => {
 													<Link className="list-group-item active" href="/student/dashboard" preserveScroll preserveState>
 														<i className="bi bi-ui-checks-grid fa-fw me-2"></i>Dashboard
 													</Link>
-													<Link className="list-group-item" href="/student/subscriptions" preserveScroll>
-														<i className="bi bi-card-checklist fa-fw me-2"></i>My Subscriptions
-													</Link>
 													<Link className="list-group-item " href="/student/courselist" preserveScroll >
 														<i className="bi bi-basket fa-fw me-2"></i>My Courses
 													</Link>
