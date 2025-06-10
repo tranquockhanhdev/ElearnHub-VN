@@ -17,8 +17,6 @@ class LogoutController extends Controller
 
         $request->session()->regenerateToken();
 
-        return Inertia::render('Auth/Login', [
-            'flash_success' => 'Bạn đã đăng xuất thành công!',
-        ]);
+        return Inertia::location(route('home'));
     }
 }

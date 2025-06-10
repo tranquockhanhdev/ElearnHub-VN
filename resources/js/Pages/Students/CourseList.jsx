@@ -49,25 +49,22 @@ const CourseList = () => {
 											<div className="bg-dark border rounded-3 pb-0 p-3 w-100">
 												{/* Dashboard menu */}
 												<div className="list-group list-group-dark list-group-borderless">
-													<Link className="list-group-item" href="/student/dashboard">
+													<Link className="list-group-item" href="/student/dashboard" preserveScroll preserveState>
 														<i className="bi bi-ui-checks-grid fa-fw me-2"></i>Dashboard
 													</Link>
-													<Link className="list-group-item" href="/student/subscriptions">
+													<Link className="list-group-item" href="/student/subscriptions" preserveScroll>
 														<i className="bi bi-card-checklist fa-fw me-2"></i>My Subscriptions
 													</Link>
-													<Link className="list-group-item active" href="/student/courses">
+													<Link className="list-group-item active" href="/student/courselist" preserveScroll>
 														<i className="bi bi-basket fa-fw me-2"></i>My Courses
 													</Link>
-													<Link className="list-group-item" href="/student/payment-info">
+													<Link className="list-group-item" href="/student/payment-info" preserveScroll preserveState>
 														<i className="bi bi-credit-card-2-front fa-fw me-2"></i>Payment info
 													</Link>
-													<Link className="list-group-item" href="/student/wishlist">
-														<i className="bi bi-cart-check fa-fw me-2"></i>Wishlist
-													</Link>
-													<Link className="list-group-item" href="/profile/edit">
+													<Link className="list-group-item" href="/profile/edit" preserveScroll>
 														<i className="bi bi-pencil-square fa-fw me-2"></i>Edit Profile
 													</Link>
-													<Link className="list-group-item" href="/settings">
+													<Link className="list-group-item" href="/settings" preserveScroll>
 														<i className="bi bi-gear fa-fw me-2"></i>Settings
 													</Link>
 													<Link

@@ -47,30 +47,31 @@ const StudentDashboard = () => {
 											<div className="bg-dark border rounded-3 pb-0 p-3 w-100">
 												{/* Dashboard menu */}
 												<div className="list-group list-group-dark list-group-borderless">
-													<Link className="list-group-item active" href="student-dashboard.html">
+													<Link className="list-group-item active" href="/student/dashboard" preserveScroll preserveState>
 														<i className="bi bi-ui-checks-grid fa-fw me-2"></i>Dashboard
 													</Link>
-													<Link className="list-group-item" href="student-subscription.html">
+													<Link className="list-group-item" href="/student/subscriptions" preserveScroll>
 														<i className="bi bi-card-checklist fa-fw me-2"></i>My Subscriptions
-													</Link>``
-													<Link className="list-group-item" href="student-course-list.html">
+													</Link>
+													<Link className="list-group-item " href="/student/courselist" preserveScroll >
 														<i className="bi bi-basket fa-fw me-2"></i>My Courses
 													</Link>
-													<Link className="list-group-item" href="student-payment-info.html">
+													<Link className="list-group-item" href="/student/payment-info" preserveScroll>
 														<i className="bi bi-credit-card-2-front fa-fw me-2"></i>Payment info
 													</Link>
-													<Link className="list-group-item" href="instructor-edit-profile.html">
+													<Link className="list-group-item" href="/profile/edit" preserveScroll>
 														<i className="bi bi-pencil-square fa-fw me-2"></i>Edit Profile
 													</Link>
-													<Link className="list-group-item" href="instructor-setting.html">
+													<Link className="list-group-item" href="/settings" preserveScroll >
 														<i className="bi bi-gear fa-fw me-2"></i>Settings
-													</Link>
-													<Link className="list-group-item" href="instructor-delete-account.html">
-														<i className="bi bi-trash fa-fw me-2"></i>Delete Profile
 													</Link>
 													<Link
 														className="list-group-item text-danger bg-danger-soft-hover"
 														href="#"
+														onClick={(e) => {
+															e.preventDefault();
+															Inertia.post('/logout');
+														}}
 													>
 														<i className="fas fa-sign-out-alt fa-fw me-2"></i>Sign Out
 													</Link>
