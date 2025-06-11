@@ -129,8 +129,37 @@ const CreateCourse = () => {
                 const nextBtns = document.querySelectorAll('.next-btn');
                 const prevBtns = document.querySelectorAll('.prev-btn');
 
-                const handleNext = () => stepperInstance?.next();
-                const handlePrev = () => stepperInstance?.previous();
+                // Function to scroll to center of stepper
+                const scrollToStepper = () => {
+                    setTimeout(() => {
+                        if (stepperRef.current) {
+                            const stepperTop = stepperRef.current.offsetTop;
+                            const stepperHeight = stepperRef.current.offsetHeight;
+                            const windowHeight = window.innerHeight;
+
+                            // Tính toán vị trí để stepper ở giữa màn hình
+                            const scrollPosition = stepperTop - (windowHeight / 2) + (stepperHeight / 2);
+
+                            window.scrollTo({
+                                top: Math.max(0, scrollPosition),
+                                behavior: 'smooth'
+                            });
+                        }
+                    }, 150);
+                };
+
+                const handleNext = () => {
+                    stepperInstance?.next();
+                    scrollToStepper();
+                };
+
+                const handlePrev = () => {
+                    stepperInstance?.previous();
+                    scrollToStepper();
+                };
+
+                // Listen for stepper events
+                stepperRef.current.addEventListener('shown.bs-stepper', scrollToStepper);
 
                 nextBtns.forEach(btn => btn.addEventListener('click', handleNext));
                 prevBtns.forEach(btn => btn.addEventListener('click', handlePrev));
@@ -138,6 +167,7 @@ const CreateCourse = () => {
                 stepperRef.current.cleanup = () => {
                     nextBtns.forEach(btn => btn.removeEventListener('click', handleNext));
                     prevBtns.forEach(btn => btn.removeEventListener('click', handlePrev));
+                    stepperRef.current?.removeEventListener('shown.bs-stepper', scrollToStepper);
                 };
             } else {
                 setTimeout(initStepper, 100);
