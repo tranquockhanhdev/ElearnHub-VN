@@ -5,9 +5,17 @@ namespace App\Http\Controllers\Instructor;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
+use App\Services\CourseService;
 
 class CourseController extends Controller
 {
+    protected $CourseService;
+    public function __construct(CourseService $CourseService)
+    {
+        $this->CourseService = $CourseService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -21,7 +29,13 @@ class CourseController extends Controller
      */
     public function create()
     {
-        //
+        $categories = $this->CourseService->getAllCategories();
+        return Inertia::render(
+            'Intructors/CreateCourse',
+            [
+                'categories' => $categories,
+            ]
+        );
     }
 
     /**
@@ -29,7 +43,7 @@ class CourseController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        dd($request->all());
     }
 
     /**
