@@ -51,9 +51,7 @@
     <script src="{{ asset('assets/vendor/glightbox/js/glightbox.js') }}"></script>
     <script src="{{ asset('assets/vendor/purecounterjs/dist/purecounter_vanilla.js') }}"></script>
     <script src="{{ asset('assets/vendor/choices/js/choices.min.js') }}"></script>
-    <!-- Template JS -->
-    <script src="{{ asset('assets/js/functions.js') }}"></script>
-    <script src="{{ asset('assets/js/darkMode.js') }}"></script>
+  
 </body>
 
 </html>

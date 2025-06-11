@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { route } from 'ziggy-js';
+import "../../../public/css/style.css"; 
+import "../../../public/js/functions.js"; 
 const UserLayout = ({ children }) => {
 	const { auth, flash_success, flash_error } = usePage().props;
 
