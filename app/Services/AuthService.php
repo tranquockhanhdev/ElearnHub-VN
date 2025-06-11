@@ -54,7 +54,7 @@ class AuthService
             'redirect' => match ((int) $user->role_id) {
                 1 => route('admin.dashboard'),
                 2 => route('instructor.dashboard'),
-                3 => route('student.dashboard'),
+                3 => route('home'),
                 default => route('login'),
             },
         ];
