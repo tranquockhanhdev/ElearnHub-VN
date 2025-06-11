@@ -36,35 +36,35 @@ const AdminLayout = ({ children }) => {
 								{/* Courses Dropdown */}
 								<li className="nav-item">
 									<a className="nav-link d-flex justify-content-between align-items-center" onClick={() => setShowCourses(!showCourses)} role="button">
-										<span><i className="bi bi-basket fa-fw me-2"></i> Courses</span>
+										<span><i className="bi bi-basket fa-fw me-2"></i>Khóa Học</span>
 										<i className={`bi ms-2 ${showCourses ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
 									</a>
 									{showCourses && (
 										<ul className="nav flex-column ms-3">
-											<li className="nav-item"><Link className="nav-link" href="/admin-course-list">All Courses</Link></li>
-											<li className="nav-item"><Link className="nav-link" href={route('admin.admin-course-category')}>Course Category</Link></li>
+											<li className="nav-item"><Link className="nav-link" href={route('admin.admin-course')}>Tất cả khóa học</Link></li>
+											<li className="nav-item"><Link className="nav-link" href={route('admin.admin-course-category')}>Danh mục khóa học</Link></li>
 										</ul>
 									)}
 								</li>
 
 								<li className="nav-item">
 									<Link className="nav-link" href="/admin-student-list">
-										<i className="fas fa-user-graduate fa-fw me-2"></i> Students
+										<i className="fas fa-user-graduate fa-fw me-2"></i>Học Viên
 									</Link>
 								</li>
 
 								{/* Instructors Dropdown */}
 								<li className="nav-item">
 									<a className="nav-link d-flex justify-content-between align-items-center" onClick={() => setShowInstructors(!showInstructors)} role="button">
-										<span><i className="fas fa-user-tie fa-fw me-2"></i> Instructors</span>
+										<span><i className="fas fa-user-tie fa-fw me-2"></i>Giảng Viên</span>
 										<i className={`bi ms-2 ${showInstructors ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
 									</a>
 									{showInstructors && (
 										<ul className="nav flex-column ms-3">
-											<li className="nav-item"><Link className="nav-link" href="/admin-instructor-list">Instructors</Link></li>
+											<li className="nav-item"><Link className="nav-link" href="/admin-instructor-list">Danh sách giảng viên</Link></li>
 											<li className="nav-item">
 												<Link className="nav-link" href="/admin-instructor-request">
-													Instructor requests
+													Yêu cầu của giảng viên
 												</Link>
 											</li>
 										</ul>
@@ -73,20 +73,20 @@ const AdminLayout = ({ children }) => {
 
 								<li className="nav-item">
 									<Link className="nav-link" href="/admin-earning">
-										<i className="far fa-chart-bar fa-fw me-2"></i> Earnings
+										<i className="far fa-chart-bar fa-fw me-2"></i>Thống Kê
 									</Link>
 								</li>
 
 								<li className="nav-item">
 									<Link className="nav-link" href="/admin-setting">
-										<i className="fas fa-user-cog fa-fw me-2"></i> Admin Settings
+										<i className="fas fa-user-cog fa-fw me-2"></i>Cài Đặt
 									</Link>
 								</li>
 
 								{/* Authentication Dropdown */}
 								<li className="nav-item">
 									<a className="nav-link d-flex justify-content-between align-items-center" onClick={() => setShowAuth(!showAuth)} role="button">
-										<span><i className="bi bi-lock fa-fw me-2"></i> Authentication</span>
+										<span><i className="bi bi-lock fa-fw me-2"></i>Xác Thực</span>
 										<i className={`bi ms-2 ${showAuth ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
 									</a>
 									{showAuth && (
