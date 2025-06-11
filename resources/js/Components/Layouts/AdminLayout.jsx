@@ -26,7 +26,7 @@ const AdminLayout = ({ children }) => {
 						<div className="offcanvas-body sidebar-content d-flex flex-column bg-dark">
 							<ul className="navbar-nav flex-column" id="navbar-sidebar">
 								<li className="nav-item">
-									<Link href="/admin-dashboard" className="nav-link active">
+									<Link href={route('admin.dashboard')} className="nav-link active">
 										<i className="bi bi-house fa-fw me-2"></i> Dashboard
 									</Link>
 								</li>
@@ -42,7 +42,7 @@ const AdminLayout = ({ children }) => {
 									{showCourses && (
 										<ul className="nav flex-column ms-3">
 											<li className="nav-item"><Link className="nav-link" href="/admin-course-list">All Courses</Link></li>
-											<li className="nav-item"><Link className="nav-link" href="/admin-course-category">Course Category</Link></li>
+											<li className="nav-item"><Link className="nav-link" href={route('admin.admin-course-category')}>Course Category</Link></li>
 										</ul>
 									)}
 								</li>
