@@ -46,7 +46,7 @@ cp .env.example .env
 
 5.Tạo khóa ứng dụng:
 php artisan key:generate
-
+php artisan storage:link
 6.Chạy migration để tạo bảng cơ sở dữ liệu:
 php artisan migrate
 
@@ -62,43 +62,3 @@ database/migrations/: Chứa các file migration.
 public/: Chứa các file tĩnh như hình ảnh, CSS, JS.
 Đóng góp
 Nếu bạn muốn đóng góp cho dự án, vui lòng tạo một pull request hoặc mở một issue trên GitHub.
-
-resources/js/
-├── Pages/
-│   ├── Auth/                      // Login, Register, ForgotPassword...
-│   ├── Admin/                    // Quản trị viên
-│   │   ├── Dashboard.jsx
-│   │   ├── Users/Index.jsx
-│   │   ├── Payments/Index.jsx
-│   ├── Instructor/               // Giảng viên
-│   │   ├── Dashboard.jsx
-│   │   ├── Courses/Index.jsx
-│   │   ├── Courses/Edit.jsx
-│   │   ├── Lessons/Edit.jsx
-│   │   ├── Quizzes/Edit.jsx
-│   ├── Student/                  // Học viên
-│   │   ├── Dashboard.jsx
-│   │   ├── Courses/MyCourses.jsx
-│   │   ├── Lessons/Watch.jsx
-│   │   ├── Quizzes/Attempt.jsx
-│   ├── Public/                   // Giao diện bên ngoài
-│   │   ├── Home.jsx
-│   │   ├── Course/Details.jsx
-│   │   ├── Category/Index.jsx
-│   └── Errors/
-│       └── 404.jsx
-├── Components/                  // Các component tái sử dụng
-│   ├── Layouts/
-│   │   ├── AdminLayout.jsx
-│   │   ├── InstructorLayout.jsx
-│   │   ├── StudentLayout.jsx
-│   │   └── GuestLayout.jsx
-│   ├── CourseCard.jsx
-│   ├── LessonVideo.jsx
-│   ├── QuizQuestion.jsx
-├── Hooks/
-│   └── useAuth.js
-├── Utils/
-│   └── formatDate.js
-├── App.jsx
-└── main.jsx                     // Entry file (vite)

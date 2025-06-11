@@ -40,9 +40,9 @@ const InfoIntructor = () => {
                                     </div>
                                     {/* Button */}
                                     <div className="mt-2 mt-sm-0">
-                                        <a href="student-course-list.html" className="btn btn-outline-primary mb-0">
+                                        <Link href={route('instructor.courses.create')} className="btn btn-outline-primary mb-0">
                                             Create a course
-                                        </a>
+                                        </Link>
                                     </div>
                                 </div>
                             </div>

@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CourseRequest;
 use App\Models\Course;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Services\CourseService;
+use Illuminate\Support\Facades\Session;
 
 class CourseController extends Controller
 {
@@ -41,11 +43,23 @@ class CourseController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(CourseRequest $request)
     {
-        dd($request->all());
+        $result  = $this->CourseService->createCourse($request->all());
+        if ($result['success']) {
+            return Inertia::location(route('instructor.courses.success'));
+        }
+        return redirect()->back()
+            ->withErrors($result['errors'] ?? ['general' => $result['message']])
+            ->withInput($request->except('course_image'));
     }
-
+    /**
+     * Show the success message after course creation.
+     */
+    public function success()
+    {
+        return Inertia::render('Intructors/SuccessCourse');
+    }
     /**
      * Display the specified resource.
      */

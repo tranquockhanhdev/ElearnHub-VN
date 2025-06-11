@@ -17,6 +17,7 @@ class Course extends Model
         'instructor_id',
         'title',
         'slug',
+        'img_url',
         'description',
         'status',
         'price',

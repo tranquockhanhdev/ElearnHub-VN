@@ -22,6 +22,9 @@ Route::middleware(['auth', 'verified', 'role:2'])->group(function () {
     // Hiển thị form tạo khóa học mới
     Route::get('/instructor/courses/create', [CourseController::class, 'create'])
         ->name('instructor.courses.create');
+    //show success message after course creation
+    Route::get('/instructor/courses/success', [CourseController::class, 'success'])
+        ->name('instructor.courses.success');
     // Lưu thông tin khóa học mới
     Route::post('/instructor/courses/store', [CourseController::class, 'store'])
         ->name('instructor.courses.store');
