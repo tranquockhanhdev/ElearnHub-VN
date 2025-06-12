@@ -9,5 +9,5 @@ Route::get('/about', [HomeController::class, 'about'])->name('about');
 
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
 Route::get('/coursestest', [CourseController::class, 'test'])->name('courses.test');
-Route::get('/courses/{id}', [CourseController::class, 'show'])->name('courses.show');
+Route::get('/courses/{slug}', [CourseController::class, 'show'])->name('courses.show');
 Route::get('/search', [CourseController::class, 'search'])->name('courses.search');

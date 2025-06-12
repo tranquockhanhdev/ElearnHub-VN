@@ -23,7 +23,7 @@ class CourseRepository
     }
     public function getAllCourses()
     {
-        return $this->course->with('categories')->get();
+        return $this->course->with('categories', 'instructor')->get();
     }
 
     public function getCourseById($id)

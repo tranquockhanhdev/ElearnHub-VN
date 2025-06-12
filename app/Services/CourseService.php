@@ -59,7 +59,6 @@ class CourseService
 
             $data['slug'] = $slug;
             $data['img_url'] = $data['course_image'] ?? null;
-
             $course = $this->CourseRepository->createCourse($data);
 
             if (isset($categoryIds) && !empty($categoryIds)) {
