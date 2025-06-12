@@ -21,9 +21,54 @@ class CourseRepository
     {
         return $this->category->all();
     }
+
     public function getAllCourses()
     {
         return $this->course->with('categories', 'instructor')->get();
+    }
+
+    // Thêm method mới cho search và filter với pagination
+    public function getCoursesWithFilters($filters = [], $perPage = 12)
+    {
+        $query = $this->course->with(['categories', 'instructor'])
+            ->where('status', 'active'); // Chỉ lấy khóa học active
+
+        // Search by title or instructor name
+        if (!empty($filters['search'])) {
+            $searchTerm = $filters['search'];
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'LIKE', "%{$searchTerm}%")
+                    ->orWhereHas('instructor', function ($instructorQuery) use ($searchTerm) {
+                        $instructorQuery->where('name', 'LIKE', "%{$searchTerm}%");
+                    });
+            });
+        }
+
+        // Filter by category
+        if (!empty($filters['category']) && $filters['category'] !== 'All') {
+            $query->whereHas('categories', function ($categoryQuery) use ($filters) {
+                $categoryQuery->where('name', $filters['category']);
+            });
+        }
+
+        // Sort by price
+        if (!empty($filters['sort'])) {
+            switch ($filters['sort']) {
+                case 'price-lowest-highest':
+                    $query->orderBy('price', 'asc');
+                    break;
+                case 'price-highest-lowest':
+                    $query->orderBy('price', 'desc');
+                    break;
+                default:
+                    $query->orderBy('id', 'desc');
+                    break;
+            }
+        } else {
+            $query->orderBy('id', 'desc');
+        }
+
+        return $query->paginate($perPage);
     }
 
     public function getCourseById($id)

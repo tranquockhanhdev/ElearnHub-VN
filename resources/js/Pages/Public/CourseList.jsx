@@ -1,76 +1,75 @@
-﻿import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import UserLayout from '../../Components/Layouts/UserLayout';
-import InfoStudent from '../../Components/InfoStudent';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 
 const CourseList = () => {
-	const { auth, flash_success, flash_error, courses, categories } = usePage().props;
+	const { auth, flash_success, flash_error, courses, categories, filters } = usePage().props;
 
-	// State for filters
-	const [searchTerm, setSearchTerm] = useState('');
-	const [selectedCategory, setSelectedCategory] = useState('');
-	const [sortBy, setSortBy] = useState('');
+	// State for filters - khởi tạo từ backend
+	const [searchTerm, setSearchTerm] = useState(filters?.search || '');
+	const [selectedCategory, setSelectedCategory] = useState(filters?.category || '');
+	const [sortBy, setSortBy] = useState(filters?.sort || '');
 
-	const categoryOptions = useMemo(() => {
+	// Submit filters to backend
+	const handleFilterSubmit = () => {
+		const params = {};
+		if (searchTerm) params.search = searchTerm;
+		if (selectedCategory && selectedCategory !== 'All') params.category = selectedCategory;
+		if (sortBy) params.sort = sortBy;
+
+		router.get('/courses', params, {
+			preserveState: true,
+			preserveScroll: true
+		});
+	};
+
+	// Clear all filters
+	const handleClearFilters = () => {
+		setSearchTerm('');
+		setSelectedCategory('');
+		setSortBy('');
+
+		router.get('/courses', {}, {
+			preserveState: true,
+			preserveScroll: true
+		});
+	};
+
+	// Handle pagination
+	const handlePageChange = (url) => {
+		if (url) {
+			router.get(url, {}, {
+				preserveState: true,
+				preserveScroll: true
+			});
+		}
+	};
+
+	// Handle search on Enter key
+	const handleSearchKeyPress = (e) => {
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			handleFilterSubmit();
+		}
+	};
+
+	// Auto submit when filters change (optional - có thể bỏ nếu không muốn)
+	useEffect(() => {
+		const timeoutId = setTimeout(() => {
+			if (searchTerm !== (filters?.search || '')) {
+				handleFilterSubmit();
+			}
+		}, 500); // Debounce 500ms
+
+		return () => clearTimeout(timeoutId);
+	}, [searchTerm]);
+
+	const categoryOptions = React.useMemo(() => {
 		if (categories && categories.length > 0) {
 			return ['All', ...categories.map(cat => cat.name)];
 		}
 		return ['All'];
 	}, [categories]);
-
-	// Filter and sort courses
-	const filteredCourses = useMemo(() => {
-		let filtered = courses || [];
-
-		// Chỉ hiển thị khóa học active
-		filtered = filtered.filter(course => course.status === 'active');
-
-		// Search by course title or instructor name
-		if (searchTerm) {
-			filtered = filtered.filter(course => {
-				const titleMatch = course.title.toLowerCase().includes(searchTerm.toLowerCase());
-
-				let instructorMatch = false;
-				if (course.instructor) {
-					// Nếu instructor là object, lấy name
-					if (typeof course.instructor === 'object' && course.instructor.name) {
-						instructorMatch = course.instructor.name.toLowerCase().includes(searchTerm.toLowerCase());
-					}
-					// Nếu instructor là string
-					else if (typeof course.instructor === 'string') {
-						instructorMatch = course.instructor.toLowerCase().includes(searchTerm.toLowerCase());
-					}
-				}
-
-				return titleMatch || instructorMatch;
-			});
-		}
-
-		// Filter by category
-		if (selectedCategory && selectedCategory !== 'All') {
-			filtered = filtered.filter(course => {
-				// Nếu course có categories (many-to-many relationship)
-				if (course.categories && Array.isArray(course.categories)) {
-					return course.categories.some(cat => cat.name === selectedCategory);
-				}
-				return false;
-			});
-		}
-
-		// Sort courses
-		switch (sortBy) {
-			case 'price-lowest-highest':
-				filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-				break;
-			case 'price-highest-lowest':
-				filtered.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-				break;
-			default:
-				break;
-		}
-
-		return filtered;
-	}, [courses, searchTerm, selectedCategory, sortBy]);
 
 	// Format price
 	const formatPrice = (price) => {
@@ -80,9 +79,7 @@ const CourseList = () => {
 	// Get course image URL
 	const getCourseImageUrl = (imgUrl) => {
 		if (!imgUrl) return 'https://placehold.co/600x400/EEE/31343C';
-		// Nếu img_url đã có đường dẫn đầy đủ
 		if (imgUrl.startsWith('http')) return imgUrl;
-		// Nếu chỉ có tên file, thêm đường dẫn storage
 		return `/storage/${imgUrl}`;
 	};
 
@@ -98,28 +95,77 @@ const CourseList = () => {
 		}
 	};
 
+	// Render pagination
+	const renderPagination = () => {
+		if (!courses.links || courses.links.length <= 3) return null;
+
+		return (
+			<nav className="mt-4 d-flex justify-content-center" aria-label="phân trang">
+				<ul className="pagination pagination-primary-soft rounded mb-0">
+					{courses.links.map((link, index) => {
+						if (link.label.includes('Previous')) {
+							return (
+								<li key={index} className={`page-item mb-0 ${!link.url ? 'disabled' : ''}`}>
+									<button
+										className="page-link"
+										onClick={() => handlePageChange(link.url)}
+										disabled={!link.url}
+										title="Trang trước"
+									>
+										<i className="fas fa-angle-left" />
+									</button>
+								</li>
+							);
+						}
+
+						if (link.label.includes('Next')) {
+							return (
+								<li key={index} className={`page-item mb-0 ${!link.url ? 'disabled' : ''}`}>
+									<button
+										className="page-link"
+										onClick={() => handlePageChange(link.url)}
+										disabled={!link.url}
+										title="Trang sau"
+									>
+										<i className="fas fa-angle-right" />
+									</button>
+								</li>
+							);
+						}
+
+						return (
+							<li key={index} className={`page-item mb-0 ${link.active ? 'active' : ''}`}>
+								<button
+									className="page-link"
+									onClick={() => handlePageChange(link.url)}
+									disabled={link.active}
+								>
+									{link.label}
+								</button>
+							</li>
+						);
+					})}
+				</ul>
+			</nav>
+		);
+	};
+
 	return (
 		<UserLayout>
 			<>
-				{/* **************** MAIN CONTENT START **************** */}
 				<main>
-					{/* =======================
-Page Banner START */}
+					{/* Page Banner */}
 					<section
 						className="bg-dark align-items-center d-flex"
 						style={{
-							background:
-								"url(/assets/images/pattern/04.png) no-repeat center center",
+							background: "url(/assets/images/pattern/04.png) no-repeat center center",
 							backgroundSize: "cover"
 						}}
 					>
-						{/* Main banner background image */}
 						<div className="container">
 							<div className="row">
 								<div className="col-12">
-									{/* Title */}
 									<h1 className="text-white">Danh Sách Khóa Học</h1>
-									{/* Breadcrumb */}
 									<div className="d-flex">
 										<nav aria-label="breadcrumb">
 											<ol className="breadcrumb breadcrumb-dark breadcrumb-dots mb-0">
@@ -136,13 +182,11 @@ Page Banner START */}
 							</div>
 						</div>
 					</section>
-					{/* =======================
-Page Banner END */}
-					{/* =======================
-Page content START */}
+
+					{/* Page content */}
 					<section className="pt-5">
 						<div className="container">
-							{/* Search option START */}
+							{/* Search and Filter Options */}
 							<div className="row mb-4 align-items-center">
 								{/* Search bar */}
 								<div className="col-sm-6 col-xl-4">
@@ -154,21 +198,36 @@ Page content START */}
 												placeholder="Tìm kiếm khóa học hoặc giảng viên"
 												value={searchTerm}
 												onChange={(e) => setSearchTerm(e.target.value)}
+												onKeyPress={handleSearchKeyPress}
 											/>
-											<button type="button" className="btn btn-primary mb-0 rounded">
+											<button
+												type="button"
+												className="btn btn-primary mb-0 rounded"
+												onClick={handleFilterSubmit}
+											>
 												<i className="fas fa-search" />
 											</button>
 										</div>
 									</form>
 								</div>
-								{/* Select option */}
+
+								{/* Category filter */}
 								<div className="col-sm-6 col-xl-3 mt-3 mt-lg-0">
 									<form className="bg-body shadow rounded p-2 input-borderless">
 										<select
 											className="form-select form-select-sm js-choice"
-											aria-label=".form-select-sm"
 											value={selectedCategory}
-											onChange={(e) => setSelectedCategory(e.target.value)}
+											onChange={(e) => {
+												setSelectedCategory(e.target.value);
+												// Auto submit on change
+												setTimeout(() => {
+													const params = {};
+													if (searchTerm) params.search = searchTerm;
+													if (e.target.value && e.target.value !== 'All') params.category = e.target.value;
+													if (sortBy) params.sort = sortBy;
+													router.get('/courses', params, { preserveState: true, preserveScroll: true });
+												}, 100);
+											}}
 										>
 											<option value="">Danh Mục</option>
 											{categoryOptions.map((category) => (
@@ -179,50 +238,57 @@ Page content START */}
 										</select>
 									</form>
 								</div>
-								{/* Select option */}
+
+								{/* Sort filter */}
 								<div className="col-sm-6 col-xl-3 mt-3 mt-xl-0">
 									<form className="bg-body shadow rounded p-2 input-borderless">
 										<select
 											className="form-select form-select-sm js-choice"
-											aria-label=".form-select-sm"
 											value={sortBy}
-											onChange={(e) => setSortBy(e.target.value)}
+											onChange={(e) => {
+												setSortBy(e.target.value);
+												// Auto submit on change
+												setTimeout(() => {
+													const params = {};
+													if (searchTerm) params.search = searchTerm;
+													if (selectedCategory && selectedCategory !== 'All') params.category = selectedCategory;
+													if (e.target.value) params.sort = e.target.value;
+													router.get('/courses', params, { preserveState: true, preserveScroll: true });
+												}, 100);
+											}}
 										>
 											<option value="">Sắp Xếp Theo</option>
 											<option value="price-lowest-highest">Giá thấp đến cao</option>
-											<option value="price-highest-lowest">Giá Cao Đến Thấp</option>
+											<option value="price-highest-lowest">Giá cao đến thấp</option>
 										</select>
 									</form>
 								</div>
-								{/* Button */}
+
+								{/* Clear filters button */}
 								<div className="col-sm-6 col-xl-2 mt-3 mt-xl-0 d-grid">
 									<button
 										className="btn btn-lg btn-primary mb-0"
-										onClick={() => {
-											setSearchTerm('');
-											setSelectedCategory('');
-											setSortBy('');
-										}}
+										onClick={handleClearFilters}
 									>
 										Xóa Bộ Lọc
 									</button>
 								</div>
 							</div>
-							{/* Search option END */}
 
 							{/* Results count */}
 							<div className="row mb-3">
 								<div className="col-12">
 									<p className="text-muted">
-										Tìm thấy {filteredCourses.length} khóa học
+										Tìm thấy {courses.total} khóa học
+										{courses.current_page > 1 && ` - Trang ${courses.current_page} / ${courses.last_page}`}
 									</p>
 								</div>
 							</div>
 
-							{/* Course list START */}
+							{/* Course list */}
 							<div className="row g-4">
-								{filteredCourses.length > 0 ? (
-									filteredCourses.map((course) => (
+								{courses.data && courses.data.length > 0 ? (
+									courses.data.map((course) => (
 										<div key={course.id} className="col-lg-3 col-md-6">
 											<div className="card h-100 shadow">
 												{/* Image */}
@@ -233,13 +299,12 @@ Page content START */}
 														className="card-img-top"
 														style={{ height: '200px', objectFit: 'cover' }}
 													/>
-													{/* Status badge */}
 													{getStatusBadge(course.status)}
 												</div>
 
 												{/* Card body */}
 												<div className="card-body d-flex flex-column">
-													{/* Categories - hiển thị nhiều category */}
+													{/* Categories */}
 													<div className="mb-2">
 														{course.categories && course.categories.length > 0 ? (
 															course.categories.map((category, index) => (
@@ -266,7 +331,10 @@ Page content START */}
 
 													{/* Instructor */}
 													<p className="text-black small mb-3">
-														{course.instructor ? course.instructor.name || course.instructor : 'Chưa có giảng viên'}
+														{course.instructor ?
+															(course.instructor.name || course.instructor) :
+															'Chưa có giảng viên'
+														}
 													</p>
 
 													{/* Price */}
@@ -299,58 +367,12 @@ Page content START */}
 									</div>
 								)}
 							</div>
-							{/* Course list END */}
 
-							{/* Pagination START */}
-							{filteredCourses.length > 0 && (
-								<div className="col-12">
-									<nav
-										className="mt-4 d-flex justify-content-center"
-										aria-label="phân trang"
-									>
-										<ul className="pagination pagination-primary-soft rounded mb-0">
-											<li className="page-item mb-0">
-												<a className="page-link" href="#" tabIndex={-1} title="Trang đầu">
-													<i className="fas fa-angle-double-left" />
-												</a>
-											</li>
-											<li className="page-item mb-0">
-												<a className="page-link" href="#" title="Trang 1">
-													1
-												</a>
-											</li>
-											<li className="page-item mb-0 active">
-												<a className="page-link" href="#" title="Trang hiện tại">
-													2
-												</a>
-											</li>
-											<li className="page-item mb-0">
-												<a className="page-link" href="#" title="Trang tiếp theo">
-													..
-												</a>
-											</li>
-											<li className="page-item mb-0">
-												<a className="page-link" href="#" title="Trang 6">
-													6
-												</a>
-											</li>
-											<li className="page-item mb-0">
-												<a className="page-link" href="#" title="Trang cuối">
-													<i className="fas fa-angle-double-right" />
-												</a>
-											</li>
-										</ul>
-									</nav>
-								</div>
-							)}
-							{/* Pagination END */}
+							{/* Pagination */}
+							{courses.data && courses.data.length > 0 && renderPagination()}
 						</div>
 					</section>
-					{/* =======================
-Page content END */}
-
 				</main>
-				{/* **************** MAIN CONTENT END **************** */}
 			</>
 		</UserLayout>
 	);

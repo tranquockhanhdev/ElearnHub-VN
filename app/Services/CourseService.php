@@ -29,6 +29,12 @@ class CourseService
         return $this->CourseRepository->getAllCourses();
     }
 
+    // Thêm method mới cho search và filter
+    public function getCoursesWithFilters($filters = [], $perPage = 12)
+    {
+        return $this->CourseRepository->getCoursesWithFilters($filters, $perPage);
+    }
+
     public function getCourseById($id)
     {
         return $this->CourseRepository->getCourseById($id);
