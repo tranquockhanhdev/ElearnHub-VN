@@ -70,7 +70,13 @@ class CourseRepository
 
         return $query->paginate($perPage);
     }
-
+    public function getCourseBySlug($slug)
+    {
+        return $this->course->with(['categories', 'instructor'])
+            ->where('slug', $slug)
+            ->where('status', 'active')
+            ->first();
+    }
     public function getCourseById($id)
     {
         return $this->course->with('categories')->findOrFail($id);

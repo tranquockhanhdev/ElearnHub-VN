@@ -132,7 +132,10 @@ class CourseService
 
         return $this->CourseRepository->updateCourse($id, $data);
     }
-
+    public function getCourseBySlug($slug)
+    {
+        return $this->CourseRepository->getCourseBySlug($slug);
+    }
     public function deleteCourse($id)
     {
         $course = $this->getCourseById($id);

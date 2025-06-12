@@ -42,9 +42,16 @@ class CourseController extends Controller
         return Inertia::render('Public/CourseDetail');
     }
 
-    public function show($id)
+    public function show($slug)
     {
-        return Inertia::render('Public/Courses/Show', ['courseId' => $id]);
+        $course = $this->CourseService->getCourseBySlug($slug);
+
+        if (!$course) {
+            abort(404, 'Khóa học không tồn tại');
+        }
+        return Inertia::render('Public/CourseDetail', [
+            'course' => $course
+        ]);
     }
 
     public function search(Request $request)
