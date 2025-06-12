@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminCourseCategoryController;
 use App\Http\Controllers\Admin\AdminCourseController;
+use App\Http\Controllers\Admin\AdminUserController;
 
 Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
@@ -12,4 +13,7 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
         ->name('admin.admin-course-category');
     Route::get('/admin/course/admin-course', [AdminCourseController::class, 'index'])
         ->name('admin.admin-course');
+    Route::get('/admin/student/admin-student', [AdminUserController::class, 'studentList'])
+        ->name('admin.students');
+
 });
