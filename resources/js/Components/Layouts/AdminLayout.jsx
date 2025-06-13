@@ -78,24 +78,19 @@ const AdminLayout = ({ children }) => {
                     onClick={() => setShowInstructors(!showInstructors)}
                     role="button"
                   >
-                    <span><i className="fas fa-user-tie fa-fw me-2"></i>Giảng Viên</span>
-                    <i className={`bi ms-2 ${showInstructors ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
+                    <span><i className="bi bi-basket fa-fw me-2"></i>Khóa Học</span>
+                    <i className={`bi ms-2 ${showCourses ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
                   </a>
-                  {(showInstructors || window.location.pathname.startsWith('/admin-instructor')) && (
+                  {(showCourses || isRoute('admin.instructors') || isRoute('admin.admin-course-category')) && (
                     <ul className="nav flex-column ms-3">
                       <li className="nav-item">
-                        <Link className={`nav-link ${window.location.pathname === '/admin-instructor-list' ? 'active' : ''}`} href="/admin-instructor-list">
-                          Danh sách giảng viên
+                        <Link className={`nav-link ${isRoute('admin.instructors') ? 'active' : ''}`} href={route('admin.instructors')}>
+                         Danh sách giảng viên
                         </Link>
                       </li>
                       <li className="nav-item">
-                        <Link className={`nav-link ${window.location.pathname === '/admin-instructor-detail' ? 'active' : ''}`} href="/admin-instructor-detail">
-                          Chi tiết giảng viên
-                        </Link>
-                      </li>
-                      <li className="nav-item">
-                        <Link className={`nav-link ${window.location.pathname === '/admin-instructor-request' ? 'active' : ''}`} href="/admin-instructor-request">
-                          Yêu cầu của giảng viên
+                        <Link className={`nav-link ${isRoute('admin.admin-course-category') ? 'active' : ''}`} href={route('admin.admin-course-category')}>
+                          Yêu cầu giảng viên
                         </Link>
                       </li>
                     </ul>

@@ -99,10 +99,10 @@ const AdminCourseList = ({ courses }) => {
                   </div>
 
                   <div className="card-body">
-                    {course.thumbnail && (
+                    {course.img_url && (
                       <div className="mb-3 text-center">
                         <img
-                          src={course.thumbnail}
+                          src={course.img_url}
                           alt={course.title}
                           className="img-fluid rounded"
                           style={{ maxHeight: '180px', objectFit: 'cover', width: '100%' }}

@@ -15,5 +15,9 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
         ->name('admin.admin-course');
     Route::get('/admin/student/admin-student', [AdminUserController::class, 'studentList'])
         ->name('admin.students');
+    Route::get('/admin/instructor/admin-instructor', [AdminUserController::class, 'instructorList'])
+        ->name('admin.instructors');
+    Route::get('/admin/instructors/{id}', [AdminUserController::class, 'showInstructor'])
+        ->name('admin.instructors.show');
 
 });

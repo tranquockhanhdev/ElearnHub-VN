@@ -1,0 +1,186 @@
+import React, { useState } from 'react';
+import AdminLayout from '@/Components/Layouts/AdminLayout';
+import { Link } from '@inertiajs/react';
+
+const AdminInstructorList = ({ instructors }) => {
+  const [activeTab, setActiveTab] = useState('grid');
+
+  const formatDate = (isoDate) => {
+    if (!isoDate) return '---';
+    const date = new Date(isoDate);
+    return date.toLocaleDateString('vi-VN');
+  };
+
+  const renderPagination = () => {
+    const pages = [];
+
+    for (let i = 1; i <= instructors.last_page; i++) {
+      pages.push(
+        <Link
+          key={i}
+          href={`?page=${i}`}
+          className={`page-link ${instructors.current_page === i ? 'active' : ''}`}
+        >
+          {i}
+        </Link>
+      );
+    }
+
+    return (
+      <nav className="mt-4">
+        <ul className="pagination justify-content-center">
+          {pages.map((page, index) => (
+            <li key={index} className="page-item">
+              {page}
+            </li>
+          ))}
+        </ul>
+      </nav>
+    );
+  };
+
+  return (
+    <AdminLayout>
+      <div className="page-content-wrapper border">
+        {/* Title + Add button */}
+        <div className="row mb-3">
+          <div className="col-6">
+            <h1 className="h3 mb-2">Instructors</h1>
+          </div>
+          <div className="col-6 text-end">
+            <Link href="/admin/instructors/create" className="btn btn-primary">
+              <i className="bi bi-plus-circle me-1"></i> Thêm giảng viên
+            </Link>
+          </div>
+        </div>
+
+        <div className="card bg-transparent">
+          <div className="card-header bg-transparent border-bottom px-0">
+            <div className="row g-3 align-items-center justify-content-between">
+              <div className="col-md-8">
+                <form className="rounded position-relative">
+                  <input className="form-control bg-transparent" type="search" placeholder="Search" />
+                  <button className="bg-transparent p-2 position-absolute top-50 end-0 translate-middle-y border-0 text-reset">
+                    <i className="fas fa-search fs-6"></i>
+                  </button>
+                </form>
+              </div>
+
+              <div className="col-md-3">
+                <ul className="list-inline nav nav-pills justify-content-end">
+                  <li className="nav-item">
+                    <button className={`nav-link ${activeTab === 'grid' ? 'active' : ''}`} onClick={() => setActiveTab('grid')}>
+                      <i className="fas fa-th-large"></i>
+                    </button>
+                  </li>
+                  <li className="nav-item">
+                    <button className={`nav-link ${activeTab === 'list' ? 'active' : ''}`} onClick={() => setActiveTab('list')}>
+                      <i className="fas fa-list-ul"></i>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="card-body px-0 pt-4">
+            <div className={activeTab === 'grid' ? 'row g-4' : ''}>
+              {instructors.data.length === 0 ? (
+                <div className="col-12">
+                  <div className="alert alert-warning">No instructors found.</div>
+                </div>
+              ) : (
+                instructors.data.map((instructor) =>
+                  activeTab === 'grid' ? (
+                    <div className="col-md-6 col-xxl-4" key={instructor.id}>
+                      <div className="card border h-100">
+                        <div className="card-header d-flex justify-content-between">
+                          <div>
+                            <h5 className="mb-0">{instructor.name}</h5>
+                            <span className="text-body small">
+                              <i className="fas fa-envelope fa-fw me-1"></i> {instructor.email}
+                            </span>
+                          </div>
+                          <div className="dropdown text-end">
+                            <button className="btn btn-sm btn-light" data-bs-toggle="dropdown">
+                              <i className="bi bi-three-dots"></i>
+                            </button>
+                            <ul className="dropdown-menu dropdown-menu-end">
+                              <li><a className="dropdown-item" href="#"><i className="bi bi-pencil me-2"></i>Edit</a></li>
+                              <li><a className="dropdown-item" href="#"><i className="bi bi-trash me-2"></i>Remove</a></li>
+                            </ul>
+                          </div>
+                        </div>
+
+                        <div className="card-body">
+                          <div className="d-flex justify-content-between align-items-center mb-3">
+                            <div className="d-flex align-items-center">
+                              <div className="icon-md bg-info bg-opacity-10 text-info rounded-circle">
+                                <i className="bi bi-telephone-fill"></i>
+                              </div>
+                              <h6 className="mb-0 ms-2 fw-light">Phone</h6>
+                            </div>
+                            <span className="fw-bold">{instructor.phone || 'N/A'}</span>
+                          </div>
+                          <div className="d-flex justify-content-between align-items-center mb-3">
+                            <div className="d-flex align-items-center">
+                              <div className="icon-md bg-warning bg-opacity-10 text-warning rounded-circle">
+                                <i className="bi bi-person-check-fill"></i>
+                              </div>
+                              <h6 className="mb-0 ms-2 fw-light">Status</h6>
+                            </div>
+                           <span className="fw-bold">{instructor.status === 'active' ? 'Active' : instructor.status === 'suspended' ? 'Suspended' : 'Inactive'}</span>
+                          </div>
+                        </div>
+
+                        <div className="card-footer">
+                          <div className="d-flex justify-content-between">
+                            <h6 className="mb-0">
+                              <i className="bi bi-calendar fa-fw text-orange me-2"></i>
+                              <span className="text-body">Join at:</span> {formatDate(instructor.email_verified_at)}
+                            </h6>
+                            <div>
+                            <Link href={route('admin.instructors.show', { id: instructor.id })}className="btn btn-sm btn-outline-secondary me-2">
+                              <i className="bi bi-eye-fill"></i>
+                            </Link>
+
+                              <button className="btn btn-sm btn-outline-danger">
+                                <i className="fas fa-ban"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="card mb-3" key={instructor.id}>
+                      <div className="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                          <h5 className="mb-1">{instructor.name}</h5>
+                          <p className="mb-1 text-muted">{instructor.email}</p>
+                          <small>Join at: {formatDate(instructor.email_verified_at)}</small>
+                        </div>
+                        <div>
+                          <button className="btn btn-sm btn-outline-secondary me-2">
+                            <i className="bi bi-eye-fill"></i>
+                          </button>
+                          <button className="btn btn-sm btn-outline-danger">
+                            <i className="fas fa-ban"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                )
+              )}
+            </div>
+
+            {instructors.last_page > 1 && renderPagination()}
+          </div>
+        </div>
+      </div>
+    </AdminLayout>
+  );
+};
+
+export default AdminInstructorList;

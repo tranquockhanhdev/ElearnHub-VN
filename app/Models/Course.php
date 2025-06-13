@@ -20,6 +20,7 @@ class Course extends Model
         'description',
         'status',
         'price',
+        'img_url',
     ];
 
     public $timestamps = true;
