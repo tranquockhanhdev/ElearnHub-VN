@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\PaymentMethod;
 use Exception;
 
 class CourseRepository
@@ -76,6 +77,13 @@ class CourseRepository
             ->where('slug', $slug)
             ->where('status', 'active')
             ->first();
+    }
+    public function getPaymentMethods()
+    {
+        return PaymentMethod::where('is_active', 1)->get()->map(function ($item) {
+            $item->config_json = json_decode($item->config_json, true);
+            return $item;
+        });
     }
     public function getCourseById($id)
     {

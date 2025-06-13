@@ -136,6 +136,10 @@ class CourseService
     {
         return $this->CourseRepository->getCourseBySlug($slug);
     }
+    public function getPaymentMethods()
+    {
+        return $this->CourseRepository->getPaymentMethods();
+    }
     public function deleteCourse($id)
     {
         $course = $this->getCourseById($id);

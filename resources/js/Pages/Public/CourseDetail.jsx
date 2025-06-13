@@ -85,10 +85,7 @@ Page content START */}
 
 											{/* Course stats */}
 											<ul className="list-inline mb-0">
-												<li className="list-inline-item fw-light h6 me-3 mb-1 mb-sm-0">
-													<i className="fas fa-star me-2" />
-													4.5/5.0
-												</li>
+
 												<li className="list-inline-item fw-light h6 me-3 mb-1 mb-sm-0">
 													<i className="fas fa-user-graduate me-2" />
 													12k Đã tham gia
@@ -194,10 +191,6 @@ Page content START */}
 																<li className="list-group-item h6 fw-light d-flex mb-0">
 																	<i className="fas fa-check-circle text-success me-2" />
 																	Cập nhật xu hướng mới
-																</li>
-																<li className="list-group-item h6 fw-light d-flex mb-0">
-																	<i className="fas fa-check-circle text-success me-2" />
-																	Nhận chứng chỉ hoàn thành
 																</li>
 															</ul>
 														</div>
@@ -362,9 +355,12 @@ Page content START */}
 													{/* Buttons */}
 													<div className="mt-3 d-grid">
 														{auth?.user ? (
-															<button className="btn btn-success">
+															<Link
+																href={`/student/checkout/${course.id}`}
+																className="btn btn-success"
+															>
 																Mua ngay
-															</button>
+															</Link>
 														) : (
 															<Link href="/login" className="btn btn-success">
 																Đăng nhập để mua
@@ -413,13 +409,7 @@ Page content START */}
 															</span>
 															<span>Trọn đời</span>
 														</li>
-														<li className="list-group-item px-0 d-flex justify-content-between">
-															<span className="h6 fw-light mb-0">
-																<i className="fas fa-fw fa-medal text-primary" />
-																Chứng chỉ
-															</span>
-															<span>Có</span>
-														</li>
+
 													</ul>
 
 													{/* Divider */}
@@ -443,34 +433,7 @@ Page content START */}
 														</div>
 													</div>
 
-													{/* Rating and follow */}
-													<div className="d-sm-flex justify-content-sm-between align-items-center mt-0 mt-sm-2">
-														{/* Rating star */}
-														<ul className="list-inline mb-0">
-															<li className="list-inline-item me-0 small">
-																<i className="fas fa-star text-warning" />
-															</li>
-															<li className="list-inline-item me-0 small">
-																<i className="fas fa-star text-warning" />
-															</li>
-															<li className="list-inline-item me-0 small">
-																<i className="fas fa-star text-warning" />
-															</li>
-															<li className="list-inline-item me-0 small">
-																<i className="fas fa-star text-warning" />
-															</li>
-															<li className="list-inline-item me-0 small">
-																<i className="fas fa-star-half-alt text-warning" />
-															</li>
-															<li className="list-inline-item ms-2 h6 fw-light mb-0">
-																4.5/5.0
-															</li>
-														</ul>
-														{/* button */}
-														<button className="btn btn-sm btn-primary mb-0 mt-2 mt-sm-0">
-															Theo dõi
-														</button>
-													</div>
+
 												</div>
 												{/* Course info END */}
 											</div>

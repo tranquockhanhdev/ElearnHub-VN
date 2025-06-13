@@ -36,12 +36,6 @@ class CourseController extends Controller
             'filters' => $filters
         ]);
     }
-
-    public function test()
-    {
-        return Inertia::render('Public/CourseDetail');
-    }
-
     public function show($slug)
     {
         $course = $this->CourseService->getCourseBySlug($slug);
