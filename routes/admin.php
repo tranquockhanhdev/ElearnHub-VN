@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminCourseCategoryController;
 use App\Http\Controllers\Admin\AdminCourseController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminSettingController;
 
 Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
@@ -19,5 +20,6 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
         ->name('admin.instructors');
     Route::get('/admin/instructors/{id}', [AdminUserController::class, 'showInstructor'])
         ->name('admin.instructors.show');
-
+    Route::get('/admin/settings', [AdminSettingController::class, 'index'])
+        ->name('admin.settings');
 });

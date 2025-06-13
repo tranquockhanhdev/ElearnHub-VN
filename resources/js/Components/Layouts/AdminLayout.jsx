@@ -71,31 +71,38 @@ const AdminLayout = ({ children }) => {
                   </Link>
                 </li>
 
-                {/* Giảng viên */}
+          {/* Giảng viên */}
                 <li className="nav-item">
                   <a
                     className="nav-link d-flex justify-content-between align-items-center"
                     onClick={() => setShowInstructors(!showInstructors)}
                     role="button"
                   >
-                    <span><i className="bi bi-basket fa-fw me-2"></i>Khóa Học</span>
-                    <i className={`bi ms-2 ${showCourses ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
+                    <span><i className="fas fa-user-tie fa-fw me-2"></i>Giảng Viên</span>
+                    <i className={`bi ms-2 ${showInstructors ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
                   </a>
-                  {(showCourses || isRoute('admin.instructors') || isRoute('admin.admin-course-category')) && (
+
+                  {(showInstructors || isRoute('admin.instructors')) && (
                     <ul className="nav flex-column ms-3">
                       <li className="nav-item">
-                        <Link className={`nav-link ${isRoute('admin.instructors') ? 'active' : ''}`} href={route('admin.instructors')}>
-                         Danh sách giảng viên
+                        <Link
+                          className={`nav-link ${isRoute('admin.instructors') ? 'active' : ''}`}
+                          href={route('admin.instructors')}
+                        >
+                          Danh sách giảng viên
                         </Link>
                       </li>
+
+                      {/* Tạm thời chưa làm, dùng link disabled hoặc placeholder */}
                       <li className="nav-item">
-                        <Link className={`nav-link ${isRoute('admin.admin-course-category') ? 'active' : ''}`} href={route('admin.admin-course-category')}>
-                          Yêu cầu giảng viên
-                        </Link>
+                        <a className="nav-link disabled" href="#">
+                          Yêu cầu giảng viên <small className="text-muted">(đang phát triển)</small>
+                        </a>
                       </li>
                     </ul>
                   )}
                 </li>
+
 
                 {/* Báo cáo */}
                 <li className="nav-item">
@@ -106,8 +113,8 @@ const AdminLayout = ({ children }) => {
 
                 {/* Cài đặt */}
                 <li className="nav-item">
-                  <Link className={`nav-link ${window.location.pathname === '/admin-setting' ? 'active' : ''}`} href="/admin-setting">
-                    <i className="fas fa-user-cog fa-fw me-2"></i>Cài Đặt
+                <Link href={route('admin.settings')} className={`nav-link ${isRoute('admin.settings') ? 'active' : ''}`}>
+                    <i className="fas fa-user-cog fa-fw me-2"></i> Admin Cài Đặt
                   </Link>
                 </li>
 
