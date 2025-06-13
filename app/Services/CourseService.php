@@ -29,6 +29,12 @@ class CourseService
         return $this->CourseRepository->getAllCourses();
     }
 
+    // Thêm method mới cho search và filter
+    public function getCoursesWithFilters($filters = [], $perPage = 12)
+    {
+        return $this->CourseRepository->getCoursesWithFilters($filters, $perPage);
+    }
+
     public function getCourseById($id)
     {
         return $this->CourseRepository->getCourseById($id);
@@ -59,7 +65,6 @@ class CourseService
 
             $data['slug'] = $slug;
             $data['img_url'] = $data['course_image'] ?? null;
-
             $course = $this->CourseRepository->createCourse($data);
 
             if (isset($categoryIds) && !empty($categoryIds)) {
@@ -127,7 +132,14 @@ class CourseService
 
         return $this->CourseRepository->updateCourse($id, $data);
     }
-
+    public function getCourseBySlug($slug)
+    {
+        return $this->CourseRepository->getCourseBySlug($slug);
+    }
+    public function getPaymentMethods()
+    {
+        return $this->CourseRepository->getPaymentMethods();
+    }
     public function deleteCourse($id)
     {
         $course = $this->getCourseById($id);
