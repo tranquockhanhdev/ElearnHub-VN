@@ -12,6 +12,10 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
         ->name('admin.dashboard');
     Route::get('/admin/course-category/admin-course-category', [AdminCourseCategoryController::class, 'index'])
         ->name('admin.admin-course-category');
+    Route::post('/course-categories', [AdminCourseCategoryController::class, 'store'])
+        ->name('admin.course-category.store');
+    Route::put('/admin/course-category/{id}', [AdminCourseCategoryController::class, 'update'])
+        ->name('admin.course-category.update');
     Route::get('/admin/course/admin-course', [AdminCourseController::class, 'index'])
         ->name('admin.admin-course');
     Route::get('/admin/student/admin-student', [AdminUserController::class, 'studentList'])
