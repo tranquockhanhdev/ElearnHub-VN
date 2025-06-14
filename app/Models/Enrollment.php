@@ -16,7 +16,9 @@ class Enrollment extends Model
     protected $fillable = [
         'student_id',
         'course_id',
+        'payment_id',
         'enrolled_at',
+        'status'
     ];
 
     public $timestamps = true;
@@ -29,5 +31,9 @@ class Enrollment extends Model
     public function course()
     {
         return $this->belongsTo(Course::class);
+    }
+    public function payment()
+    {
+        return $this->belongsTo(Payment::class, 'payment_id');
     }
 }

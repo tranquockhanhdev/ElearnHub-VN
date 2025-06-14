@@ -20,7 +20,7 @@ class CourseRepository
 
     public function getAllCategories()
     {
-        return $this->category->all();
+        return $this->category->where('status', 'active')->get();
     }
 
     public function getAllCourses()
@@ -28,7 +28,6 @@ class CourseRepository
         return $this->course->with('categories', 'instructor')->get();
     }
 
-    // Thêm method mới cho search và filter với pagination
     public function getCoursesWithFilters($filters = [], $perPage = 12)
     {
         $query = $this->course->with(['categories', 'instructor'])

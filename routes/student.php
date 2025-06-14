@@ -22,10 +22,6 @@ Route::middleware(['auth', 'verified', 'role:3'])->group(function () {
     Route::get('/student/course/{id}', [CourseController::class, 'show'])
         ->name('student.course.show');
 
-    // Đăng ký tham gia một khóa học
-    Route::post('/student/course/{id}/enroll', [CourseController::class, 'enroll'])
-        ->name('student.course.enroll');
-
     // Hiển thị nội dung bài học
     Route::get('/student/lesson/{id}', [LessonController::class, 'show'])
         ->name('student.lesson.show');
@@ -41,6 +37,7 @@ Route::middleware(['auth', 'verified', 'role:3'])->group(function () {
     // Xử lý thanh toán cho một khóa học
     Route::post('/student/checkout/{courseId}', [CheckoutController::class, 'process'])
         ->name('student.checkout.process');
+
 
     // Hiển thị trang thông báo thanh toán thành công
     Route::get('/student/checkout/success', [CheckoutController::class, 'success'])
@@ -77,3 +74,5 @@ Route::middleware(['auth', 'verified', 'role:3'])->group(function () {
     Route::get('/student/enrolled-courses', [StudentDashboardController::class, 'enrolledCourses'])
         ->name('student.enrolled-courses');
 });
+
+Route::get('vnpay_return', [CheckoutController::class, 'vnpay_return'])->name('vnpay.return');
