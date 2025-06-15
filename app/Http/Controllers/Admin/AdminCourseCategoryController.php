@@ -36,7 +36,7 @@ class AdminCourseCategoryController extends Controller
     }
 
     public function update(Request $request, $id)
-{
+    {
     $category = Category::findOrFail($id);
 
     $validated = $request->validate([
@@ -70,7 +70,13 @@ class AdminCourseCategoryController extends Controller
     ]);
 
     return redirect()->route('admin.admin-course-category')->with('success', 'Cập nhật danh mục thành công.');
-}
+    }
+ public function destroy($id)
+    {
+        $category = Category::findOrFail($id);
+        $category->delete();
 
+        return redirect()->route('admin.admin-course-category')->with('success', 'Xóa danh mục thành công.');
+    }
 
 }
