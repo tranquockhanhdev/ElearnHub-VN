@@ -106,6 +106,11 @@ const AdminCourseCategory = () => {
             },
         });
     };
+    const handleChangeStatus = (id, newStatus) => {
+        router.patch(`/admin/course-category/${id}/status`, {
+            status: newStatus,
+        });
+    };
 
     return (
         <AdminLayout>
@@ -186,32 +191,70 @@ const AdminCourseCategory = () => {
                                             <td>{category.name}</td>
                                             <td>{category.slug}</td>
                                             <td>
-                                                <span
-                                                    className={`btn-sm rounded-pill px-2 py-1 fw-semibold 
-                          ${
-                              category.status === "active"
-                                  ? "bg-success text-white"
-                                  : ""
-                          }
-                          ${
-                              category.status === "inactive"
-                                  ? "bg-secondary text-white"
-                                  : ""
-                          }
-                          ${
-                              category.status === "suspended"
-                                  ? "bg-danger text-white"
-                                  : ""
-                          }`}
-                                                >
-                                                    {category.status
-                                                        .charAt(0)
-                                                        .toUpperCase() +
-                                                        category.status.slice(
-                                                            1
+                                                <div className="dropdown">
+                                                    <button
+                                                        className={`btn btn-sm dropdown-toggle ${
+                                                            category.status ===
+                                                            "active"
+                                                                ? "btn-success"
+                                                                : category.status ===
+                                                                  "inactive"
+                                                                ? "btn-secondary"
+                                                                : "btn-warning"
+                                                        }`}
+                                                        type="button"
+                                                        data-bs-toggle="dropdown"
+                                                        aria-expanded="false"
+                                                    >
+                                                        {category.status
+                                                            .charAt(0)
+                                                            .toUpperCase() +
+                                                            category.status.slice(
+                                                                1
+                                                            )}
+                                                    </button>
+                                                    <ul className="dropdown-menu">
+                                                        {[
+                                                            "active",
+                                                            "inactive",
+                                                            "suspended",
+                                                        ].map(
+                                                            (statusOption) => (
+                                                                <li
+                                                                    key={
+                                                                        statusOption
+                                                                    }
+                                                                >
+                                                                    <button
+                                                                        className={`dropdown-item ${
+                                                                            statusOption ===
+                                                                            category.status
+                                                                                ? "active"
+                                                                                : ""
+                                                                        }`}
+                                                                        onClick={() =>
+                                                                            handleChangeStatus(
+                                                                                category.id,
+                                                                                statusOption
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        {statusOption
+                                                                            .charAt(
+                                                                                0
+                                                                            )
+                                                                            .toUpperCase() +
+                                                                            statusOption.slice(
+                                                                                1
+                                                                            )}
+                                                                    </button>
+                                                                </li>
+                                                            )
                                                         )}
-                                                </span>
+                                                    </ul>
+                                                </div>
                                             </td>
+
                                             <td>
                                                 {new Date(
                                                     category.created_at

@@ -20,6 +20,9 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
         ->name('admin.course-category.destroy');
     Route::get('/admin/course/admin-course', [AdminCourseController::class, 'index'])
         ->name('admin.admin-course');
+    Route::patch('/admin/course-category/{id}/status', [AdminCourseCategoryController::class, 'updateStatus'])
+        ->name('admin.admin-course-category.update-status');
+
     Route::get('/admin/student/admin-student', [AdminUserController::class, 'studentList'])
         ->name('admin.students');
     Route::get('/admin/instructor/admin-instructor', [AdminUserController::class, 'instructorList'])
