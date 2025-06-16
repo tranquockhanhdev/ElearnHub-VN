@@ -10,14 +10,37 @@ use App\Models\Category;
 
 class AdminCourseCategoryController extends Controller
 {
-    public function index()
-    {
-        $categories = Category::all();
+  public function index(Request $request)
+{
+    $query = Category::query();
 
-        return Inertia::render('Admin/Course-category/AdminCourseCategory', [
-            'categories' => $categories
-        ]);
+    // Search
+    if ($request->filled('search')) {
+        $query->where('name', 'like', '%' . $request->search . '%');
     }
+
+    // Status filter 👇
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    // Sort
+    if ($request->filled('sort')) {
+        $sortOption = $request->sort === 'oldest' ? 'asc' : 'desc';
+        $query->orderBy('created_at', $sortOption);
+    } else {
+        $query->orderBy('created_at', 'desc');
+    }
+
+    $categories = $query->paginate(10)->withQueryString();
+
+    return Inertia::render('Admin/Course-category/AdminCourseCategory', [
+        'categories' => $categories,
+        'filters' => $request->only(['search', 'sort', 'status']), // 👈 THÊM status
+    ]);
+}
+
+
 
     public function store(Request $request)
     {
@@ -26,9 +49,19 @@ class AdminCourseCategoryController extends Controller
             'status' => 'required|in:active,inactive,suspended',
         ]);
 
+        // Tạo slug và đảm bảo không trùng
+        $slug = Str::slug($validated['name']);
+        $originalSlug = $slug;
+        $count = 1;
+
+        while (Category::where('slug', $slug)->exists()) {
+            $slug = $originalSlug . '-' . $count;
+            $count++;
+        }
+
         Category::create([
             'name' => $validated['name'],
-            'slug' => Str::slug($validated['name']),
+            'slug' => $slug,
             'status' => $validated['status'],
         ]);
 

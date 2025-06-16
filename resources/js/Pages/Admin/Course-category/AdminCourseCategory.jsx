@@ -3,7 +3,7 @@ import { usePage, router } from "@inertiajs/react";
 import { route } from "ziggy-js";
 import slugify from "slugify";
 import AdminLayout from "../../../Components/Layouts/AdminLayout";
-
+import { Link } from "@inertiajs/react";
 const AdminCourseCategory = () => {
     const { categories, errors, flash } = usePage().props;
 
@@ -74,6 +74,7 @@ const AdminCourseCategory = () => {
         setShowCreateModal(true);
     };
     const handleOpenEditModal = (category) => {
+        setManualSlug(false);
         setEditData(category);
         setLocalErrors({});
         setShowEditModal(true);
@@ -111,6 +112,67 @@ const AdminCourseCategory = () => {
             status: newStatus,
         });
     };
+    const renderPagination = (categories) => {
+        const pages = [];
+
+        for (let i = 1; i <= categories.last_page; i++) {
+            pages.push(
+                <Link
+                    key={i}
+                    href={`?page=${i}`}
+                    className={`page-link ${
+                        categories.current_page === i ? "active" : ""
+                    }`}
+                >
+                    {i}
+                </Link>
+            );
+        }
+
+        return (
+            <nav className="mt-4">
+                <ul className="pagination justify-content-center">
+                    {pages.map((page, index) => (
+                        <li key={index} className="page-item">
+                            {page}
+                        </li>
+                    ))}
+                </ul>
+            </nav>
+        );
+    };
+    const [filters, setFilters] = useState({
+        search: categories?.filters?.search || "",
+        sort: categories?.filters?.sort || "",
+        status: categories?.filters?.status || "",
+    });
+    const handleSearchSortChange = (e) => {
+        const { name, value } = e.target;
+        setFilters((prev) => ({ ...prev, [name]: value }));
+    };
+    const handleFilterSubmit = (e) => {
+        e.preventDefault();
+        router.get(route("admin.admin-course-category"), filters, {
+            preserveScroll: true,
+            preserveState: true,
+        });
+    };
+    // Thực hiện gọi API lọc
+    const applyFilter = (updatedFilters) => {
+        router.get(route("admin.admin-course-category"), updatedFilters, {
+            preserveScroll: true,
+            preserveState: true,
+        });
+    };
+
+    // Dùng debounce cho search để tránh spam request khi đang gõ
+    let debounceTimer;
+    const debounceFilter = (newFilters) => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            applyFilter(newFilters);
+        }, 500); // delay 500ms
+    };
 
     return (
         <AdminLayout>
@@ -134,7 +196,7 @@ const AdminCourseCategory = () => {
                         <h1 className="h3 mb-2 mb-sm-0">
                             Course Categories{" "}
                             <span className="badge bg-orange bg-opacity-10 text-orange">
-                                {categories.length}
+                                {categories.total}
                             </span>
                         </h1>
                         <button
@@ -147,28 +209,101 @@ const AdminCourseCategory = () => {
                 </div>
 
                 <div className="card bg-transparent border">
-                    <div className="card-header bg-light border-bottom">
-                        <div className="row g-3 align-items-center justify-content-between">
-                            <div className="col-md-8">
-                                <form className="rounded position-relative">
+                    <div className="card-header bg-light border-bottom py-3 px-4">
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                applyFilter(filters); // Chỉ áp dụng khi Enter
+                            }}
+                        >
+                            <div className="row g-3 align-items-center">
+                                {/* Search Input */}
+                                <div className="col-12 col-md-6 position-relative">
                                     <input
-                                        className="form-control bg-body"
-                                        type="search"
-                                        placeholder="Search"
+                                        type="text"
+                                        className="form-control ps-4"
+                                        name="search"
+                                        placeholder="Search categories..."
+                                        value={filters.search}
+                                        onChange={(e) =>
+                                            setFilters((prev) => ({
+                                                ...prev,
+                                                search: e.target.value,
+                                            }))
+                                        }
                                     />
-                                    <button className="bg-transparent p-2 position-absolute top-50 end-0 translate-middle-y border-0">
-                                        <i className="fas fa-search fs-6"></i>
+                                    <i className="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                                </div>
+
+                                {/* Sort Filter */}
+                                <div className="col-6 col-md-2">
+                                    <select
+                                        className="form-select"
+                                        name="sort"
+                                        value={filters.sort}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            const updated = {
+                                                ...filters,
+                                                sort: value,
+                                            };
+                                            setFilters(updated);
+                                            applyFilter(updated); // Áp dụng ngay
+                                        }}
+                                    >
+                                        <option value="">Sort by</option>
+                                        <option value="newest">Newest</option>
+                                        <option value="oldest">Oldest</option>
+                                    </select>
+                                </div>
+
+                                {/* Status Filter */}
+                                <div className="col-6 col-md-2">
+                                    <select
+                                        className="form-select"
+                                        name="status"
+                                        value={filters.status}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            const updated = {
+                                                ...filters,
+                                                status: value,
+                                            };
+                                            setFilters(updated);
+                                            applyFilter(updated); // Áp dụng ngay
+                                        }}
+                                    >
+                                        <option value="">All Status</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">
+                                            Inactive
+                                        </option>
+                                        <option value="suspended">
+                                            Suspended
+                                        </option>
+                                    </select>
+                                </div>
+
+                                {/* Clear Filter Button */}
+                                <div className="col-12 col-md-2 text-md-end">
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary w-100"
+                                        onClick={() => {
+                                            const reset = {
+                                                search: "",
+                                                sort: "",
+                                                status: "",
+                                            };
+                                            setFilters(reset);
+                                            applyFilter(reset);
+                                        }}
+                                    >
+                                        Clear Filters
                                     </button>
-                                </form>
+                                </div>
                             </div>
-                            <div className="col-md-3">
-                                <select className="form-select border-0">
-                                    <option value="">Sort by</option>
-                                    <option>Newest</option>
-                                    <option>Oldest</option>
-                                </select>
-                            </div>
-                        </div>
+                        </form>
                     </div>
 
                     <div className="card-body">
@@ -185,9 +320,14 @@ const AdminCourseCategory = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {categories.map((category, index) => (
+                                    {categories.data.map((category, index) => (
                                         <tr key={category.id}>
-                                            <td>{index + 1}</td>
+                                            <td>
+                                                {(categories.current_page - 1) *
+                                                    categories.per_page +
+                                                    index +
+                                                    1}
+                                            </td>
                                             <td>{category.name}</td>
                                             <td>{category.slug}</td>
                                             <td>
@@ -284,7 +424,7 @@ const AdminCourseCategory = () => {
                                             </td>
                                         </tr>
                                     ))}
-                                    {categories.length === 0 && (
+                                    {categories.data.length === 0 && (
                                         <tr>
                                             <td
                                                 colSpan="6"
@@ -296,6 +436,8 @@ const AdminCourseCategory = () => {
                                     )}
                                 </tbody>
                             </table>
+                            {categories.last_page > 1 &&
+                                renderPagination(categories)}
                         </div>
                     </div>
                 </div>
