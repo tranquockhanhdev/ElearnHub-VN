@@ -31,4 +31,10 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
         ->name('admin.instructors.show');
     Route::get('/admin/settings', [AdminSettingController::class, 'index'])
         ->name('admin.settings');
+    Route::post('/settings/update', [AdminSettingController::class, 'update'])
+         ->name('admin.settings.update');
+    Route::post('/settings/upload-logo', [AdminSettingController::class, 'uploadLogo'])
+        ->name('admin.settings.uploadLogo');
+    Route::post('/admin/settings/remove-logo', [AdminSettingController::class, 'removeLogo'])
+        ->name('admin.settings.removeLogo');
 });
