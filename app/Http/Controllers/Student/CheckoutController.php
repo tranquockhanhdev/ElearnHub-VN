@@ -137,8 +137,7 @@ class CheckoutController extends Controller
 
     public function vnpay_return(Request $request)
     {
-        dd($request->all());
-        $vnp_HashSecret = "LHMDGF68I5808JJJBF4WYUN4KXKYARXE";
+        $vnp_HashSecret = config('services.vnpay.hash_secret');
         $inputData = [];
 
         foreach ($request->all() as $key => $value) {

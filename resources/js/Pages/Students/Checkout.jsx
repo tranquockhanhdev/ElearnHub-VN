@@ -99,18 +99,6 @@ const Checkout = () => {
         }
     };
 
-    // // Handle confirm and proceed to payment
-    // const handleConfirmAndPay = () => {
-    //     router.post(`/student/checkout/${course.id}`, formData, {
-    //         onSuccess: () => {
-    //             setCurrentStep(3);
-    //         },
-    //         onError: (errors) => {
-    //             setErrors(errors);
-    //             setCurrentStep(1);
-    //         }
-    //     });
-    // };
     const handleConfirmAndPay = async () => {
         try {
             const response = await axios.post(route('student.checkout.process', course.id), formData);
