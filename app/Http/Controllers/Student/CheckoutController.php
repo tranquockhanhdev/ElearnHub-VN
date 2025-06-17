@@ -147,57 +147,108 @@ class CheckoutController extends Controller
         }
 
         $vnp_SecureHash = $inputData['vnp_SecureHash'] ?? '';
-        unset($inputData['vnp_SecureHash'], $inputData['vnp_SecureHashType']);
+        unset($inputData['vnp_SecureHash']);
+        unset($inputData['vnp_SecureHashType']);
 
         ksort($inputData);
-        $hashData = urldecode(http_build_query($inputData)); // ✅ đúng thứ tự và encoding
+        $hashData = '';
+        foreach ($inputData as $key => $value) {
+            $hashData .= $key . '=' . urlencode($value) . '&';
+        }
+        $hashData = rtrim($hashData, '&');
 
         $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
 
         if ($secureHash === $vnp_SecureHash) {
-            $vnp_TxnRef = $request->input('vnp_TxnRef');
-            $payment = Payment::find($vnp_TxnRef);
+            $vnp_ResponseCode = $request->get('vnp_ResponseCode');
+            $vnp_TxnRef = $request->get('vnp_TxnRef');
 
-            if (!$payment) {
-                return redirect()->route('student.checkout.success')
-                    ->with('error', 'Không tìm thấy thông tin giao dịch.');
-            }
+            if ($vnp_ResponseCode == '00') {
+                // Thanh toán thành công
+                $payment = $this->handleSuccessfulPayment($vnp_TxnRef);
 
-            if ($request->input('vnp_ResponseCode') === '00') {
-                DB::beginTransaction();
-                try {
-                    $payment->update(['status' => 'completed']);
-
-                    Enrollment::create([
-                        'student_id' => $payment->student_id,
-                        'course_id' => $payment->course_id,
-                        'payment_id' => $payment->id,
-                        'enrolled_at' => now(),
-                        'status' => 'active'
+                if ($payment) {
+                    // Redirect đến trang success với thông tin payment
+                    return redirect()->route('student.checkout.success', [
+                        'payment' => $payment->id
                     ]);
-
-                    DB::commit();
-                    return redirect()->route('student.checkout.success')
-                        ->with('success', 'Thanh toán thành công!');
-                } catch (\Exception $e) {
-                    DB::rollBack();
-                    return redirect()->route('student.checkout.success')
-                        ->with('error', 'Lỗi khi ghi danh: ' . $e->getMessage());
                 }
             } else {
-                $payment->update(['status' => 'failed']);
-                return redirect()->route('student.checkout.success')
-                    ->with('error', 'Thanh toán thất bại!');
+                // Thanh toán thất bại
+                $this->handleFailedPayment($vnp_TxnRef);
+                $courseId = $this->getCourseIdFromPayment($vnp_TxnRef);
+
+                session(['payment_status' => 'failed']);
+                session()->flash('error', 'Thanh toán không thành công. Vui lòng thử lại.');
+
+                return redirect()->route('student.checkout.show', $courseId);
             }
         } else {
-            return redirect()->route('student.checkout.success')
-                ->with('error', 'Mã xác thực không hợp lệ!');
+            // Hash không hợp lệ
+            session()->flash('error', 'Giao dịch không hợp lệ.');
+            return redirect()->route('student.dashboard');
         }
     }
 
-
-    public function success()
+    private function handleSuccessfulPayment($transactionRef)
     {
-        return Inertia::render('Students/CheckoutSuccess');
+        $payment = Payment::where('id', $transactionRef)->first();
+
+        if ($payment) {
+            // Cập nhật payment status
+            $payment->update([
+                'status' => 'completed',
+                'completed_at' => now()
+            ]);
+
+            // Tạo hoặc cập nhật enrollment
+            $enrollment = Enrollment::firstOrCreate([
+                'student_id' => $payment->student_id,
+                'course_id' => $payment->course_id
+            ], [
+                'payment_id' => $payment->id,
+                'status' => 'active',
+                'enrolled_at' => now()
+            ]);
+
+            // Nếu enrollment đã tồn tại, cập nhật status
+            if (!$enrollment->wasRecentlyCreated) {
+                $enrollment->update([
+                    'payment_id' => $payment->id,
+                    'status' => 'active',
+                    'enrolled_at' => now()
+                ]);
+            }
+
+            return $payment;
+        }
+
+        return null;
+    }
+
+    public function success(Request $request)
+    {
+        $paymentId = $request->get('payment');
+
+        $payment = Payment::with([
+            'course.instructor',
+            'course.categories',
+            'paymentMethod',
+            'student'
+        ])->findOrFail($paymentId);
+
+        // Kiểm tra xem payment có thuộc về user hiện tại không
+        if ($payment->student_id !== Auth::id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Lấy thông tin enrollment
+        $enrollment = Enrollment::where('payment_id', $payment->id)->first();
+
+        return Inertia::render('Students/Success', [
+            'payment' => $payment,
+            'course' => $payment->course,
+            'enrollment' => $enrollment
+        ]);
     }
 }

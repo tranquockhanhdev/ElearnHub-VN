@@ -49,7 +49,7 @@ class Payment extends Model
         return $this->belongsTo(Course::class);
     }
 
-    public function method()
+    public function paymentMethod()
     {
         return $this->belongsTo(PaymentMethod::class, 'payment_method_id');
     }

@@ -528,30 +528,7 @@ const Checkout = () => {
                                         </div>
                                     )}
 
-                                    {/* STEP 3: Hoàn tất thanh toán */}
-                                    {currentStep === 3 && (
-                                        <div className="card border-0 shadow-sm">
-                                            <div className="card-body p-5 text-center">
-                                                <div className="mb-4">
-                                                    <i className="bi bi-check-circle-fill text-success display-3"></i>
-                                                </div>
-                                                <h3 className="fw-bold text-success mb-3">Thanh toán thành công!</h3>
-                                                <p className="text-gray-400d mb-4">
-                                                    Cảm ơn bạn đã mua khóa học. Bạn có thể bắt đầu học ngay bây giờ.
-                                                </p>
-                                                <div className="d-flex gap-3 justify-content-center">
-                                                    <Link href="/student/courselist" className="btn btn-primary">
-                                                        <i className="bi bi-play-circle me-2"></i>
-                                                        Bắt đầu học
-                                                    </Link>
-                                                    <Link href="/courses" className="btn btn-outline-primary">
-                                                        <i className="bi bi-arrow-left me-2"></i>
-                                                        Tiếp tục mua sắm
-                                                    </Link>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
+
                                 </div>
                                 {/* Main content END */}
 

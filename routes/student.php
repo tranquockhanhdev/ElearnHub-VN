@@ -33,18 +33,15 @@ Route::middleware(['auth', 'verified', 'role:3'])->group(function () {
     // Hiển thị trang thanh toán cho một khóa học
     Route::get('/student/checkout/{courseId}', [CheckoutController::class, 'show'])
         ->name('student.checkout.show');
-
     // Xử lý thanh toán cho một khóa học
     Route::post('/student/checkout/{courseId}', [CheckoutController::class, 'process'])
         ->name('student.checkout.process');
 
-
     // Hiển thị trang thông báo thanh toán thành công
-    Route::get('/student/checkout/success', [CheckoutController::class, 'success'])
+    Route::get('/student/success', [CheckoutController::class, 'success'])
         ->name('student.checkout.success');
-
     // Hiển thị trang thông báo hủy thanh toán
-    Route::get('/student/checkout/cancel', [CheckoutController::class, 'cancel'])
+    Route::get('/student/cancel', [CheckoutController::class, 'cancel'])
         ->name('student.checkout.cancel');
 
     // Hiển thị trang hồ sơ cá nhân của học viên
