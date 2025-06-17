@@ -40,6 +40,9 @@ Route::middleware(['auth', 'verified', 'role:3'])->group(function () {
     // Hiển thị trang thông báo thanh toán thành công
     Route::get('/student/success', [CheckoutController::class, 'success'])
         ->name('student.checkout.success');
+    // Route download hóa đơn PDF
+    Route::get('/student/invoice/{paymentId}/download', [CheckoutController::class, 'downloadInvoice'])
+        ->name('student.invoice.download');
     // Hiển thị trang thông báo hủy thanh toán
     Route::get('/student/cancel', [CheckoutController::class, 'cancel'])
         ->name('student.checkout.cancel');

@@ -13,6 +13,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class CheckoutController extends Controller
 {
@@ -168,16 +169,28 @@ class CheckoutController extends Controller
                 $payment = $this->handleSuccessfulPayment($vnp_TxnRef);
 
                 if ($payment) {
-                    // Redirect đến trang success với thông tin payment
                     return redirect()->route('student.checkout.success', [
                         'payment' => $payment->id
                     ]);
                 }
             } else {
-                // Thanh toán thất bại
-                $this->handleFailedPayment($vnp_TxnRef);
-                $courseId = $this->getCourseIdFromPayment($vnp_TxnRef);
+                // Thanh toán thất bại hoặc bị hủy
+                $payment = $this->handleFailedPayment($vnp_TxnRef);
 
+                // Nếu người dùng hủy giao dịch (ResponseCode = 24)
+                if ($vnp_ResponseCode == '24') {
+                    $payment->update([
+                        'status' => 'failed',
+                        'cancelled_at' => now()
+                    ]);
+
+                    return redirect()->route('student.checkout.cancel', [
+                        'payment' => $payment->id
+                    ]);
+                }
+
+                // Các lỗi khác
+                $courseId = $this->getCourseIdFromPayment($vnp_TxnRef);
                 session(['payment_status' => 'failed']);
                 session()->flash('error', 'Thanh toán không thành công. Vui lòng thử lại.');
 
@@ -250,5 +263,87 @@ class CheckoutController extends Controller
             'course' => $payment->course,
             'enrollment' => $enrollment
         ]);
+    }
+    public function downloadInvoice($paymentId)
+    {
+        $payment = Payment::with([
+            'course',
+            'student'
+        ])->find($paymentId);
+
+        if (!$payment) {
+            abort(404, 'Không tìm thấy thông tin thanh toán');
+        }
+
+        // Kiểm tra quyền truy cập
+        if ($payment->student_id !== Auth::id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $enrollment = Enrollment::where('payment_id', $payment->id)->first();
+
+        $data = [
+            'payment' => $payment,
+            'course' => $payment->course,
+            'student' => $payment->student,
+            'enrollment' => $enrollment,
+            'invoiceNumber' => 'HD' . str_pad($payment->id, 6, '0', STR_PAD_LEFT),
+            'invoiceDate' => $payment->created_at->format('d/m/Y'),
+        ];
+
+        $pdf = Pdf::loadView('pdf.invoice', $data)
+            ->setPaper('a4', 'portrait')
+            ->setOptions([
+                'defaultFont' => 'DejaVu Sans',
+                'isRemoteEnabled' => true,
+            ]);
+
+        return $pdf->download('hoa-don-' . $data['invoiceNumber'] . '.pdf');
+    }
+    public function cancel(Request $request)
+    {
+        $paymentId = $request->get('payment');
+        $courseId = $request->get('course');
+
+        // Nếu có payment ID, cập nhật status thành cancelled
+        if ($paymentId) {
+            $payment = Payment::find($paymentId);
+            if ($payment && $payment->student_id === Auth::id()) {
+                $payment->update([
+                    'status' => 'failed',
+                    'cancelled_at' => now()
+                ]);
+
+                $course = $payment->course;
+            }
+        } else if ($courseId) {
+            // Nếu chỉ có course ID
+            $course = Course::find($courseId);
+        }
+
+        return Inertia::render('Students/Cancel', [
+            'course' => $course ?? null,
+            'payment' => $payment ?? null
+        ]);
+    }
+
+    private function handleFailedPayment($transactionRef)
+    {
+        $payment = Payment::where('id', $transactionRef)->first();
+
+        if ($payment) {
+            $payment->update([
+                'status' => 'failed',
+                'failed_at' => now()
+            ]);
+        }
+
+        return $payment;
+    }
+
+    private function getCourseIdFromPayment($transactionRef)
+    {
+        $payment = Payment::where('id', $transactionRef)->first();
+        return $payment ? $payment->course_id : null;
     }
 }

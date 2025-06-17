@@ -23,6 +23,9 @@ class Payment extends Model
         'gateway_response',
         'redirect_url',
         'payment_time',
+        'completed_at',
+        'cancelled_at',
+        'failed_at'
     ];
 
     public $timestamps = true;
