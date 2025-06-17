@@ -37,4 +37,8 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
         ->name('admin.settings.uploadLogo');
     Route::post('/admin/settings/remove-logo', [AdminSettingController::class, 'removeLogo'])
         ->name('admin.settings.removeLogo');
+    Route::post('/admin/users', [AdminUserController::class, 'store'])
+        ->name('admin.users.store');
+    Route::put('/users/{user}', [AdminUserController::class, 'update'])
+        ->name('admin.users.update');
 });
