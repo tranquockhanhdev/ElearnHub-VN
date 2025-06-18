@@ -4,6 +4,8 @@ import AdminLayout from "@/Components/Layouts/AdminLayout";
 import { Link } from "@inertiajs/react";
 import EditUserModal from "@/Pages/Admin/User/EditUserModal";
 import CreateUserModal from "@/Pages/Admin/User/CreateUserModal";
+import { route } from "ziggy-js";
+import { router } from "@inertiajs/react";
 const AdminInstructorList = ({ instructors }) => {
     const [activeTab, setActiveTab] = useState("grid");
     const [showModal, setShowModal] = useState(false);
@@ -11,7 +13,10 @@ const AdminInstructorList = ({ instructors }) => {
     const [selectedUser, setSelectedUser] = useState(null);
     const { flash } = usePage().props;
     const [message, setMessage] = useState("");
-
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [showBlockModal, setShowBlockModal] = useState(false);
+    const [blockUserId, setBlockUserId] = useState(null); // nếu bạn muốn biết đang block user nào
     useEffect(() => {
         if (flash.success) {
             setMessage(flash.success);
@@ -55,7 +60,28 @@ const AdminInstructorList = ({ instructors }) => {
             </nav>
         );
     };
-
+    const handleDelete = () => {
+        if (confirmDeleteId) {
+            router.delete(route("admin.users.destroy", confirmDeleteId), {
+                onSuccess: () => {
+                    setShowConfirmModal(false);
+                    setConfirmDeleteId(null);
+                },
+            });
+        }
+    };
+    const handleBlockUser = (userId) => {
+        router.put(
+            route("admin.instructors.block", userId),
+            {},
+            {
+                onSuccess: () => {
+                    setShowBlockModal(false);
+                    setSelectedUser(null);
+                },
+            }
+        );
+    };
     return (
         <AdminLayout>
             <div className="page-content-wrapper border">
@@ -191,13 +217,20 @@ const AdminInstructorList = ({ instructors }) => {
                                                                 </button>
                                                             </li>
                                                             <li>
-                                                                <a
-                                                                    className="dropdown-item"
-                                                                    href="#"
+                                                                <button
+                                                                    className="dropdown-item text-red-600 hover:bg-red-100"
+                                                                    onClick={() => {
+                                                                        setConfirmDeleteId(
+                                                                            instructor.id
+                                                                        );
+                                                                        setShowConfirmModal(
+                                                                            true
+                                                                        );
+                                                                    }}
                                                                 >
-                                                                    <i className="bi bi-trash me-2"></i>
-                                                                    Remove
-                                                                </a>
+                                                                    <i className="bi bi-trash me-2"></i>{" "}
+                                                                    Xóa
+                                                                </button>
                                                             </li>
                                                         </ul>
                                                     </div>
@@ -263,7 +296,17 @@ const AdminInstructorList = ({ instructors }) => {
                                                                 <i className="bi bi-eye-fill"></i>
                                                             </Link>
 
-                                                            <button className="btn btn-sm btn-outline-danger">
+                                                            <button
+                                                                className="btn btn-sm btn-outline-danger"
+                                                                onClick={() => {
+                                                                    setSelectedUser(
+                                                                        instructor
+                                                                    ); // lưu user muốn chặn
+                                                                    setShowBlockModal(
+                                                                        true
+                                                                    ); // mở modal xác nhận
+                                                                }}
+                                                            >
                                                                 <i className="fas fa-ban"></i>
                                                             </button>
                                                         </div>
@@ -292,10 +335,28 @@ const AdminInstructorList = ({ instructors }) => {
                                                     </small>
                                                 </div>
                                                 <div>
-                                                    <button className="btn btn-sm btn-outline-secondary me-2">
+                                                    <Link
+                                                        href={route(
+                                                            "admin.instructors.show",
+                                                            {
+                                                                id: instructor.id,
+                                                            }
+                                                        )}
+                                                        className="btn btn-sm btn-outline-secondary me-2"
+                                                    >
                                                         <i className="bi bi-eye-fill"></i>
-                                                    </button>
-                                                    <button className="btn btn-sm btn-outline-danger">
+                                                    </Link>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        onClick={() => {
+                                                            setSelectedUser(
+                                                                instructor
+                                                            ); // lưu user muốn chặn
+                                                            setShowBlockModal(
+                                                                true
+                                                            ); // mở modal xác nhận
+                                                        }}
+                                                    >
                                                         <i className="fas fa-ban"></i>
                                                     </button>
                                                 </div>
@@ -322,6 +383,74 @@ const AdminInstructorList = ({ instructors }) => {
                             setSelectedUser(null);
                         }}
                     />
+                )}
+                {showConfirmModal && (
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-fade-in">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="bg-red-100 text-red-600 rounded-full p-2">
+                                    <i className="bi bi-exclamation-triangle-fill text-xl"></i>
+                                </div>
+                                <h2 className="text-lg font-bold text-gray-800">
+                                    Xác nhận xóa
+                                </h2>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                                Bạn có chắc chắn muốn{" "}
+                                <span className="font-medium text-red-600">
+                                    xóa người dùng này
+                                </span>{" "}
+                                không? Thao tác này không thể hoàn tác.
+                            </p>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => setShowConfirmModal(false)}
+                                    className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={handleDelete}
+                                    className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                                >
+                                    Xóa
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {showBlockModal && selectedUser && (
+                    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+                            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                                Xác nhận chặn người dùng
+                            </h2>
+                            <p className="text-sm text-gray-600 mb-6">
+                                Bạn có chắc chắn muốn{" "}
+                                <span className="font-semibold text-red-600">
+                                    chặn
+                                </span>{" "}
+                                tài khoản <strong>{selectedUser.name}</strong>{" "}
+                                không?
+                            </p>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => setShowBlockModal(false)}
+                                    className="px-4 py-2 text-sm border rounded-lg text-gray-700 hover:bg-gray-100"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={() =>
+                                        handleBlockUser(selectedUser.id)
+                                    }
+                                    className="px-4 py-2 text-sm bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+                                >
+                                    Chặn
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 )}
             </div>
         </AdminLayout>

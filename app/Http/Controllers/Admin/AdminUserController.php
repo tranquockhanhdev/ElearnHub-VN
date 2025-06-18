@@ -88,5 +88,17 @@ class AdminUserController extends Controller
 
         return redirect()->back()->with('success', 'Cập nhật người dùng thành công.');
     }
+    public function destroy($id)
+    {
+        $user = User::findOrFail($id);
+        $user->delete();
 
+        return redirect()->back()->with('success', 'Xóa người dùng thành công!');
+    }
+    public function block(User $user)
+    {
+        $user->update(['status' => 'suspended']);
+
+        return back()->with('success', 'Người dùng đã bị chặn.');
+    }
 }
