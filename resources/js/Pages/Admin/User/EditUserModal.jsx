@@ -198,22 +198,59 @@ const EditUserModal = ({ show, onClose, user }) => {
                             </div>
 
                             {/* Status */}
-                            <div>
-                                <label className="block font-medium mb-1">
-                                    Trạng thái
-                                </label>
-                                <select
-                                    name="status"
-                                    value={formData.status}
-                                    onChange={handleChange}
-                                    className="..."
+                            <div className="space-y-1">
+                                <label
+                                    htmlFor="status"
+                                    className="block text-sm font-medium text-gray-800"
                                 >
-                                    <option value="active">Hoạt động</option>
-                                    <option value="inactive">Vô hiệu</option>
-                                    <option value="suspended">Tạm khóa</option>
-                                </select>
+                                    Trạng thái{" "}
+                                    <span className="text-red-500">*</span>
+                                </label>
+
+                                <div className="relative">
+                                    <select
+                                        id="status"
+                                        name="status"
+                                        value={formData.status}
+                                        onChange={handleChange}
+                                        className={`block w-full appearance-none rounded-xl border px-4 py-2.5 text-sm text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                                            localErrors.status
+                                                ? "border-red-500"
+                                                : "border-gray-300"
+                                        }`}
+                                    >
+                                        <option value="active">
+                                            Hoạt động
+                                        </option>
+                                        <option value="inactive">
+                                            Vô hiệu
+                                        </option>
+                                        <option value="suspended">
+                                            Tạm khóa
+                                        </option>
+                                    </select>
+
+                                    {/* Custom dropdown icon */}
+                                    <div className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="h-4 w-4"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M19 9l-7 7-7-7"
+                                            />
+                                        </svg>
+                                    </div>
+                                </div>
+
                                 {localErrors.status && (
-                                    <p className="text-red-600 mt-1">
+                                    <p className="text-sm text-red-600">
                                         {localErrors.status}
                                     </p>
                                 )}

@@ -51,7 +51,7 @@ class AdminUserController extends Controller
         'password' => 'required|string|min:6',
         'phone' => 'nullable|string|max:20',
         'role_id' => 'required|integer',
-        'status' => 'required|boolean',
+        'status' => ['required', Rule::in(['active', 'inactive', 'suspended'])],
     ]);
 
     $validated['password'] = bcrypt($validated['password']);

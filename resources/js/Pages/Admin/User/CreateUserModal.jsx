@@ -10,7 +10,7 @@ const CreateUserModal = ({ show, onClose }) => {
         password: "",
         phone: "",
         role_id: 3,
-        status: 1,
+        status: "active",
     });
 
     const [localErrors, setLocalErrors] = useState({});
@@ -190,6 +190,7 @@ const CreateUserModal = ({ show, onClose }) => {
                                 </label>
                                 <select
                                     name="status"
+                                    value={formData.status}
                                     onChange={handleChange}
                                     className={`w-full border rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 ${
                                         localErrors.status
@@ -197,8 +198,9 @@ const CreateUserModal = ({ show, onClose }) => {
                                             : "focus:ring-blue-500"
                                     }`}
                                 >
-                                    <option value={1}>Hoạt động</option>
-                                    <option value={0}>Vô hiệu</option>
+                                    <option value="active">Hoạt động</option>
+                                    <option value="inactive">Vô hiệu</option>
+                                    <option value="suspended">Tạm khóa</option>
                                 </select>
                                 {localErrors.status && (
                                     <p className="text-red-600 mt-1">
