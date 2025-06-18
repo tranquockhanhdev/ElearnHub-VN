@@ -16,7 +16,24 @@ const AdminInstructorList = ({ instructors }) => {
     const [confirmDeleteId, setConfirmDeleteId] = useState(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showBlockModal, setShowBlockModal] = useState(false);
-    const [blockUserId, setBlockUserId] = useState(null); // nếu bạn muốn biết đang block user nào
+    const [blockUserId, setBlockUserId] = useState(null);
+    const [filters, setFilters] = useState({
+        keyword: "",
+        email: "",
+        status: "",
+        sort: "",
+    });
+    const handleFilterChange = (e) => {
+        setFilters({ ...filters, [e.target.name]: e.target.value });
+    };
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        router.get(route("admin.instructors"), filters, {
+            preserveState: true,
+        });
+    };
+
     useEffect(() => {
         if (flash.success) {
             setMessage(flash.success);
@@ -123,16 +140,157 @@ const AdminInstructorList = ({ instructors }) => {
                     <div className="card-header bg-transparent border-bottom px-0">
                         <div className="row g-3 align-items-center justify-content-between">
                             <div className="col-md-8">
-                                <form className="rounded position-relative">
-                                    <input
-                                        className="form-control bg-transparent"
-                                        type="search"
-                                        placeholder="Search"
-                                    />
-                                    <button className="bg-transparent p-2 position-absolute top-50 end-0 translate-middle-y border-0 text-reset">
-                                        <i className="fas fa-search fs-6"></i>
-                                    </button>
-                                </form>
+                                <div className="card shadow border-0 mb-4">
+                                    <div className="card-header bg-white pb-0">
+                                        <h5 className="mb-0 text-primary fw-bold">
+                                            <i className="fas fa-filter me-2"></i>
+                                            Bộ lọc giảng viên
+                                        </h5>
+                                    </div>
+                                    <div className="card-body pt-3">
+                                        <form onSubmit={handleSearch}>
+                                            <div className="row gy-4">
+                                                {/* Tên giảng viên */}
+                                                <div className="col-lg-3 col-md-6">
+                                                    <label className="form-label text-muted fw-semibold">
+                                                        Tên giảng viên
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        name="name"
+                                                        value={
+                                                            filters.name || ""
+                                                        }
+                                                        onChange={
+                                                            handleFilterChange
+                                                        }
+                                                        className="form-control"
+                                                        placeholder="Nhập tên"
+                                                    />
+                                                </div>
+
+                                                {/* Email */}
+                                                <div className="col-lg-3 col-md-6">
+                                                    <label className="form-label text-muted fw-semibold">
+                                                        Email
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        name="email"
+                                                        value={
+                                                            filters.email || ""
+                                                        }
+                                                        onChange={
+                                                            handleFilterChange
+                                                        }
+                                                        className="form-control"
+                                                        placeholder="example@email.com"
+                                                    />
+                                                </div>
+
+                                                {/* Trạng thái */}
+                                                <div className="col-lg-2 col-md-6">
+                                                    <label className="form-label text-muted fw-semibold">
+                                                        Trạng thái
+                                                    </label>
+                                                    <select
+                                                        name="status"
+                                                        value={filters.status}
+                                                        onChange={
+                                                            handleFilterChange
+                                                        }
+                                                        className="form-select"
+                                                    >
+                                                        <option value="">
+                                                            Tất cả
+                                                        </option>
+                                                        <option value="active">
+                                                            Hoạt động
+                                                        </option>
+                                                        <option value="inactive">
+                                                            Vô hiệu
+                                                        </option>
+                                                        <option value="suspended">
+                                                            Tạm khóa
+                                                        </option>
+                                                    </select>
+                                                </div>
+
+                                                {/* Sắp xếp */}
+                                                <div className="col-lg-2 col-md-6">
+                                                    <label className="form-label text-muted fw-semibold">
+                                                        Sắp xếp
+                                                    </label>
+                                                    <select
+                                                        name="sort"
+                                                        value={filters.sort}
+                                                        onChange={
+                                                            handleFilterChange
+                                                        }
+                                                        className="form-select"
+                                                    >
+                                                        <option value="newest">
+                                                            Mới nhất
+                                                        </option>
+                                                        <option value="oldest">
+                                                            Cũ nhất
+                                                        </option>
+                                                        <option value="az">
+                                                            Tên A-Z
+                                                        </option>
+                                                        <option value="za">
+                                                            Tên Z-A
+                                                        </option>
+                                                    </select>
+                                                </div>
+
+                                                {/* Nút hành động */}
+                                                <div className="col-lg-2 col-md-12">
+                                                    <label className="form-label text-muted fw-semibold invisible">
+                                                        Hành động
+                                                    </label>
+                                                    <div className="d-flex gap-2">
+                                                        <button
+                                                            type="submit"
+                                                            className="btn btn-primary w-100"
+                                                        >
+                                                            <i className="fas fa-search me-1"></i>{" "}
+                                                            Tìm kiếm
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const cleared =
+                                                                    {
+                                                                        name: "",
+                                                                        email: "",
+                                                                        status: "",
+                                                                        sort: "",
+                                                                    };
+                                                                setFilters(
+                                                                    cleared
+                                                                );
+                                                                router.get(
+                                                                    route(
+                                                                        "admin.instructors"
+                                                                    ),
+                                                                    cleared,
+                                                                    {
+                                                                        preserveState: true,
+                                                                    }
+                                                                );
+                                                            }}
+                                                            className="btn btn-outline-secondary w-100"
+                                                        >
+                                                            <i className="fas fa-sync-alt me-1"></i>{" "}
+                                                            Đặt lại
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="col-md-3">

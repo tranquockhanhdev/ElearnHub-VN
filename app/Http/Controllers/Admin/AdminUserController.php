@@ -13,59 +13,144 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminUserController extends Controller
 {
-    public function studentList()
+    public function studentList(Request $request)
     {
-        $students = User::where('role_id', 3)->paginate(6);
+         $query = User::query()->where('role_id', 3);
+
+    // Tìm kiếm keyword (name hoặc email)
+    if ($request->filled('keyword')) {
+        $keyword = $request->keyword;
+        $query->where(function ($q) use ($keyword) {
+            $q->where('name', 'like', '%' . $keyword . '%')
+              ->orWhere('email', 'like', '%' . $keyword . '%');
+        });
+    }
+
+  
+ if ($request->filled('name')) {
+    $query->where('name', 'like', '%' . $request->name . '%');
+}
+
+if ($request->filled('email')) {
+    $query->where('email', 'like', '%' . $request->email . '%');
+}
+
+    // Lọc theo trạng thái
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    // Sắp xếp
+    switch ($request->get('sort')) {
+        case 'oldest':
+            $query->orderBy('created_at', 'asc');
+            break;
+        case 'az':
+            $query->orderBy('name', 'asc');
+            break;
+        case 'za':
+            $query->orderBy('name', 'desc');
+            break;
+        default:
+            $query->orderBy('created_at', 'desc'); // newest
+            break;
+    }
+
+    $students = $query->paginate(6)->withQueryString();
 
         return Inertia::render('Admin/Student/AdminStudentList', [
             'students' => $students
         ]);
     }
-    public function instructorList()
-    {
-        // Lấy danh sách Instructor (giảng viên) role_id = 2
-        $instructors = User::where('role_id', 2)->paginate(6); // 6 giảng viên mỗi trang
+public function instructorList(Request $request)
+{
+    $query = User::query()->where('role_id', 2);
 
-        return Inertia::render('Admin/Instructor/AdminInstructorList', [
-            'instructors' => $instructors,
-        ]);
+    // Tìm kiếm keyword (name hoặc email)
+    if ($request->filled('keyword')) {
+        $keyword = $request->keyword;
+        $query->where(function ($q) use ($keyword) {
+            $q->where('name', 'like', '%' . $keyword . '%')
+              ->orWhere('email', 'like', '%' . $keyword . '%');
+        });
     }
+
+  
+ if ($request->filled('name')) {
+    $query->where('name', 'like', '%' . $request->name . '%');
+}
+
+if ($request->filled('email')) {
+    $query->where('email', 'like', '%' . $request->email . '%');
+}
+
+    // Lọc theo trạng thái
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    // Sắp xếp
+    switch ($request->get('sort')) {
+        case 'oldest':
+            $query->orderBy('created_at', 'asc');
+            break;
+        case 'az':
+            $query->orderBy('name', 'asc');
+            break;
+        case 'za':
+            $query->orderBy('name', 'desc');
+            break;
+        default:
+            $query->orderBy('created_at', 'desc'); // newest
+            break;
+    }
+
+    $instructors = $query->paginate(6)->withQueryString();
+
+    return Inertia::render('Admin/Instructor/AdminInstructorList', [
+        'instructors' => $instructors,
+    ]);
+}
+
+
     public function showInstructor($id)
-        {
+    {
         $instructor = User::where('role_id', 2)->findOrFail($id);
         // Eager load categories qua quan hệ many-to-many
         $courses = Course::with('categories')
-                    ->where('instructor_id', $id)
-                    ->get();
+            ->where('instructor_id', $id)
+            ->get();
 
         return Inertia::render('Admin/Instructor/ShowInstructor', [
             'instructor' => $instructor,
             'courses' => $courses,
         ]);
-        }
-  public function store(Request $request)
-{
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:users',
-        'password' => 'required|string|min:6',
-        'phone' => 'nullable|string|max:20',
-        'role_id' => 'required|integer',
-        'status' => ['required', Rule::in(['active', 'inactive', 'suspended'])],
-    ]);
+    }
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|string|min:6',
+            'phone' => 'nullable|string|max:20',
+            'role_id' => 'required|integer',
+            'status' => ['required', Rule::in(['active', 'inactive', 'suspended'])],
+        ]);
 
-    $validated['password'] = bcrypt($validated['password']);
-    User::create($validated);
+        $validated['password'] = bcrypt($validated['password']);
+        User::create($validated);
 
-    return redirect()->back()->with('success', 'Tạo người dùng thành công!');
-}
+        return redirect()->back()->with('success', 'Tạo người dùng thành công!');
+    }
 
-     public function update(Request $request, User $user)
+    public function update(Request $request, User $user)
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => [
-                'required', 'email', 'max:255',
+                'required',
+                'email',
+                'max:255',
                 Rule::unique('users')->ignore($user->id),
             ],
             'password' => ['nullable', 'string', 'min:6'],

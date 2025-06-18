@@ -20,7 +20,11 @@ const CreateUserModal = ({ show, onClose }) => {
     }, [errors]);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({
+            ...formData,
+            [name]: name === "role_id" ? parseInt(value) : value,
+        });
     };
 
     const handleSubmit = (e) => {
@@ -165,6 +169,7 @@ const CreateUserModal = ({ show, onClose }) => {
                                 </label>
                                 <select
                                     name="role_id"
+                                    value={formData.role_id}
                                     onChange={handleChange}
                                     className={`w-full border rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 ${
                                         localErrors.role_id

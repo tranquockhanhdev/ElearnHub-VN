@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Head, useForm } from "@inertiajs/react";
-
+import { route } from "ziggy-js";
+import { usePage } from "@inertiajs/react";
+import { router } from "@inertiajs/react";
 import AdminLayout from "../../../Components/Layouts/AdminLayout";
-
+import CreateUserModal from "@/Pages/Admin/User/CreateUserModal";
+import EditUserModal from "@/Pages/Admin/User/EditUserModal";
 export default function Settings({ setting, admin, admins }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         site_name: setting?.site_name || "",
@@ -14,7 +17,20 @@ export default function Settings({ setting, admin, admins }) {
         site_logo_url: setting?.site_logo_url || "",
         site_logo: null,
     });
-
+    const [showModal, setShowModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const { flash } = usePage().props;
+    const [message, setMessage] = useState("");
+    useEffect(() => {
+        if (flash.success) {
+            setMessage(flash.success);
+            const timeout = setTimeout(() => setMessage(""), 3000);
+            return () => clearTimeout(timeout);
+        }
+    }, [flash]);
     const handleSubmit = (e) => {
         e.preventDefault();
         post(route("admin.settings.update"), {
@@ -42,6 +58,16 @@ export default function Settings({ setting, admin, admins }) {
             preserveScroll: true,
         });
     };
+    const handleDelete = () => {
+        if (confirmDeleteId) {
+            router.delete(route("admin.users.destroy", confirmDeleteId), {
+                onSuccess: () => {
+                    setShowConfirmModal(false);
+                    setConfirmDeleteId(null);
+                },
+            });
+        }
+    };
     return (
         <AdminLayout>
             <Head title="Admin Settings" />
@@ -51,6 +77,24 @@ export default function Settings({ setting, admin, admins }) {
                         <h1 className="h3 mb-2 mb-sm-0">Admin Settings</h1>
                     </div>
                 </div>
+                {/* FLASH MESSAGE đẹp và rõ */}
+                {message && (
+                    <div className="row mb-3">
+                        <div className="col-12">
+                            <div
+                                className="alert alert-success alert-dismissible fade show"
+                                role="alert"
+                            >
+                                {message}
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => setMessage("")}
+                                ></button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <div className="row g-4">
                     {/* Left menu */}
                     <div className="col-xl-3">
@@ -375,7 +419,10 @@ export default function Settings({ setting, admin, admins }) {
                                 <div className="mt-5">
                                     <div className="d-flex justify-content-between align-items-center mb-3">
                                         <h5>Admin Accounts</h5>
-                                        <button className="btn btn-primary">
+                                        <button
+                                            className="btn btn-primary"
+                                            onClick={() => setShowModal(true)}
+                                        >
                                             <i className="fas fa-plus me-1"></i>{" "}
                                             Add Admin
                                         </button>
@@ -411,10 +458,43 @@ export default function Settings({ setting, admin, admins }) {
                                                                         "-"}
                                                                 </td>
                                                                 <td>
-                                                                    <button className="btn btn-sm btn-warning me-2">
+                                                                    <button
+                                                                        className="btn btn-sm btn-warning me-2"
+                                                                        onClick={() => {
+                                                                            setSelectedUser(
+                                                                                admins.find(
+                                                                                    (
+                                                                                        u
+                                                                                    ) =>
+                                                                                        u.id ===
+                                                                                        item.id
+                                                                                )
+                                                                            ); // Gán user được chọn
+                                                                            setShowEditModal(
+                                                                                true
+                                                                            ); // Mở modal
+                                                                        }}
+                                                                    >
                                                                         <i className="fas fa-edit"></i>
                                                                     </button>
-                                                                    <button className="btn btn-sm btn-danger">
+                                                                    <button
+                                                                        className="btn btn-sm btn-danger"
+                                                                        onClick={() => {
+                                                                            setConfirmDeleteId(
+                                                                                admins.find(
+                                                                                    (
+                                                                                        u
+                                                                                    ) =>
+                                                                                        u.id ===
+                                                                                        item.id
+                                                                                )
+                                                                                    .id
+                                                                            );
+                                                                            setShowConfirmModal(
+                                                                                true
+                                                                            );
+                                                                        }}
+                                                                    >
                                                                         <i className="fas fa-trash-alt"></i>
                                                                     </button>
                                                                 </td>
@@ -440,6 +520,55 @@ export default function Settings({ setting, admin, admins }) {
                         </div>
                     </div>
                 </div>
+                <CreateUserModal
+                    show={showModal}
+                    onClose={() => setShowModal(false)}
+                />
+                {showEditModal && selectedUser && (
+                    <EditUserModal
+                        show={showEditModal}
+                        user={selectedUser}
+                        onClose={() => {
+                            setShowEditModal(false);
+                            setSelectedUser(null);
+                        }}
+                    />
+                )}
+                {showConfirmModal && (
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-fade-in">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="bg-red-100 text-red-600 rounded-full p-2">
+                                    <i className="bi bi-exclamation-triangle-fill text-xl"></i>
+                                </div>
+                                <h2 className="text-lg font-bold text-gray-800">
+                                    Xác nhận xóa
+                                </h2>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                                Bạn có chắc chắn muốn{" "}
+                                <span className="font-medium text-red-600">
+                                    xóa người dùng này
+                                </span>{" "}
+                                không? Thao tác này không thể hoàn tác.
+                            </p>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => setShowConfirmModal(false)}
+                                    className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={handleDelete}
+                                    className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                                >
+                                    Xóa
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </AdminLayout>
     );
