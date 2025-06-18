@@ -1,10 +1,65 @@
-﻿import React from 'react';
+﻿import React, { useState } from 'react';
 import UserLayout from '../../Components/Layouts/UserLayout';
 import InfoStudent from '../../Components/InfoStudent';
-import { Link, usePage } from '@inertiajs/react';
+import Pagination from '../../Components/Pagination';
+import { Link, usePage, router } from '@inertiajs/react';
 
 const CourseList = () => {
-	const { auth, flash_success, flash_error } = usePage().props;
+	const { enrolledCourses, filters, auth } = usePage().props;
+	const [searchTerm, setSearchTerm] = useState(filters.search || '');
+	const [sortBy, setSortBy] = useState(filters.sort || '');
+
+	// Xử lý tìm kiếm
+	const handleSearch = (e) => {
+		e.preventDefault();
+		router.get(route('student.courselist'), {
+			search: searchTerm,
+			sort: sortBy
+		}, {
+			preserveState: true,
+			preserveScroll: true
+		});
+	};
+
+	// Xử lý sắp xếp
+	const handleSort = (value) => {
+		setSortBy(value);
+		router.get(route('student.courselist'), {
+			search: searchTerm,
+			sort: value
+		}, {
+			preserveState: true,
+			preserveScroll: true
+		});
+	};
+
+	// Xử lý hành động khóa học
+	const getCourseAction = (course) => {
+		if (course.is_completed) {
+			return (
+				<div>
+					<button className="btn btn-sm btn-success me-1 mb-1 mb-md-0 disabled">
+						<i className="bi bi-check me-1"></i>Đã hoàn thành
+					</button>
+					<Link
+						href={route('student.course.show', course.id)}
+						className="btn btn-sm btn-light me-1"
+					>
+						<i className="bi bi-arrow-repeat me-1"></i>Xem lại
+					</Link>
+				</div>
+			);
+		} else {
+			return (
+				<Link
+					href={route('student.course.show', course.id)}
+					className="btn btn-sm btn-primary-soft me-1 mb-1 mb-md-0"
+				>
+					<i className="bi bi-play-circle me-1"></i>Tiếp tục học
+				</Link>
+			);
+		}
+	};
 
 	return (
 		<UserLayout>
@@ -35,7 +90,7 @@ const CourseList = () => {
 										{/* Offcanvas header */}
 										<div className="offcanvas-header bg-light">
 											<h5 className="offcanvas-title" id="offcanvasNavbarLabel">
-												My profile
+												Hồ sơ của tôi
 											</h5>
 											<button
 												type="button"
@@ -49,30 +104,28 @@ const CourseList = () => {
 											<div className="bg-dark border rounded-3 pb-0 p-3 w-100">
 												{/* Dashboard menu */}
 												<div className="list-group list-group-dark list-group-borderless">
-													<Link className="list-group-item" href="/student/dashboard" preserveScroll preserveState>
-														<i className="bi bi-ui-checks-grid fa-fw me-2"></i>Dashboard
+													<Link className="list-group-item" href={route('student.dashboard')} preserveScroll preserveState>
+														<i className="bi bi-ui-checks-grid fa-fw me-2"></i>Bảng điều khiển
 													</Link>
-													<Link className="list-group-item active" href="/student/courselist" preserveScroll>
-														<i className="bi bi-basket fa-fw me-2"></i>My Courses
+													<Link className="list-group-item active" href={route('student.courselist')} preserveScroll>
+														<i className="bi bi-basket fa-fw me-2"></i>Khóa học của tôi
 													</Link>
 													<Link className="list-group-item" href="/student/payment-info" preserveScroll preserveState>
-														<i className="bi bi-credit-card-2-front fa-fw me-2"></i>Payment info
+														<i className="bi bi-credit-card-2-front fa-fw me-2"></i>Thông tin thanh toán
 													</Link>
-													<Link className="list-group-item" href="/profile/edit" preserveScroll>
-														<i className="bi bi-pencil-square fa-fw me-2"></i>Edit Profile
+													<Link className="list-group-item" href="/student/profile" preserveScroll>
+														<i className="bi bi-pencil-square fa-fw me-2"></i>Chỉnh sửa hồ sơ
 													</Link>
 													<Link className="list-group-item" href="/settings" preserveScroll>
-														<i className="bi bi-gear fa-fw me-2"></i>Settings
+														<i className="bi bi-gear fa-fw me-2"></i>Cài đặt
 													</Link>
 													<Link
 														className="list-group-item text-danger bg-danger-soft-hover"
-														href="#"
-														onClick={(e) => {
-															e.preventDefault();
-															Inertia.post('/logout');
-														}}
+														href={route('logout')}
+														method="post"
+														as="button"
 													>
-														<i className="fas fa-sign-out-alt fa-fw me-2"></i>Sign Out
+														<i className="fas fa-sign-out-alt fa-fw me-2"></i>Đăng xuất
 													</Link>
 												</div>
 											</div>
@@ -88,7 +141,7 @@ const CourseList = () => {
 								<div className="card border rounded-3">
 									{/* Card header START */}
 									<div className="card-header border-bottom">
-										<h3 className="mb-0">My Courses List</h3>
+										<h3 className="mb-0">Danh sách khóa học của tôi</h3>
 									</div>
 									{/* Card header END */}
 
@@ -98,12 +151,14 @@ const CourseList = () => {
 										<div className="row g-3 align-items-center justify-content-between mb-4">
 											{/* Search */}
 											<div className="col-md-8">
-												<form className="rounded position-relative">
+												<form className="rounded position-relative" onSubmit={handleSearch}>
 													<input
 														className="form-control pe-5 bg-transparent"
 														type="search"
-														placeholder="Search"
+														placeholder="Tìm kiếm khóa học..."
 														aria-label="Search"
+														value={searchTerm}
+														onChange={(e) => setSearchTerm(e.target.value)}
 													/>
 													<button
 														className="btn bg-transparent px-2 py-0 position-absolute top-50 end-0 translate-middle-y"
@@ -115,292 +170,130 @@ const CourseList = () => {
 											</div>
 											{/* Select option */}
 											<div className="col-md-3">
-												<form>
-													<select
-														className="form-select js-choice border-0 z-index-9 bg-transparent"
-														aria-label=".form-select-sm"
-													>
-														<option value="">Sort by</option>
-														<option>Free</option>
-														<option>Newest</option>
-														<option>Most popular</option>
-														<option>Most Viewed</option>
-													</select>
-												</form>
+												<select
+													className="form-select border-0 z-index-9 bg-transparent"
+													value={sortBy}
+													onChange={(e) => handleSort(e.target.value)}
+												>
+													<option value="">Sắp xếp theo</option>
+													<option value="newest">Mới nhất</option>
+													<option value="oldest">Cũ nhất</option>
+													<option value="title">Tên khóa học</option>
+												</select>
 											</div>
 										</div>
 										{/* Search and select END */}
 
 										{/* Course list table START */}
 										<div className="table-responsive border-0">
-											<table className="table table-dark-gray align-middle p-4 mb-0 table-hover">
-												{/* Table head */}
-												<thead>
-													<tr>
-														<th scope="col" className="border-0 rounded-start">
-															Course Title
-														</th>
-														<th scope="col" className="border-0">Total Lectures</th>
-														<th scope="col" className="border-0">Completed Lecture</th>
-														<th scope="col" className="border-0 rounded-end">Action</th>
-													</tr>
-												</thead>
-												{/* Table body */}
-												<tbody>
-													{/* Table item */}
-													<tr>
-														<td>
-															<div className="d-flex align-items-center">
-																<div className="w-100px">
-																	<img
-																		src="/assets/images/courses/4by3/08.jpg"
-																		className="rounded"
-																		alt="Course Thumbnail"
-																	/>
-																</div>
-																<div className="mb-0 ms-2">
-																	<h6>
-																		<a href="#">Building Scalable APIs with GraphQL</a>
-																	</h6>
-																	<div className="overflow-hidden">
-																		<h6 className="mb-0 text-end">85%</h6>
-																		<div className="progress progress-sm bg-primary bg-opacity-10">
-																			<div
-																				className="progress-bar bg-primary aos"
-																				role="progressbar"
-																				style={{ width: '85%' }}
-																				aria-valuenow="85"
-																				aria-valuemin="0"
-																				aria-valuemax="100"
-																			></div>
+											{enrolledCourses.data.length > 0 ? (
+												<table className="table table-dark-gray align-middle p-4 mb-0 table-hover">
+													{/* Table head */}
+													<thead>
+														<tr>
+															<th scope="col" className="border-0 rounded-start">
+																Tên khóa học
+															</th>
+															<th scope="col" className="border-0">Tổng số bài</th>
+															<th scope="col" className="border-0">Đã hoàn thành</th>
+															<th scope="col" className="border-0 rounded-end">Hành động</th>
+														</tr>
+													</thead>
+													{/* Table body */}
+													<tbody>
+														{enrolledCourses.data.map((course) => (
+															<tr key={course.id}>
+																<td>
+																	<div className="d-flex align-items-center">
+																		<div className="w-100px">
+																			<img
+																				src={course.img_url ? `/storage/${course.img_url}` : '/assets/images/courses/4by3/default.jpg'}
+																				className="rounded"
+																				alt={course.title}
+																				style={{ width: '80px', height: '60px', objectFit: 'cover' }}
+																			/>
+																		</div>
+																		<div className="mb-0 ms-2">
+																			<h6>
+																				<Link href={route('student.courselist', course.id)}>
+																					{course.title}
+																				</Link>
+																			</h6>
+																			<p className="mb-1 small text-muted">
+																				Giảng viên: {course.instructor_name}
+																			</p>
+																			{course.categories.length > 0 && (
+																				<div className="mb-2">
+																					{course.categories.map((category, index) => (
+																						<span key={index} className="badge bg-light text-dark me-1 small">
+																							{category}
+																						</span>
+																					))}
+																				</div>
+																			)}
+																			<div className="overflow-hidden">
+																				<h6 className="mb-0 text-end">{course.progress}%</h6>
+																				<div className="progress progress-sm bg-primary bg-opacity-10">
+																					<div
+																						className="progress-bar bg-primary"
+																						role="progressbar"
+																						style={{ width: `${course.progress}%` }}
+																						aria-valuenow={course.progress}
+																						aria-valuemin="0"
+																						aria-valuemax="100"
+																					></div>
+																				</div>
+																			</div>
 																		</div>
 																	</div>
-																</div>
-															</div>
-														</td>
-														<td>56</td>
-														<td>40</td>
-														<td>
-															<a
-																href="#"
-																className="btn btn-sm btn-primary-soft me-1 mb-1 mb-md-0"
-															>
-																<i className="bi bi-play-circle me-1"></i>Continue
-															</a>
-														</td>
-													</tr>
-
-													{/* Table item */}
-													<tr>
-														<td>
-															<div className="d-flex align-items-center">
-																<div className="w-100px">
-																	<img
-																		src="/assets/images/courses/4by3/03.jpg"
-																		className="rounded"
-																		alt="Course Thumbnail"
-																	/>
-																</div>
-																<div className="mb-0 ms-2">
-																	<h6>
-																		<a href="#">Create a Design System in Figma</a>
-																	</h6>
-																	<div className="overflow-hidden">
-																		<h6 className="mb-0 text-end">100%</h6>
-																		<div className="progress progress-sm bg-primary bg-opacity-10">
-																			<div
-																				className="progress-bar bg-primary aos"
-																				role="progressbar"
-																				style={{ width: '100%' }}
-																				aria-valuenow="100"
-																				aria-valuemin="0"
-																				aria-valuemax="100"
-																			></div>
-																		</div>
-																	</div>
-																</div>
-															</div>
-														</td>
-														<td>42</td>
-														<td>42</td>
-														<td>
-															<button className="btn btn-sm btn-success me-1 mb-1 mb-x;-0 disabled">
-																<i className="bi bi-check me-1"></i>Complete
-															</button>
-															<a href="#" className="btn btn-sm btn-light me-1">
-																<i className="bi bi-arrow-repeat me-1"></i>Restart
-															</a>
-														</td>
-													</tr>
-
-													{/* Table item */}
-													<tr>
-														<td>
-															<div className="d-flex align-items-center">
-																<div className="w-100px">
-																	<img
-																		src="/assets/images/courses/4by3/05.jpg"
-																		className="rounded"
-																		alt="Course Thumbnail"
-																	/>
-																</div>
-																<div className="mb-0 ms-2">
-																	<h6>
-																		<a href="#">The Complete Web Development in python</a>
-																	</h6>
-																	<div className="overflow-hidden">
-																		<h6 className="mb-0 text-end">60%</h6>
-																		<div className="progress progress-sm bg-primary bg-opacity-10">
-																			<div
-																				className="progress-bar bg-primary aos"
-																				role="progressbar"
-																				style={{ width: '60%' }}
-																				aria-valuenow="60"
-																				aria-valuemin="0"
-																				aria-valuemax="100"
-																			></div>
-																		</div>
-																	</div>
-																</div>
-															</div>
-														</td>
-														<td>28</td>
-														<td>12</td>
-														<td>
-															<a
-																href="#"
-																className="btn btn-sm btn-primary-soft me-1 mb-1 mb-md-0"
-															>
-																<i className="bi bi-play-circle me-1"></i>Continue
-															</a>
-														</td>
-													</tr>
-
-													{/* Table item */}
-													<tr>
-														<td>
-															<div className="d-flex align-items-center">
-																<div className="w-100px">
-																	<img
-																		src="/assets/images/courses/4by3/01.jpg"
-																		className="rounded"
-																		alt="Course Thumbnail"
-																	/>
-																</div>
-																<div className="mb-0 ms-2">
-																	<h6>
-																		<a href="#">Digital Marketing Masterclass</a>
-																	</h6>
-																	<div className="overflow-hidden">
-																		<h6 className="mb-0 text-end">40%</h6>
-																		<div className="progress progress-sm bg-primary bg-opacity-10">
-																			<div
-																				className="progress-bar bg-primary aos"
-																				role="progressbar"
-																				style={{ width: '40%' }}
-																				aria-valuenow="40"
-																				aria-valuemin="0"
-																				aria-valuemax="100"
-																			></div>
-																		</div>
-																	</div>
-																</div>
-															</div>
-														</td>
-														<td>32</td>
-														<td>18</td>
-														<td>
-															<a
-																href="#"
-																className="btn btn-sm btn-primary-soft me-1 mb-1 mb-md-0"
-															>
-																<i className="bi bi-play-circle me-1"></i>Continue
-															</a>
-														</td>
-													</tr>
-
-													{/* Table item */}
-													<tr>
-														<td>
-															<div className="d-flex align-items-center">
-																<div className="w-100px">
-																	<img
-																		src="/assets/images/courses/4by3/02.jpg"
-																		className="rounded"
-																		alt="Course Thumbnail"
-																	/>
-																</div>
-																<div className="mb-0 ms-2">
-																	<h6>
-																		<a href="#">Graphic Design Masterclass</a>
-																	</h6>
-																	<div className="overflow-hidden">
-																		<h6 className="mb-0 text-end">90%</h6>
-																		<div className="progress progress-sm bg-primary bg-opacity-10">
-																			<div
-																				className="progress-bar bg-primary aos"
-																				role="progressbar"
-																				style={{ width: '90%' }}
-																				aria-valuenow="90"
-																				aria-valuemin="0"
-																				aria-valuemax="100"
-																			></div>
-																		</div>
-																	</div>
-																</div>
-															</div>
-														</td>
-														<td>16</td>
-														<td>14</td>
-														<td>
-															<a
-																href="#"
-																className="btn btn-sm btn-primary-soft me-1 mb-1 mb-md-0"
-															>
-																<i className="bi bi-play-circle me-1"></i>Continue
-															</a>
-														</td>
-													</tr>
-												</tbody>
-											</table>
+																</td>
+																<td>
+																	<span className="badge bg-light text-dark">
+																		{course.total_lessons}
+																	</span>
+																</td>
+																<td>
+																	<span className="badge bg-success">
+																		{course.completed_lessons}
+																	</span>
+																</td>
+																<td>
+																	{getCourseAction(course)}
+																</td>
+															</tr>
+														))}
+													</tbody>
+												</table>
+											) : (
+												<div className="text-center py-5">
+													<i className="bi bi-book fs-1 text-muted mb-3 d-block"></i>
+													<h5 className="text-muted">Chưa có khóa học nào</h5>
+													<p className="text-muted mb-3">Bạn chưa đăng ký khóa học nào. Hãy khám phá các khóa học mới!</p>
+													<Link
+														href="/courses"
+														className="btn btn-primary"
+													>
+														<i className="bi bi-search me-2"></i>Khám phá khóa học
+													</Link>
+												</div>
+											)}
 										</div>
 										{/* Course list table END */}
 
 										{/* Pagination START */}
-										<div className="d-sm-flex justify-content-sm-between align-items-sm-center mt-4 mt-sm-3">
-											{/* Content */}
-											<p className="mb-0 text-center text-sm-start">Showing 1 to 8 of 20 entries</p>
-											{/* Pagination */}
-											<nav className="d-flex justify-content-center mb-0" aria-label="navigation">
-												<ul className="pagination pagination-sm pagination-primary-soft mb-0 pb-0">
-													<li className="page-item mb-0">
-														<a className="page-link" href="#" tabIndex="-1">
-															<i className="fas fa-angle-left"></i>
-														</a>
-													</li>
-													<li className="page-item mb-0">
-														<a className="page-link" href="#">
-															1
-														</a>
-													</li>
-													<li className="page-item mb-0 active">
-														<a className="page-link" href="#">
-															2
-														</a>
-													</li>
-													<li className="page-item mb-0">
-														<a className="page-link" href="#">
-															3
-														</a>
-													</li>
-													<li className="page-item mb-0">
-														<a className="page-link" href="#">
-															<i className="fas fa-angle-right"></i>
-														</a>
-													</li>
-												</ul>
-											</nav>
-										</div>
+										{enrolledCourses.data.length > 0 && (
+											<div className="d-sm-flex justify-content-sm-between align-items-sm-center mt-4 mt-sm-3">
+												{/* Content */}
+												<p className="mb-0 text-center text-sm-start">
+													Hiển thị {enrolledCourses.from} đến {enrolledCourses.to} trong tổng số {enrolledCourses.total} khóa học
+												</p>
+												{/* Pagination */}
+												<Pagination
+													links={enrolledCourses.links}
+													className="mb-0"
+												/>
+											</div>
+										)}
 										{/* Pagination END */}
 									</div>
 									{/* Card body END */}

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Services\CourseService;
+use Illuminate\Support\Facades\Auth;
 
 class CourseController extends Controller
 {
@@ -36,6 +37,7 @@ class CourseController extends Controller
             'filters' => $filters
         ]);
     }
+
     public function show($slug)
     {
         $course = $this->CourseService->getCourseBySlug($slug);
@@ -43,8 +45,15 @@ class CourseController extends Controller
         if (!$course) {
             abort(404, 'Khóa học không tồn tại');
         }
+        // Kiểm tra user đã enrollment chưa
+        $isEnrolled = false;
+        if (Auth::check()) {
+            $isEnrolled = $this->CourseService->isUserEnrolled(Auth::id(), $course->id);
+        }
+
         return Inertia::render('Public/CourseDetail', [
-            'course' => $course
+            'course' => $course,
+            'isEnrolled' => $isEnrolled
         ]);
     }
 
