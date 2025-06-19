@@ -34,14 +34,19 @@ const Register = () => {
                     <div className="row">
                         {/* Left */}
                         <div className="col-12 col-lg-6 d-md-flex align-items-center justify-content-center bg-primary bg-opacity-10 vh-lg-100">
-                            <div className="p-3 p-lg-5">
+                            <div className="p-3 p-lg-5 border rounded position-relative bg-white shadow-sm w-100" style={{ maxWidth: '600px' }}>
                                 <div className="text-center">
-                                    <h2 className="fw-bold">Chào mừng đến với cộng đồng lớn nhất của chúng tôi</h2>
-                                    <p className="mb-0 h6 fw-light">Chỉ vài bước để mở khóa kho tàng kiến thức!</p>
+                                    <h2 className="fw-bold">Bắt đầu hành trình thay đổi số phận của bạn</h2>
+                                    <p className="mb-0 h6 fw-light">Chỉ vài bước để mở khóa kho tàng kiến thức và cơ hội!</p>
                                 </div>
-                                <img src="/assets/images/element/02.svg" className="mt-5" alt="" />
+                                <img
+                                    src="https://i.ibb.co/mVhJ0mdd/Chat-GPT-Image-14-13-40-19-thg-6-2025.png"
+                                    className="mt-5 img-fluid"
+                                    alt="Người đang quyết tâm thay đổi số phận"
+                                />
                             </div>
                         </div>
+
                         {/* Right */}
                         <div className="col-12 col-lg-6 m-auto " >
                             <div className="row my-5" >

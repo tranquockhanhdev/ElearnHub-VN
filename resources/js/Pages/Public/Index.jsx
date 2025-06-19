@@ -125,7 +125,7 @@ const Home = () => {
 						<div className="row mb-5">
 							<div className="col-12 text-center">
 								<h2 className="fw-bold mb-3">Danh mục khóa học phổ biến</h2>
-								<p className="text-muted mb-0">Chọn lĩnh vực bạn muốn phát triển</p>
+								<p className="text-gray-700 mb-0">Chọn lĩnh vực bạn muốn phát triển</p>
 							</div>
 						</div>
 						<div className="row g-4">
@@ -138,10 +138,10 @@ const Home = () => {
 													<i className={`bi ${['bi-code-slash', 'bi-palette', 'bi-phone', 'bi-graph-up'][index % 4]} text-${['primary', 'success', 'warning', 'info'][index % 4]} display-6`}></i>
 												</div>
 												<h5 className="card-title text-dark">{category.name}</h5>
-												<p className="text-muted small mb-3">
+												<p className="text-gray-700 small mb-3">
 													{category.description || 'Khóa học chất lượng cao'}
 												</p>
-												<div className="d-flex justify-content-between text-muted small">
+												<div className="d-flex justify-content-between text-gray-700 small">
 													<span>{category.courses_count}+ khóa học</span>
 													<span>từ 299K</span>
 												</div>
@@ -162,7 +162,7 @@ const Home = () => {
 								<div className="d-flex justify-content-between align-items-center">
 									<div>
 										<h2 className="fw-bold mb-2">Khóa học bán chạy</h2>
-										<p className="text-muted mb-0">Những khóa học được yêu thích nhất</p>
+										<p className="text-gray-700 mb-0">Những khóa học được yêu thích nhất</p>
 									</div>
 									<Link href="/courses" className="btn btn-outline-primary">
 										Xem tất cả
@@ -200,7 +200,7 @@ const Home = () => {
 												<div className="d-flex align-items-center text-warning">
 													<i className="bi bi-star-fill small me-1"></i>
 													<span className="small fw-semibold">{course.rating || '4.8'}</span>
-													<span className="small text-muted ms-1">({course.reviews_count || 0})</span>
+													<span className="small text-gray-700 ms-1">({course.reviews_count || 0})</span>
 												</div>
 											</div>
 											<h5 className="card-title mb-3">
@@ -214,18 +214,18 @@ const Home = () => {
 													className="avatar avatar-xs rounded-circle me-2"
 													alt="Instructor"
 												/>
-												<small className="text-muted">{course.instructor?.name}</small>
+												<small className="text-gray-700">{course.instructor?.name}</small>
 											</div>
 											<div className="d-flex justify-content-between align-items-center">
 												<div>
 													<span className="h5 text-success mb-0">{formatCurrency(course.price)}</span>
 													{course.original_price && (
-														<span className="text-muted text-decoration-line-through ms-2">
+														<span className="text-gray-700 text-decoration-line-through ms-2">
 															{formatCurrency(course.original_price)}
 														</span>
 													)}
 												</div>
-												<div className="text-muted small">
+												<div className="text-gray-700 small">
 													<i className="bi bi-clock me-1"></i>
 													{course.duration || '12h 30m'}
 												</div>
@@ -246,7 +246,7 @@ const Home = () => {
 								<div className="d-flex justify-content-between align-items-center">
 									<div>
 										<h2 className="fw-bold mb-2">Khóa học mới cập nhật</h2>
-										<p className="text-muted mb-0">Nội dung được cập nhật theo xu hướng mới nhất</p>
+										<p className="text-gray-700 mb-0">Nội dung được cập nhật theo xu hướng mới nhất</p>
 									</div>
 									<Link href="/courses?filter=latest" className="btn btn-outline-primary">
 										Xem tất cả
@@ -286,11 +286,11 @@ const Home = () => {
 															<i className="bi bi-star-fill small me-1"></i>
 															<span className="small">{course.rating || '4.8'}</span>
 														</div>
-														<small className="text-muted">{course.duration || '6h 30m'}</small>
+														<small className="text-gray-700">{course.duration || '6h 30m'}</small>
 													</div>
 													<div className="d-flex justify-content-between align-items-center">
 														<span className="h6 text-success mb-0">{formatCurrency(course.price)}</span>
-														<small className="text-muted">
+														<small className="text-gray-700">
 															Cập nhật: {new Date(course.updated_at).toLocaleDateString('vi-VN')}
 														</small>
 													</div>
@@ -312,7 +312,7 @@ const Home = () => {
 								<div className="d-flex justify-content-between align-items-center">
 									<div>
 										<h2 className="fw-bold mb-2">Khóa học nổi bật</h2>
-										<p className="text-muted mb-0">Được chọn lọc bởi đội ngũ chuyên gia</p>
+										<p className="text-gray-700 mb-0">Được chọn lọc bởi đội ngũ chuyên gia</p>
 									</div>
 									<Link href="/courses?filter=featured" className="btn btn-outline-primary">
 										Xem tất cả
@@ -353,11 +353,11 @@ const Home = () => {
 												</Link>
 											</h5>
 											<div className="d-flex align-items-center mb-3">
-												<small className="text-muted">{course.instructor?.name}</small>
+												<small className="text-gray-700">{course.instructor?.name}</small>
 											</div>
 											<div className="d-flex justify-content-between align-items-center">
 												<span className="h5 text-success mb-0">{formatCurrency(course.price)}</span>
-												<div className="text-muted small">
+												<div className="text-gray-700 small">
 													<i className="bi bi-clock me-1"></i>
 													{course.duration || '8h 45m'}
 												</div>
@@ -389,7 +389,7 @@ const Home = () => {
 
 							<div className="col-lg-6">
 								<h2 className="fw-bold mb-4">Tại sao chọn K-Edu?</h2>
-								<p className="text-muted mb-4">
+								<p className="text-gray-700 mb-4">
 									Nền tảng học tập trực tuyến hàng đầu dành riêng cho sinh viên IT,
 									với giá cả phù hợp và chất lượng đảm bảo.
 								</p>
@@ -402,7 +402,7 @@ const Home = () => {
 											</div>
 											<div>
 												<h6 className="mb-2">Hỗ trợ đồ án</h6>
-												<p className="text-muted small mb-0">
+												<p className="text-gray-700 small mb-0">
 													Hướng dẫn chi tiết làm đồ án tốt nghiệp
 												</p>
 											</div>
@@ -416,7 +416,7 @@ const Home = () => {
 											</div>
 											<div>
 												<h6 className="mb-2">Giá sinh viên</h6>
-												<p className="text-muted small mb-0">
+												<p className="text-gray-700 small mb-0">
 													Mức giá phù hợp với túi tiền sinh viên
 												</p>
 											</div>
@@ -430,7 +430,7 @@ const Home = () => {
 											</div>
 											<div>
 												<h6 className="mb-2">Học linh hoạt</h6>
-												<p className="text-muted small mb-0">
+												<p className="text-gray-700 small mb-0">
 													Học mọi lúc mọi nơi, phù hợp lịch học
 												</p>
 											</div>
@@ -444,7 +444,7 @@ const Home = () => {
 											</div>
 											<div>
 												<h6 className="mb-2">Hỗ trợ 24/7</h6>
-												<p className="text-muted small mb-0">
+												<p className="text-gray-700 small mb-0">
 													Giải đáp thắc mắc mọi lúc mọi nơi
 												</p>
 											</div>

@@ -30,13 +30,24 @@ const Login = () => {
                     <div className="row">
                         {/* Left */}
                         <div className="col-12 col-lg-6 d-md-flex align-items-center justify-content-center bg-primary bg-opacity-10 vh-lg-100">
-                            <div className="p-3 p-lg-5">
-                                <div className="text-center">
-                                    <h2 className="fw-bold">Chào mừng đến với cộng đồng lớn nhất của chúng tôi</h2>
-                                    <p className="mb-0 h6 fw-light">Mỗi lần đăng nhập là một bước tiến đến thành công!</p>
+                            <div className="p-3 p-lg-5 text-center">
+                                <h2 className="fw-bold mb-3">
+                                    Chào mừng đến với <span className="text-primary">K-Edu</span> – cộng đồng tri thức!
+                                </h2>
+                                <p className="h6 fw-light mb-4">
+                                    Từ thời tối cổ cũng muốn học lập trình. Còn bạn thì sao?
+                                </p>
+
+                                <div className="d-flex justify-content-center">
+                                    <img
+                                        src="https://i.ibb.co/tTQcZh01/Chat-GPT-Image-14-08-47-19-thg-6-2025.png"
+                                        alt="Người tối cổ học lập trình"
+                                        className="img-fluid rounded shadow-sm"
+                                        style={{ maxWidth: '400px' }}
+                                    />
                                 </div>
-                                <img src="/assets/images/element/02.svg" className="mt-5" alt="" />
                             </div>
+
                         </div>
                         {/* Right */}
                         <div className="col-12 col-lg-6 m-auto">
