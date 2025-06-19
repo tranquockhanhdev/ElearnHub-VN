@@ -110,14 +110,11 @@ const CourseList = () => {
 													<Link className="list-group-item active" href={route('student.courselist')} preserveScroll>
 														<i className="bi bi-basket fa-fw me-2"></i>Khóa học của tôi
 													</Link>
-													<Link className="list-group-item" href="/student/payment-info" preserveScroll preserveState>
-														<i className="bi bi-credit-card-2-front fa-fw me-2"></i>Thông tin thanh toán
+													<Link className="list-group-item" href="/student/payments" preserveScroll preserveState>
+														<i className="bi bi-credit-card-2-front fa-fw me-2"></i>Lịch Sử thanh toán
 													</Link>
-													<Link className="list-group-item" href="/student/profile" preserveScroll>
+													<Link className="list-group-item" href="/student/profile" preserveScroll preserveState>
 														<i className="bi bi-pencil-square fa-fw me-2"></i>Chỉnh sửa hồ sơ
-													</Link>
-													<Link className="list-group-item" href="/settings" preserveScroll>
-														<i className="bi bi-gear fa-fw me-2"></i>Cài đặt
 													</Link>
 													<Link
 														className="list-group-item text-danger bg-danger-soft-hover"

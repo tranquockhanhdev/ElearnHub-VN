@@ -121,52 +121,102 @@ const UserLayout = ({ children }) => {
 										alt="User Avatar"
 									/>
 								</a>
-								<ul className="dropdown-menu dropdown-menu-end shadow dropdown-animation pt-3" aria-labelledby="profileDropdown">
+								<ul
+									className="dropdown-menu dropdown-menu-end shadow-lg rounded-xl border-0 p-4 dropdown-animation"
+									aria-labelledby="profileDropdown"
+									style={{ minWidth: '280px' }}
+								>
 									{/* Header */}
-									<li className="px-3 pb-2 border-bottom">
+									<li className="pb-3 mb-3 border-bottom">
 										<div className="d-flex align-items-center">
 											<div className="avatar me-3">
 												<img
-													className="avatar-img rounded-circle shadow"
+													className="avatar-img rounded-circle shadow-sm"
 													src="/assets/images/avatar/01.jpg"
 													alt="User"
+													style={{ width: '50px', height: '50px' }}
 												/>
 											</div>
 											<div className="flex-grow-1">
-												<h6 className="mb-0">{auth.user.name}</h6>
-												<p className="mb-0 small text-muted">{auth.user.email}</p>
+												<h6 className="mb-1 fw-semibold text-dark">
+													{auth.user.name}
+												</h6>
+												<p className="mb-0 small text-muted text-truncate" style={{ maxWidth: '180px' }}>
+													{auth.user.email}
+												</p>
+												<span className="badge bg-primary-soft text-primary mt-1 small">
+													{{
+														1: 'Admin',
+														2: 'Giảng viên',
+														3: 'Học viên'
+													}[auth.user.role] || 'Không rõ'}
+												</span>
 											</div>
 										</div>
 									</li>
 
-									{/* User info (ID, Role) */}
-									<li className="px-3 py-2 border-bottom">
-										<div className="small text-muted">ID: <span className="text-dark">{auth.user.id}</span></div>
-										<div className="small text-muted">Vai trò: <span className="text-dark">
-											{{
-												1: 'Admin',
-												2: 'Giảng viên',
-												3: 'Học viên'
-											}[auth.user.role] || 'Không rõ'
-											}</span></div>
+									{/* Menu Items */}
+									<li className="mb-2">
+										<Link
+											className="dropdown-item rounded-lg py-2 px-3 d-flex align-items-center text-decoration-none"
+											href="/student/profile"
+										>
+											<i className="bi bi-person-circle me-3 text-primary" style={{ fontSize: '18px' }}></i>
+											<span className="fw-medium">Chỉnh sửa hồ sơ</span>
+										</Link>
 									</li>
 
-									{/* Links */}
+									{/* Hiển thị "Khóa học của tôi" cho học viên */}
+									{auth.user.role === 3 && (
+										<li className="mb-2">
+											<Link
+												className="dropdown-item rounded-lg py-2 px-3 d-flex align-items-center text-decoration-none"
+												href="/student/courselist"
+											>
+												<i className="bi bi-book me-3 text-success" style={{ fontSize: '18px' }}></i>
+												<span className="fw-medium">Khóa học của tôi</span>
+											</Link>
+										</li>
+									)}
+
+									{/* Hiển thị dashboard cho từng role */}
+									{auth.user.role === 3 && (
+										<li className="mb-2">
+											<Link
+												className="dropdown-item rounded-lg py-2 px-3 d-flex align-items-center text-decoration-none"
+												href="/student/dashboard"
+											>
+												<i className="bi bi-speedometer2 me-3 text-info" style={{ fontSize: '18px' }}></i>
+												<span className="fw-medium">Bảng điều khiển</span>
+											</Link>
+										</li>
+									)}
+
+									{auth.user.role === 2 && (
+										<li className="mb-2">
+											<Link
+												className="dropdown-item rounded-lg py-2 px-3 d-flex align-items-center text-decoration-none"
+												href="/instructor/dashboard"
+											>
+												<i className="bi bi-speedometer2 me-3 text-info" style={{ fontSize: '18px' }}></i>
+												<span className="fw-medium">Bảng điều khiển</span>
+											</Link>
+										</li>
+									)}
+
+									{/* Divider */}
+									<li><hr className="dropdown-divider my-3" /></li>
+
+									{/* Logout */}
 									<li>
-										<Link className="dropdown-item" href="/profile/edit">
-											<i className="bi bi-person fa-fw me-2"></i> Chỉnh sửa hồ sơ
-										</Link>
-									</li>
-									<li>
-										<Link className="dropdown-item" href="/settings">
-											<i className="bi bi-gear fa-fw me-2"></i> Cài đặt
-										</Link>
-									</li>
-									<li>
-										<Link className="dropdown-item text-danger" onClick={(e) => {
-											e.preventDefault();
-											router.post(route('logout'));
-										}}>
+										<Link
+											className="dropdown-item rounded-lg py-2 px-3 d-flex align-items-center text-decoration-none text-danger"
+											href="#"
+											onClick={(e) => {
+												e.preventDefault();
+												router.post(route('logout'));
+											}}
+										>
 											<i className="bi bi-box-arrow-right fa-fw me-2"></i> Đăng xuất
 										</Link>
 									</li>

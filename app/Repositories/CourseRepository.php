@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Category;
 use App\Models\Course;
 use App\Models\PaymentMethod;
+use App\Models\Payment;
 use Exception;
 
 class CourseRepository
@@ -218,6 +219,72 @@ class CourseRepository
             ->get();
     }
 
+    /**
+     * Get featured courses.
+     *
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getFeaturedCourses($limit = 6)
+    {
+        return $this->course->with(['instructor:id,name', 'categories:id,name'])
+            ->where('status', 'active')
+            ->withCount('enrollments') // Đếm số lượng enrollments
+            ->orderBy('enrollments_count', 'desc')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Get latest courses.
+     *
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getLatestCourses($limit = 6)
+    {
+        return $this->course->with(['instructor:id,name', 'categories:id,name'])
+            ->where('status', 'active')
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Get best-selling courses.
+     *
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getBestSellingCourses($limit = 6)
+    {
+        return $this->course->with(['instructor:id,name', 'categories:id,name'])
+            ->where('status', 'active')
+            ->withCount('enrollments')
+            ->orderBy('enrollments_count', 'desc')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Get popular categories.
+     *
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getPopularCategories($limit = 8)
+    {
+        return $this->category->withCount([
+            'courses' => function ($query) {
+                $query->where('status', 'active');
+            }
+        ])
+            ->where('status', 'active')
+            ->having('courses_count', '>', 0)
+            ->orderBy('courses_count', 'desc')
+            ->limit($limit)
+            ->get();
+    }
     // Utility methods
     /**
      * Check if a user is enrolled in a course.

@@ -126,16 +126,16 @@ const StudentDashboard = () => {
 										<div className="offcanvas-body p-3 p-xl-0">
 											<div className="bg-dark border rounded-3 pb-0 p-3 w-100">
 												<div className="list-group list-group-dark list-group-borderless">
-													<Link className="list-group-item active" href="/student/dashboard">
+													<Link className="list-group-item active" href="/student/dashboard" preserveScroll>
 														<i className="bi bi-ui-checks-grid fa-fw me-2"></i>Bảng điều khiển
 													</Link>
-													<Link className="list-group-item" href="/student/courselist">
+													<Link className="list-group-item" href="/student/courselist" preserveScroll>
 														<i className="bi bi-basket fa-fw me-2"></i>Khóa học của tôi
 													</Link>
-													<Link className="list-group-item" href="/student/payments">
-														<i className="bi bi-credit-card-2-front fa-fw me-2"></i>Thông tin thanh toán
+													<Link className="list-group-item" href="/student/payments" preserveScroll>
+														<i className="bi bi-credit-card-2-front fa-fw me-2"></i>Lịch Sử thanh toán
 													</Link>
-													<Link className="list-group-item" href="/student/profile">
+													<Link className="list-group-item" href="/student/profile" preserveScroll>
 														<i className="bi bi-pencil-square fa-fw me-2"></i>Chỉnh sửa hồ sơ
 													</Link>
 													<Link className="list-group-item text-danger bg-danger-soft-hover" href="/logout" method="post" as="button">
@@ -234,62 +234,27 @@ const StudentDashboard = () => {
 									</div>
 								</div>
 
-								{/* Course list card */}
+								{/* Recent Courses Card */}
 								<div className="card border-0 shadow-sm">
 									<div className="card-header bg-white border-bottom">
 										<div className="d-flex align-items-center justify-content-between">
 											<h4 className="mb-0 fw-semibold">
-												<i className="fas fa-graduation-cap text-primary me-2"></i>
-												Hành trình học tập của tôi
+												<i className="fas fa-clock text-primary me-2"></i>
+												Khóa học gần đây
 											</h4>
-											<span className="badge bg-primary-soft text-primary">
-												{enrolledCourses?.total || 0} khóa học
-											</span>
+											<div className="d-flex align-items-center gap-2">
+												<span className="badge bg-primary-soft text-primary">
+													{enrolledCourses?.data?.length || 0} khóa học
+												</span>
+												<Link href="/student/courselist" className="btn btn-sm btn-outline-primary">
+													<i className="fas fa-eye me-1"></i>Xem tất cả
+												</Link>
+											</div>
 										</div>
 									</div>
 
 									<div className="card-body">
-										{/* Search and filter */}
-										<div className="row g-3 align-items-center justify-content-between mb-4">
-											<div className="col-md-6">
-												<div className="position-relative">
-													<input
-														className="form-control pe-5 border-0 bg-light"
-														type="search"
-														placeholder="Tìm kiếm khóa học của bạn..."
-														value={searchTerm}
-														onChange={(e) => setSearchTerm(e.target.value)}
-													/>
-													<i className="fas fa-search position-absolute top-50 end-0 translate-middle-y pe-3 text-black"></i>
-												</div>
-											</div>
-											<div className="col-md-3">
-												<select
-													className="form-select border-0 bg-light"
-													value={sortBy}
-													onChange={(e) => handleSortChange(e.target.value)}
-												>
-													<option value="">Sắp xếp theo</option>
-													<option value="newest">Mới nhất</option>
-													<option value="oldest">Cũ nhất</option>
-													<option value="title">Tên khóa học</option>
-												</select>
-											</div>
-											<div className="col-md-3">
-												<select
-													className="form-select border-0 bg-light"
-													value={perPage}
-													onChange={(e) => handlePerPageChange(e.target.value)}
-												>
-													<option value="6">6 khóa học</option>
-													<option value="12">12 khóa học</option>
-													<option value="24">24 khóa học</option>
-													<option value="50">50 khóa học</option>
-												</select>
-											</div>
-										</div>
-
-										{/* Courses table */}
+										{/* Recent Courses List */}
 										{enrolledCourses?.data?.length > 0 ? (
 											<>
 												<div className="table-responsive">
@@ -303,7 +268,7 @@ const StudentDashboard = () => {
 															</tr>
 														</thead>
 														<tbody>
-															{enrolledCourses.data.map((course) => (
+															{enrolledCourses.data.slice(0, 5).map((course) => (
 																<tr key={course.id}>
 																	<td>
 																		<div className="d-flex align-items-center">
@@ -380,13 +345,15 @@ const StudentDashboard = () => {
 													</table>
 												</div>
 
-												{/* Pagination */}
-												<div className="d-flex justify-content-between align-items-center mt-4">
-													<div className="text-muted small">
-														Hiển thị {enrolledCourses.from} - {enrolledCourses.to} trong tổng số {enrolledCourses.total} khóa học
+												{/* Show more courses link */}
+												{enrolledCourses.data.length > 5 && (
+													<div className="text-center mt-3">
+														<Link href="/student/courselist" className="btn btn-outline-primary">
+															<i className="fas fa-plus me-2"></i>
+															Xem thêm {enrolledCourses.data.length - 5} khóa học khác
+														</Link>
 													</div>
-													<Pagination links={enrolledCourses.links} />
-												</div>
+												)}
 											</>
 										) : (
 											<div className="text-center py-5">
@@ -394,19 +361,14 @@ const StudentDashboard = () => {
 													<i className="fas fa-graduation-cap text-black" style={{ fontSize: '4rem' }}></i>
 												</div>
 												<h5 className="text-black mb-3">
-													{searchTerm ? 'Không tìm thấy khóa học' : 'Bắt đầu hành trình học tập'}
+													Bắt đầu hành trình học tập
 												</h5>
 												<p className="text-black mb-4">
-													{searchTerm
-														? 'Thử điều chỉnh từ khóa tìm kiếm hoặc bộ lọc.'
-														: 'Bạn chưa đăng ký khóa học nào. Khám phá danh mục khóa học để bắt đầu!'
-													}
+													Bạn chưa đăng ký khóa học nào. Khám phá danh mục khóa học để bắt đầu!
 												</p>
-												{!searchTerm && (
-													<Link href="/courses" className="btn btn-primary">
-														<i className="fas fa-plus me-2"></i>Khám phá khóa học
-													</Link>
-												)}
+												<Link href="/courses" className="btn btn-primary">
+													<i className="fas fa-plus me-2"></i>Khám phá khóa học
+												</Link>
 											</div>
 										)}
 									</div>

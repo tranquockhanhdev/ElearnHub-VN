@@ -16,7 +16,19 @@ class EnrollmentRepository
     {
         $this->model = $model;
     }
+    public function getTotalEnrollmentsCount(int $studentId): int
+    {
+        return $this->model->where('student_id', $studentId)->count();
+    }
 
+    public function getRecentStudentEnrollments(int $studentId, int $limit = 5): Collection
+    {
+        return $this->model->with(['course.lessons', 'course.instructor'])
+            ->where('student_id', $studentId)
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get();
+    }
     /**
      * Lấy tất cả enrollment
      */
@@ -259,57 +271,5 @@ class EnrollmentRepository
                 $query->where('title', 'like', '%' . $keyword . '%');
             })
             ->get();
-    }
-
-    /**
-     * Lấy tổng số enrollment
-     */
-    public function getTotalEnrollments(): int
-    {
-        return $this->model->count();
-    }
-
-    /**
-     * Lấy enrollment với phân trang và filter
-     */
-    public function getEnrollmentsWithFilters(array $filters = []): LengthAwarePaginator
-    {
-        $query = $this->model->with(['student', 'course']);
-
-        // Filter theo trạng thái
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        // Filter theo khóa học
-        if (!empty($filters['course_id'])) {
-            $query->where('course_id', $filters['course_id']);
-        }
-
-        // Filter theo học viên
-        if (!empty($filters['student_id'])) {
-            $query->where('student_id', $filters['student_id']);
-        }
-
-        // Tìm kiếm
-        if (!empty($filters['search'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->whereHas('student', function ($sq) use ($filters) {
-                    $sq->where('name', 'like', '%' . $filters['search'] . '%')
-                        ->orWhere('email', 'like', '%' . $filters['search'] . '%');
-                })
-                    ->orWhereHas('course', function ($cq) use ($filters) {
-                        $cq->where('title', 'like', '%' . $filters['search'] . '%');
-                    });
-            });
-        }
-
-        // Sắp xếp
-        $sortBy = $filters['sort_by'] ?? 'created_at';
-        $sortOrder = $filters['sort_order'] ?? 'desc';
-        $query->orderBy($sortBy, $sortOrder);
-
-        $perPage = $filters['per_page'] ?? 15;
-        return $query->paginate($perPage);
     }
 }
