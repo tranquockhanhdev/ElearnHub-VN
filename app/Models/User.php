@@ -32,7 +32,10 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class);
     }
-
+    public function instructor()
+    {
+        return $this->hasOne(Instructor::class, 'user_id');
+    }
     public function courses() // nếu là instructor
     {
         return $this->hasMany(Course::class, 'instructor_id');

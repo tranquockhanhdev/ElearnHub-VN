@@ -49,5 +49,9 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
         ->name('admin.instructors.block');
     Route::put('/admin/instructors/{id}/block', [AdminUserController::class, 'block'])
         ->name('admin.instructors.block');
+    Route::put('/admin/instructors/{id}', [AdminUserController::class, 'updateInstructor'])
+        ->name('admin.instructors.update');
+    Route::delete('/admin/instructors/{id}/avatar', [AdminUserController::class, 'removeInstructorAvatar'])
+        ->name('admin.instructors.remove-avatar');
 
 });
