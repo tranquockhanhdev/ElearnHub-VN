@@ -157,16 +157,6 @@ class CourseService
         return $this->CourseRepository->getCoursesByInstructor($instructorId);
     }
 
-    public function searchCourses($keyword)
-    {
-        return $this->CourseRepository->searchCourses($keyword);
-    }
-
-    public function paginateCourses($perPage = 10)
-    {
-        return $this->CourseRepository->paginateCourses($perPage);
-    }
-
     public function getApprovedCourses()
     {
         return $this->CourseRepository->getApprovedCourses();
