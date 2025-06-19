@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import UserLayout from '../../Components/Layouts/UserLayout';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
+import axios from 'axios';
 
 const Checkout = () => {
     const { auth, flash_success, flash_error, course, paymentMethods } = usePage().props;
 
-    // State để quản lý accordion và form
-    const [activeAccordion, setActiveAccordion] = useState(0);
+    const [currentStep, setCurrentStep] = useState(1);
+    const [activeAccordion, setActiveAccordion] = useState(null); // Thay đổi từ 0 thành null
     const [formData, setFormData] = useState({
         name: auth?.user?.name || '',
         email: auth?.user?.email || '',
@@ -16,30 +17,36 @@ const Checkout = () => {
         payment_time: new Date().toISOString(),
         country: 'VN'
     });
-    console.log('Checkout Page Loaded', { formData });
-    // Format price
+
+    const [errors, setErrors] = useState({});
+
     const formatPrice = (price) => {
         return new Intl.NumberFormat('vi-VN').format(price) + '₫';
     };
 
-    // Get course image URL
     const getCourseImageUrl = (imgUrl) => {
         if (!imgUrl) return 'https://placehold.co/600x400/EEE/31343C';
         if (imgUrl.startsWith('http')) return imgUrl;
         return `/storage/${imgUrl}`;
     };
 
-    // Handle accordion toggle - sửa lại để cập nhật payment_method_id
+    // Handle accordion toggle - cập nhật logic
     const handleAccordionToggle = (index) => {
         const newActiveIndex = activeAccordion === index ? null : index;
         setActiveAccordion(newActiveIndex);
 
-        // Cập nhật payment_method_id trong formData
         if (newActiveIndex !== null && paymentMethods[newActiveIndex]) {
             setFormData({
                 ...formData,
                 payment_method_id: paymentMethods[newActiveIndex].id
             });
+            // Xóa lỗi khi user chọn phương thức thanh toán
+            if (errors.payment_method_id) {
+                setErrors({
+                    ...errors,
+                    payment_method_id: null
+                });
+            }
         } else {
             setFormData({
                 ...formData,
@@ -54,6 +61,66 @@ const Checkout = () => {
             ...formData,
             [e.target.name]: e.target.value
         });
+        // Xóa lỗi khi user nhập lại
+        if (errors[e.target.name]) {
+            setErrors({
+                ...errors,
+                [e.target.name]: null
+            });
+        }
+    };
+
+    // Validate form
+    const validateForm = () => {
+        const newErrors = {};
+
+        if (!formData.name.trim()) {
+            newErrors.name = 'Vui lòng nhập họ và tên';
+        }
+
+        if (!formData.email.trim()) {
+            newErrors.email = 'Vui lòng nhập email';
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.email = 'Email không hợp lệ';
+        }
+
+        if (!formData.payment_method_id) {
+            newErrors.payment_method_id = 'Vui lòng chọn phương thức thanh toán';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    // Handle complete payment
+    const handleCompletePayment = () => {
+        if (validateForm()) {
+            setCurrentStep(2); // Chuyển sang bước xác nhận
+        }
+    };
+
+    const handleConfirmAndPay = async () => {
+        try {
+            const response = await axios.post(route('student.checkout.process', course.id), formData);
+
+            const url = response.data.redirect_url ?? response.data.data;
+            if (url) {
+                window.location.href = url;
+
+            } else {
+                alert("Không lấy được link thanh toán VNPay");
+            }
+        } catch (error) {
+            console.error("Lỗi thanh toán:", error);
+            if (error.response?.data?.errors) {
+                setErrors(error.response.data.errors);
+                setCurrentStep(1);
+            }
+        }
+    };
+    // Get selected payment method
+    const getSelectedPaymentMethod = () => {
+        return paymentMethods?.find(method => method.id === formData.payment_method_id);
     };
 
     return (
@@ -61,8 +128,7 @@ const Checkout = () => {
             <>
                 {/* **************** MAIN CONTENT START **************** */}
                 <main>
-                    {/* =======================
-Page Banner START */}
+                    {/* Page Banner */}
                     <section className="py-0 bg-gradient-primary">
                         <div className="container">
                             <div className="row">
@@ -95,11 +161,8 @@ Page Banner START */}
                             </div>
                         </div>
                     </section>
-                    {/* =======================
-Page Banner END */}
 
-                    {/* =======================
-Page content START */}
+                    {/* Page content */}
                     <section className="pt-5 pb-5" style={{ backgroundColor: '#f8f9fa' }}>
                         <div className="container">
                             {/* Security Badge */}
@@ -109,7 +172,7 @@ Page content START */}
                                         <i className="bi bi-shield-check fs-4 me-3 text-success"></i>
                                         <div>
                                             <h6 className="mb-1 fw-semibold">Giao dịch được bảo mật</h6>
-                                            <small className="text-muted">Thông tin của bạn được mã hóa và bảo vệ bằng SSL 256-bit</small>
+                                            <small className="text-gray-400d">Thông tin của bạn được mã hóa và bảo vệ bằng SSL 256-bit</small>
                                         </div>
                                     </div>
                                 </div>
@@ -118,373 +181,354 @@ Page content START */}
                             <div className="row g-4">
                                 {/* Main content START */}
                                 <div className="col-xl-8">
-                                    {/* Alert for login */}
-                                    {!auth?.user && (
-                                        <div className="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-4">
-                                            <i className="bi bi-exclamation-triangle-fill fs-4 me-3 text-warning"></i>
-                                            <div className="flex-grow-1">
-                                                <h6 className="mb-1 fw-semibold">Cần đăng nhập để tiếp tục</h6>
-                                                <small className="text-muted">Vui lòng đăng nhập để hoàn tất quá trình thanh toán</small>
-                                            </div>
-                                            <Link href="/login" className="btn btn-warning btn-sm ms-3">
-                                                <i className="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
-                                            </Link>
-                                        </div>
-                                    )}
-
                                     {/* Step Indicator */}
                                     <div className="card border-0 shadow-sm mb-4">
                                         <div className="card-body p-4">
                                             <div className="row text-center">
                                                 <div className="col-md-4">
                                                     <div className="d-flex flex-column align-items-center">
-                                                        <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style={{ width: '50px', height: '50px' }}>
+                                                        <div className={`rounded-circle d-flex align-items-center justify-content-center ${currentStep >= 1 ? 'bg-primary text-white' : 'bg-light text-gray-400d'}`} style={{ width: '50px', height: '50px' }}>
                                                             <i className="bi bi-person-check fs-5"></i>
                                                         </div>
-                                                        <h6 className="mt-2 mb-0 fw-semibold text-primary">Thông tin</h6>
-                                                        <small className="text-muted">Nhập thông tin cá nhân</small>
+                                                        <h6 className={`mt-2 mb-0 fw-semibold ${currentStep >= 1 ? 'text-primary' : 'text-gray-400d'}`}>Thông tin</h6>
+                                                        <small className="text-gray-400d">Nhập thông tin cá nhân</small>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-4">
                                                     <div className="d-flex flex-column align-items-center">
-                                                        <div className="rounded-circle bg-light text-muted d-flex align-items-center justify-content-center" style={{ width: '50px', height: '50px' }}>
-                                                            <i className="bi bi-credit-card fs-5"></i>
+                                                        <div className={`rounded-circle d-flex align-items-center justify-content-center ${currentStep >= 2 ? 'bg-primary text-white' : 'bg-light text-gray-400d'}`} style={{ width: '50px', height: '50px' }}>
+                                                            <i className="bi bi-check-square fs-5"></i>
                                                         </div>
-                                                        <h6 className="mt-2 mb-0 text-muted">Thanh toán</h6>
-                                                        <small className="text-muted">Chọn phương thức</small>
+                                                        <h6 className={`mt-2 mb-0 ${currentStep >= 2 ? 'text-primary fw-semibold' : 'text-gray-400d'}`}>Xác nhận</h6>
+                                                        <small className="text-gray-400d">Kiểm tra thông tin</small>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-4">
                                                     <div className="d-flex flex-column align-items-center">
-                                                        <div className="rounded-circle bg-light text-muted d-flex align-items-center justify-content-center" style={{ width: '50px', height: '50px' }}>
+                                                        <div className={`rounded-circle d-flex align-items-center justify-content-center ${currentStep >= 3 ? 'bg-success text-white' : 'bg-light text-gray-400d'}`} style={{ width: '50px', height: '50px' }}>
                                                             <i className="bi bi-check-circle fs-5"></i>
                                                         </div>
-                                                        <h6 className="mt-2 mb-0 text-muted">Hoàn tất</h6>
-                                                        <small className="text-muted">Xác nhận đơn hàng</small>
+                                                        <h6 className={`mt-2 mb-0 ${currentStep >= 3 ? 'text-success fw-semibold' : 'text-gray-400d'}`}>Hoàn tất</h6>
+                                                        <small className="text-gray-400d">Thanh toán thành công</small>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Personal info START */}
-                                    <div className="card border-0 shadow-sm mb-4">
-                                        <div className="card-header bg-white border-0 p-4">
-                                            <h5 className="mb-0 fw-bold d-flex align-items-center">
-                                                <i className="bi bi-person-fill me-2 text-primary"></i>
-                                                Thông tin thanh toán
-                                            </h5>
-                                            <p className="text-muted mb-0 mt-1">Vui lòng nhập thông tin chính xác để hoàn tất giao dịch</p>
-                                        </div>
-                                        <div className="card-body p-4">
-                                            <form className="row g-4">
-                                                {/* Name */}
-                                                <div className="col-md-6">
-                                                    <label htmlFor="yourName" className="form-label fw-semibold">
-                                                        <i className="bi bi-person me-1"></i>Họ và tên <span className="text-danger">*</span>
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control form-control-lg border-2"
-                                                        id="yourName"
-                                                        name="name"
-                                                        placeholder="Nhập họ và tên đầy đủ"
-                                                        value={formData.name}
-                                                        onChange={handleInputChange}
-                                                        style={{ borderRadius: '12px' }}
-                                                    />
+                                    {/* STEP 1: Thông tin thanh toán */}
+                                    {currentStep === 1 && (
+                                        <>
+                                            {/* Personal info START */}
+                                            <div className="card border-0 shadow-sm mb-4">
+                                                <div className="card-header bg-white border-0 p-4">
+                                                    <h5 className="mb-0 fw-bold d-flex align-items-center">
+                                                        <i className="bi bi-person-fill me-2 text-primary"></i>
+                                                        Thông tin thanh toán
+                                                    </h5>
+                                                    <p className="text-gray-400d mb-0 mt-1">Vui lòng nhập thông tin chính xác để hoàn tất giao dịch</p>
                                                 </div>
-                                                {/* Email */}
-                                                <div className="col-md-6">
-                                                    <label htmlFor="emailInput" className="form-label fw-semibold">
-                                                        <i className="bi bi-envelope me-1"></i>Email <span className="text-danger">*</span>
-                                                    </label>
-                                                    <input
-                                                        type="email"
-                                                        className="form-control form-control-lg border-2"
-                                                        id="emailInput"
-                                                        name="email"
-                                                        placeholder="email@example.com"
-                                                        value={formData.email}
-                                                        onChange={handleInputChange}
-                                                        style={{ borderRadius: '12px' }}
-                                                    />
+                                                <div className="card-body p-4">
+                                                    <form className="row g-4">
+                                                        {/* Name */}
+                                                        <div className="col-md-6">
+                                                            <label htmlFor="yourName" className="form-label fw-semibold">
+                                                                <i className="bi bi-person me-1"></i>Họ và tên <span className="text-danger">*</span>
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                className={`form-control form-control-lg border-2 ${errors.name ? 'is-invalid' : ''}`}
+                                                                id="yourName"
+                                                                name="name"
+                                                                placeholder="Nhập họ và tên đầy đủ"
+                                                                value={formData.name}
+                                                                onChange={handleInputChange}
+                                                                style={{ borderRadius: '12px' }}
+                                                            />
+                                                            {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+                                                        </div>
+
+                                                        {/* Email */}
+                                                        <div className="col-md-6">
+                                                            <label htmlFor="emailInput" className="form-label fw-semibold">
+                                                                <i className="bi bi-envelope me-1"></i>Email <span className="text-danger">*</span>
+                                                            </label>
+                                                            <input
+                                                                type="email"
+                                                                className={`form-control form-control-lg border-2 ${errors.email ? 'is-invalid' : ''}`}
+                                                                id="emailInput"
+                                                                name="email"
+                                                                placeholder="email@example.com"
+                                                                value={formData.email}
+                                                                onChange={handleInputChange}
+                                                                style={{ borderRadius: '12px' }}
+                                                            />
+                                                            {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+                                                        </div>
+
+                                                        {/* Country */}
+                                                        <div className="col-md-6">
+                                                            <label htmlFor="country" className="form-label fw-semibold">
+                                                                <i className="bi bi-geo-alt me-1"></i>Quốc gia <span className="text-danger">*</span>
+                                                            </label>
+                                                            <select
+                                                                className="form-select form-select-lg border-2"
+                                                                id="country"
+                                                                name="country"
+                                                                value={formData.country}
+                                                                onChange={handleInputChange}
+                                                                style={{ borderRadius: '12px' }}
+                                                            >
+                                                                <option value="VN">🇻🇳 Việt Nam</option>
+                                                                <option value="US">🇺🇸 Hoa Kỳ</option>
+                                                                <option value="CN">🇨🇳 Trung Quốc</option>
+                                                                <option value="JP">🇯🇵 Nhật Bản</option>
+                                                            </select>
+                                                        </div>
+                                                    </form>
                                                 </div>
+                                            </div>
 
-                                                {/* Country */}
-                                                <div className="col-md-6">
-                                                    <label htmlFor="country" className="form-label fw-semibold">
-                                                        <i className="bi bi-geo-alt me-1"></i>Quốc gia <span className="text-danger">*</span>
-                                                    </label>
-                                                    <select
-                                                        className="form-select form-select-lg border-2"
-                                                        id="country"
-                                                        name="country"
-                                                        value={formData.country}
-                                                        onChange={handleInputChange}
-                                                        style={{ borderRadius: '12px' }}
-                                                    >
-                                                        <option value="VN">🇻🇳 Việt Nam</option>
-                                                        <option value="US">🇺🇸 Hoa Kỳ</option>
-                                                        <option value="CN">🇨🇳 Trung Quốc</option>
-                                                        <option value="JP">🇯🇵 Nhật Bản</option>
-                                                    </select>
+                                            {/* Payment method START */}
+                                            <div className="card border-0 shadow-sm">
+                                                <div className="card-header bg-white border-0 p-4">
+                                                    <h5 className="mb-0 fw-bold d-flex align-items-center">
+                                                        <i className="bi bi-credit-card me-2 text-primary"></i>
+                                                        Phương thức thanh toán
+                                                    </h5>
+                                                    <p className="text-gray-400d mb-0 mt-1">Chọn phương thức thanh toán phù hợp với bạn</p>
+                                                    {errors.payment_method_id && (
+                                                        <div className="text-danger small mt-2">
+                                                            <i className="bi bi-exclamation-triangle me-1"></i>
+                                                            {errors.payment_method_id}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            </form>
-                                        </div>
-                                    </div>
+                                                <div className="card-body p-4">
+                                                    {paymentMethods && paymentMethods.length > 0 ? (
+                                                        <div className="row g-3">
+                                                            {paymentMethods.map((method, index) => {
+                                                                const isActive = activeAccordion === index;
+                                                                return (
+                                                                    <div className="col-12" key={method.id}>
+                                                                        <div className={`card border-2 ${isActive ? 'border-primary shadow-sm' : 'border-light'} transition-all cursor-pointer`} style={{ borderRadius: '16px' }}>
+                                                                            <div className="card-header bg-transparent border-0 p-0">
+                                                                                <button
+                                                                                    className={`btn w-100 text-start p-4 border-0 d-flex align-items-center ${isActive ? 'bg-light' : 'bg-white'} hover-effect`}
+                                                                                    type="button"
+                                                                                    onClick={() => handleAccordionToggle(index)}
+                                                                                    style={{ borderRadius: '16px' }}
+                                                                                >
+                                                                                    <div className="d-flex align-items-center w-100">
+                                                                                        {/* Custom Radio */}
+                                                                                        <div className={`rounded-circle me-3 d-flex align-items-center justify-content-center ${isActive ? 'bg-primary' : 'bg-light border'}`} style={{ width: '24px', height: '24px' }}>
+                                                                                            {isActive && <i className="bi bi-check text-white small"></i>}
+                                                                                        </div>
 
-                                    {/* Payment method START */}
-                                    <div className="card border-0 shadow-sm">
-                                        <div className="card-header bg-white border-0 p-4">
-                                            <h5 className="mb-0 fw-bold d-flex align-items-center">
-                                                <i className="bi bi-credit-card me-2 text-primary"></i>
-                                                Phương thức thanh toán
-                                            </h5>
-                                            <p className="text-muted mb-0 mt-1">Chọn phương thức thanh toán phù hợp với bạn</p>
-                                        </div>
-                                        <div className="card-body p-4">
-                                            {paymentMethods && paymentMethods.length > 0 ? (
-                                                <div className="row g-3">
-                                                    {paymentMethods.map((method, index) => {
-                                                        const isActive = activeAccordion === index;
+                                                                                        <div className="flex-grow-1">
+                                                                                            <h6 className="mb-0 fw-bold text-dark">{method.name}</h6>
+                                                                                            <small className="text-gray-400d">
+                                                                                                {method.code === 'vnpay' && 'Thanh toán qua VNPay'}
+                                                                                                {method.code === 'momo' && 'Ví điện tử MoMo'}
+                                                                                                {method.code === 'zalopay' && 'Ví điện tử ZaloPay'}
+                                                                                                {method.code === 'card' && 'Thẻ tín dụng/ghi nợ'}
+                                                                                                {method.code === 'banking' && 'Chuyển khoản ngân hàng'}
+                                                                                            </small>
+                                                                                        </div>
 
-                                                        return (
-                                                            <div className="col-12" key={method.id}>
-                                                                <div className={`card border-2 ${isActive ? 'border-primary shadow-sm' : 'border-light'} transition-all`} style={{ borderRadius: '16px' }}>
-                                                                    <div className="card-header bg-transparent border-0 p-0">
-                                                                        <button
-                                                                            className={`btn w-100 text-start p-4 border-0 d-flex align-items-center ${isActive ? 'bg-light' : 'bg-white'}`}
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                handleAccordionToggle(index);
-                                                                                console.log('Selected payment method:', method);
-                                                                                console.log('Updated formData:', { ...formData, payment_method_id: method.id });
-                                                                            }}
-                                                                            style={{ borderRadius: '16px' }}
-                                                                        >
-                                                                            <div className="d-flex align-items-center w-100">
-                                                                                {/* Custom Radio */}
-                                                                                <div className={`rounded-circle me-3 d-flex align-items-center justify-content-center ${isActive ? 'bg-primary' : 'bg-light border'}`} style={{ width: '24px', height: '24px' }}>
-                                                                                    {isActive && <i className="bi bi-check text-white small"></i>}
-                                                                                </div>
-
-                                                                                {method.icon && (
-                                                                                    <div className="me-3 d-flex align-items-center justify-content-center bg-white rounded p-2" style={{ width: '50px', height: '50px' }}>
-                                                                                        <img
-                                                                                            src={method.icon}
-                                                                                            alt={method.name}
-                                                                                            style={{ maxWidth: '100%', maxHeight: '100%' }}
-                                                                                        />
+                                                                                        <div className="me-2">
+                                                                                            <small className="text-gray-400d">Nhấn để chọn</small>
+                                                                                        </div>
                                                                                     </div>
-                                                                                )}
-
-                                                                                <div className="flex-grow-1">
-                                                                                    <h6 className="mb-0 fw-bold text-dark">{method.name}</h6>
-                                                                                    <small className="text-muted">
-                                                                                        {method.code === 'vnpay' && 'Thanh toán qua VNPay'}
-                                                                                        {method.code === 'momo' && 'Ví điện tử MoMo'}
-                                                                                        {method.code === 'zalopay' && 'Ví điện tử ZaloPay'}
-                                                                                        {method.code === 'card' && 'Thẻ tín dụng/ghi nợ'}
-                                                                                        {method.code === 'banking' && 'Chuyển khoản ngân hàng'}
-                                                                                    </small>
-                                                                                </div>
-
-                                                                                <i className={`bi ${isActive ? 'bi-chevron-up' : 'bi-chevron-down'} text-muted`}></i>
-                                                                            </div>
-                                                                        </button>
-                                                                    </div>
-
-                                                                    {/* Collapse content */}
-                                                                    {isActive && (
-                                                                        <div className="card-body pt-0 px-4 pb-4">
-                                                                            {/* Hiển thị thông tin payment method được chọn */}
-                                                                            <div className="alert alert-info border-0 mb-3">
-                                                                                <small>
-                                                                                    <i className="bi bi-info-circle me-1"></i>
-                                                                                    Đã chọn: <strong>{method.name}</strong>
-                                                                                </small>
+                                                                                </button>
                                                                             </div>
 
-                                                                            {/* VNPay */}
-                                                                            {method.code === 'vnpay' && (
-                                                                                <div className="p-4 bg-light rounded-3">
-                                                                                    <div className="d-flex align-items-center mb-3">
-                                                                                        <i className="bi bi-shield-check text-success fs-4 me-3"></i>
-                                                                                        <div>
-                                                                                            <h6 className="mb-1 fw-semibold">Thanh toán an toàn với VNPay</h6>
-                                                                                            <small className="text-muted">Bạn sẽ được chuyển đến cổng thanh toán VNPay để hoàn tất giao dịch</small>
+                                                                            {/* Thêm phần mô tả chi tiết khi được chọn */}
+                                                                            {isActive && (
+                                                                                <div className="card-body pt-0 px-4 pb-4">
+                                                                                    <div className="bg-light p-3 rounded-3">
+                                                                                        <div className="d-flex align-items-center">
+                                                                                            <i className="bi bi-check-circle-fill text-success me-2"></i>
+                                                                                            <small className="text-gray-400d">
+                                                                                                Đã chọn {method.name} làm phương thức thanh toán
+                                                                                            </small>
                                                                                         </div>
-                                                                                    </div>
-                                                                                    <div className="d-flex flex-wrap gap-2">
-                                                                                        <span className="badge bg-primary">Visa</span>
-                                                                                        <span className="badge bg-primary">Mastercard</span>
-                                                                                        <span className="badge bg-primary">ATM Card</span>
-                                                                                        <span className="badge bg-primary">Internet Banking</span>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-
-                                                                            {/* Credit/Debit Card */}
-                                                                            {method.code === 'card' && (
-                                                                                <div>
-                                                                                    <div className="alert alert-info border-0 mb-4">
-                                                                                        <i className="bi bi-info-circle me-2"></i>
-                                                                                        <strong>Thông tin thẻ của bạn được mã hóa và bảo mật tuyệt đối</strong>
-                                                                                    </div>
-
-                                                                                    <form className="row g-4">
-                                                                                        <div className="col-12">
-                                                                                            <label className="form-label fw-semibold">
-                                                                                                <i className="bi bi-credit-card me-1"></i>Số thẻ <span className="text-danger">*</span>
-                                                                                            </label>
-                                                                                            <input
-                                                                                                type="text"
-                                                                                                className="form-control form-control-lg border-2"
-                                                                                                placeholder="1234 5678 9012 3456"
-                                                                                                maxLength="19"
-                                                                                                style={{ borderRadius: '12px' }}
-                                                                                            />
-                                                                                        </div>
-                                                                                        <div className="col-md-6">
-                                                                                            <label className="form-label fw-semibold">
-                                                                                                <i className="bi bi-calendar me-1"></i>Ngày hết hạn <span className="text-danger">*</span>
-                                                                                            </label>
-                                                                                            <div className="input-group">
-                                                                                                <input
-                                                                                                    type="text"
-                                                                                                    className="form-control form-control-lg border-2"
-                                                                                                    placeholder="MM"
-                                                                                                    maxLength="2"
-                                                                                                    style={{ borderRadius: '12px 0 0 12px' }}
-                                                                                                />
-                                                                                                <span className="input-group-text bg-light border-2">/</span>
-                                                                                                <input
-                                                                                                    type="text"
-                                                                                                    className="form-control form-control-lg border-2"
-                                                                                                    placeholder="YY"
-                                                                                                    maxLength="2"
-                                                                                                    style={{ borderRadius: '0 12px 12px 0' }}
-                                                                                                />
+                                                                                        {method.code === 'vnpay' && (
+                                                                                            <div className="mt-2">
+                                                                                                <small className="text-gray-400d">
+                                                                                                    • Hỗ trợ các ngân hàng trong nước<br />
+                                                                                                    • Thanh toán an toàn, bảo mật<br />
+                                                                                                    • Xử lý giao dịch nhanh chóng
+                                                                                                </small>
                                                                                             </div>
-                                                                                        </div>
-                                                                                        <div className="col-md-6">
-                                                                                            <label className="form-label fw-semibold">
-                                                                                                <i className="bi bi-lock me-1"></i>CVV <span className="text-danger">*</span>
-                                                                                            </label>
-                                                                                            <input
-                                                                                                type="password"
-                                                                                                className="form-control form-control-lg border-2"
-                                                                                                placeholder="123"
-                                                                                                maxLength="4"
-                                                                                                style={{ borderRadius: '12px' }}
-                                                                                            />
-                                                                                        </div>
-                                                                                        <div className="col-12">
-                                                                                            <label className="form-label fw-semibold">
-                                                                                                <i className="bi bi-person me-1"></i>Tên chủ thẻ <span className="text-danger">*</span>
-                                                                                            </label>
-                                                                                            <input
-                                                                                                type="text"
-                                                                                                className="form-control form-control-lg border-2"
-                                                                                                placeholder="NGUYEN VAN A"
-                                                                                                style={{ borderRadius: '12px', textTransform: 'uppercase' }}
-                                                                                            />
-                                                                                        </div>
-                                                                                    </form>
-                                                                                </div>
-                                                                            )}
-
-                                                                            {/* Momo */}
-                                                                            {method.code === 'momo' && (
-                                                                                <div className="p-4 bg-light rounded-3">
-                                                                                    <div className="d-flex align-items-center mb-3">
-                                                                                        <div className="bg-pink rounded-circle p-2 me-3">
-                                                                                            <i className="bi bi-phone text-white"></i>
-                                                                                        </div>
-                                                                                        <div>
-                                                                                            <h6 className="mb-1 fw-semibold">Thanh toán với MoMo</h6>
-                                                                                            <small className="text-muted">Nhanh chóng, tiện lợi và bảo mật với ví MoMo</small>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div className="alert alert-success border-0 small">
-                                                                                        <i className="bi bi-check-circle me-2"></i>
-                                                                                        Bạn sẽ nhận được thông báo trên ứng dụng MoMo để xác nhận thanh toán
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-
-                                                                            {/* ZaloPay */}
-                                                                            {method.code === 'zalopay' && (
-                                                                                <div className="p-4 bg-light rounded-3">
-                                                                                    <div className="d-flex align-items-center mb-3">
-                                                                                        <div className="bg-info rounded-circle p-2 me-3">
-                                                                                            <i className="bi bi-lightning text-white"></i>
-                                                                                        </div>
-                                                                                        <div>
-                                                                                            <h6 className="mb-1 fw-semibold">Thanh toán với ZaloPay</h6>
-                                                                                            <small className="text-muted">Thanh toán siêu tốc cùng ZaloPay</small>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div className="alert alert-info border-0 small">
-                                                                                        <i className="bi bi-info-circle me-2"></i>
-                                                                                        Bạn cần có ứng dụng ZaloPay để hoàn tất thanh toán
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-
-                                                                            {/* Banking Transfer */}
-                                                                            {method.code === 'banking' && (
-                                                                                <div>
-                                                                                    <div className="alert alert-warning border-0 mb-4">
-                                                                                        <i className="bi bi-exclamation-triangle me-2"></i>
-                                                                                        <strong>Lưu ý:</strong> Vui lòng chuyển khoản đúng nội dung để được xử lý tự động
-                                                                                    </div>
-
-                                                                                    <div className="card bg-gradient-primary text-white border-0" style={{ borderRadius: '16px' }}>
-                                                                                        <div className="card-body p-4">
-                                                                                            <h6 className="mb-3 fw-bold">
-                                                                                                <i className="bi bi-bank me-2"></i>Thông tin chuyển khoản
-                                                                                            </h6>
-                                                                                            <div className="row g-3">
-                                                                                                <div className="col-sm-6">
-                                                                                                    <small className="opacity-75">Ngân hàng</small>
-                                                                                                    <div className="fw-bold">Vietcombank</div>
-                                                                                                </div>
-                                                                                                <div className="col-sm-6">
-                                                                                                    <small className="opacity-75">Số tài khoản</small>
-                                                                                                    <div className="fw-bold">0123456789</div>
-                                                                                                </div>
-                                                                                                <div className="col-sm-6">
-                                                                                                    <small className="opacity-75">Chủ tài khoản</small>
-                                                                                                    <div className="fw-bold">CÔNG TY EHUB</div>
-                                                                                                </div>
-                                                                                                <div className="col-sm-6">
-                                                                                                    <small className="opacity-75">Nội dung</small>
-                                                                                                    <div className="fw-bold">EHUB{course?.id || 'XXX'}</div>
-                                                                                                </div>
+                                                                                        )}
+                                                                                        {method.code === 'momo' && (
+                                                                                            <div className="mt-2">
+                                                                                                <small className="text-gray-400d">
+                                                                                                    • Thanh toán bằng ví MoMo<br />
+                                                                                                    • Quét QR Code hoặc nhập số điện thoại<br />
+                                                                                                    • Giao dịch tức thì
+                                                                                                </small>
                                                                                             </div>
-                                                                                        </div>
+                                                                                        )}
                                                                                     </div>
                                                                                 </div>
                                                                             )}
                                                                         </div>
-                                                                    )}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-center py-5">
+                                                            <i className="bi bi-credit-card-2-front display-4 text-gray-400d mb-3"></i>
+                                                            <h5 className="text-gray-400d">Chưa có phương thức thanh toán</h5>
+                                                            <p className="text-gray-400d">Vui lòng liên hệ quản trị viên để cấu hình phương thức thanh toán</p>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Hiển thị thông báo khi chưa chọn phương thức thanh toán */}
+                                                    {activeAccordion === null && paymentMethods && paymentMethods.length > 0 && (
+                                                        <div className="alert alert-info border-0 mt-3">
+                                                            <div className="d-flex align-items-center">
+                                                                <i className="bi bi-info-circle me-2"></i>
+                                                                <small>Vui lòng chọn một phương thức thanh toán để tiếp tục</small>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {/* STEP 2: Xác nhận thông tin */}
+                                    {currentStep === 2 && (
+                                        <div className="card border-0 shadow-sm">
+                                            <div className="card-header bg-gradient-primary text-white border-0 p-4">
+                                                <h5 className="mb-0 fw-bold d-flex align-items-center">
+                                                    <i className="bi bi-check-square me-2"></i>
+                                                    Xác nhận thông tin thanh toán
+                                                </h5>
+                                                <p className="mb-0 mt-1 opacity-75">Vui lòng kiểm tra lại thông tin trước khi thanh toán</p>
+                                            </div>
+                                            <div className="card-body p-4">
+                                                <div className="row g-4">
+                                                    {/* Thông tin khách hàng */}
+                                                    <div className="col-md-6">
+                                                        <h6 className="fw-bold mb-3">
+                                                            <i className="bi bi-person-check me-2 text-primary"></i>
+                                                            Thông tin khách hàng
+                                                        </h6>
+                                                        <div className="bg-light p-3 rounded-3">
+                                                            <div className="row g-2">
+                                                                <div className="col-12">
+                                                                    <small className="text-gray-400d">Họ và tên:</small>
+                                                                    <div className="fw-semibold">{formData.name}</div>
+                                                                </div>
+                                                                <div className="col-12">
+                                                                    <small className="text-gray-400d">Email:</small>
+                                                                    <div className="fw-semibold">{formData.email}</div>
+                                                                </div>
+                                                                <div className="col-12">
+                                                                    <small className="text-gray-400d">Quốc gia:</small>
+                                                                    <div className="fw-semibold">
+                                                                        {formData.country === 'VN' && '🇻🇳 Việt Nam'}
+                                                                        {formData.country === 'US' && '🇺🇸 Hoa Kỳ'}
+                                                                        {formData.country === 'CN' && '🇨🇳 Trung Quốc'}
+                                                                        {formData.country === 'JP' && '🇯🇵 Nhật Bản'}
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        );
-                                                    })}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Phương thức thanh toán */}
+                                                    <div className="col-md-6">
+                                                        <h6 className="fw-bold mb-3">
+                                                            <i className="bi bi-credit-card me-2 text-primary"></i>
+                                                            Phương thức thanh toán
+                                                        </h6>
+                                                        <div className="bg-light p-3 rounded-3">
+                                                            {getSelectedPaymentMethod() && (
+                                                                <div className="d-flex align-items-center">
+                                                                    <div className="me-3">
+                                                                        <div className="bg-primary rounded-circle p-2">
+                                                                            <i className="bi bi-credit-card text-white"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="fw-semibold">{getSelectedPaymentMethod().name}</div>
+                                                                        <small className="text-gray-400d">
+                                                                            {getSelectedPaymentMethod().code === 'vnpay' && 'Thanh toán qua VNPay'}
+                                                                            {getSelectedPaymentMethod().code === 'momo' && 'Ví điện tử MoMo'}
+                                                                            {getSelectedPaymentMethod().code === 'zalopay' && 'Ví điện tử ZaloPay'}
+                                                                            {getSelectedPaymentMethod().code === 'card' && 'Thẻ tín dụng/ghi nợ'}
+                                                                            {getSelectedPaymentMethod().code === 'banking' && 'Chuyển khoản ngân hàng'}
+                                                                        </small>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Thông tin khóa học */}
+                                                    <div className="col-12">
+                                                        <h6 className="fw-bold mb-3">
+                                                            <i className="bi bi-book me-2 text-primary"></i>
+                                                            Thông tin khóa học
+                                                        </h6>
+                                                        {course && (
+                                                            <div className="bg-light p-3 rounded-3">
+                                                                <div className="d-flex">
+                                                                    <img
+                                                                        className="rounded me-3"
+                                                                        src={getCourseImageUrl(course.img_url)}
+                                                                        alt={course.title}
+                                                                        style={{ width: '60px', height: '60px', objectFit: 'cover' }}
+                                                                    />
+                                                                    <div className="flex-grow-1">
+                                                                        <h6 className="mb-1 fw-bold">{course.title}</h6>
+                                                                        <div className="mb-2">
+                                                                            {course.categories && course.categories.length > 0 ? (
+                                                                                course.categories.slice(0, 2).map((category, index) => (
+                                                                                    <span key={index} className="badge bg-primary small me-1">
+                                                                                        {category.name}
+                                                                                    </span>
+                                                                                ))
+                                                                            ) : (
+                                                                                <span className="badge bg-secondary small">Chưa phân loại</span>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="fw-bold text-success">{formatPrice(course.price)}</div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            ) : (
-                                                <div className="text-center py-5">
-                                                    <i className="bi bi-credit-card-2-front display-4 text-muted mb-3"></i>
-                                                    <h5 className="text-muted">Chưa có phương thức thanh toán</h5>
-                                                    <p className="text-muted">Vui lòng liên hệ quản trị viên để cấu hình phương thức thanh toán</p>
+
+                                                {/* Action buttons */}
+                                                <div className="d-flex gap-3 mt-4">
+                                                    <button
+                                                        className="btn btn-outline-secondary"
+                                                        onClick={() => setCurrentStep(1)}
+                                                    >
+                                                        <i className="bi bi-arrow-left me-2"></i>
+                                                        Quay lại chỉnh sửa
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-primary flex-grow-1"
+                                                        onClick={handleConfirmAndPay}
+                                                    >
+                                                        <i className="bi bi-credit-card me-2"></i>
+                                                        Xác nhận và bắt đầu thanh toán
+                                                    </button>
                                                 </div>
-                                            )}
+                                            </div>
                                         </div>
-                                    </div>
-                                    {/* Payment method END */}
+                                    )}
+
+
                                 </div>
                                 {/* Main content END */}
 
@@ -546,13 +590,13 @@ Page content START */}
                                                                 <span className="fw-semibold">{formatPrice(course.price)}</span>
                                                             </div>
                                                             <div className="d-flex justify-content-between mb-3">
-                                                                <span className="text-muted">
+                                                                <span className="text-gray-400d">
                                                                     <i className="bi bi-tag me-1"></i>Giảm giá
                                                                 </span>
                                                                 <span className="text-success">-0₫</span>
                                                             </div>
                                                             <div className="d-flex justify-content-between mb-3">
-                                                                <span className="text-muted">
+                                                                <span className="text-gray-400d">
                                                                     <i className="bi bi-percent me-1"></i>Thuế VAT
                                                                 </span>
                                                                 <span>Đã bao gồm</span>
@@ -590,12 +634,18 @@ Page content START */}
                                                         </div>
 
                                                         {/* Payment Button */}
-                                                        <div className="d-grid mb-3">
-                                                            <button className="btn btn-lg btn-primary fw-bold py-3" style={{ borderRadius: '12px' }}>
-                                                                <i className="bi bi-credit-card me-2"></i>
-                                                                Hoàn tất thanh toán
-                                                            </button>
-                                                        </div>
+                                                        {currentStep === 1 && (
+                                                            <div className="d-grid mb-3">
+                                                                <button
+                                                                    className="btn btn-lg btn-primary fw-bold py-3"
+                                                                    style={{ borderRadius: '12px' }}
+                                                                    onClick={handleCompletePayment}
+                                                                >
+                                                                    <i className="bi bi-credit-card me-2"></i>
+                                                                    Hoàn tất thanh toán
+                                                                </button>
+                                                            </div>
+                                                        )}
 
                                                         {/* Money back guarantee */}
                                                         <div className="text-center">
@@ -603,7 +653,7 @@ Page content START */}
                                                                 <i className="bi bi-shield-check fs-5 me-2"></i>
                                                                 <small className="fw-semibold">Đảm bảo hoàn tiền 30 ngày</small>
                                                             </div>
-                                                            <small className="text-muted">
+                                                            <small className="text-gray-400d">
                                                                 Bằng cách thanh toán, bạn đồng ý với{" "}
                                                                 <Link href="#" className="text-decoration-none fw-semibold">
                                                                     Điều khoản dịch vụ
@@ -613,9 +663,9 @@ Page content START */}
                                                     </>
                                                 ) : (
                                                     <div className="text-center py-5">
-                                                        <i className="bi bi-cart-x display-4 text-muted mb-3"></i>
-                                                        <h5 className="text-muted">Chưa có khóa học</h5>
-                                                        <p className="text-muted mb-4">Vui lòng chọn khóa học để tiếp tục</p>
+                                                        <i className="bi bi-cart-x display-4 text-gray-400d mb-3"></i>
+                                                        <h5 className="text-gray-400d">Chưa có khóa học</h5>
+                                                        <p className="text-gray-400d mb-4">Vui lòng chọn khóa học để tiếp tục</p>
                                                         <Link href="/courses" className="btn btn-primary">
                                                             <i className="bi bi-arrow-left me-1"></i>Chọn khóa học
                                                         </Link>
@@ -642,8 +692,6 @@ Page content START */}
                             </div>
                         </div>
                     </section>
-                    {/* =======================
-Page content END */}
                 </main>
                 {/* **************** MAIN CONTENT END **************** */}
             </>

@@ -22,10 +22,6 @@ Route::middleware(['auth', 'verified', 'role:3'])->group(function () {
     Route::get('/student/course/{id}', [CourseController::class, 'show'])
         ->name('student.course.show');
 
-    // Đăng ký tham gia một khóa học
-    Route::post('/student/course/{id}/enroll', [CourseController::class, 'enroll'])
-        ->name('student.course.enroll');
-
     // Hiển thị nội dung bài học
     Route::get('/student/lesson/{id}', [LessonController::class, 'show'])
         ->name('student.lesson.show');
@@ -37,17 +33,20 @@ Route::middleware(['auth', 'verified', 'role:3'])->group(function () {
     // Hiển thị trang thanh toán cho một khóa học
     Route::get('/student/checkout/{courseId}', [CheckoutController::class, 'show'])
         ->name('student.checkout.show');
-
     // Xử lý thanh toán cho một khóa học
     Route::post('/student/checkout/{courseId}', [CheckoutController::class, 'process'])
         ->name('student.checkout.process');
 
     // Hiển thị trang thông báo thanh toán thành công
-    Route::get('/student/checkout/success', [CheckoutController::class, 'success'])
+    Route::get('/student/success', [CheckoutController::class, 'success'])
         ->name('student.checkout.success');
 
+    // Route download hóa đơn PDF
+    Route::get('/student/invoice/{paymentId}/download', [CheckoutController::class, 'downloadInvoice'])
+        ->name('student.invoice.download');
+
     // Hiển thị trang thông báo hủy thanh toán
-    Route::get('/student/checkout/cancel', [CheckoutController::class, 'cancel'])
+    Route::get('/student/cancel', [CheckoutController::class, 'cancel'])
         ->name('student.checkout.cancel');
 
     // Hiển thị trang hồ sơ cá nhân của học viên
@@ -55,7 +54,7 @@ Route::middleware(['auth', 'verified', 'role:3'])->group(function () {
         ->name('student.profile');
 
     // Cập nhật thông tin hồ sơ cá nhân của học viên
-    Route::post('/student/profile/update', [StudentDashboardController::class, 'updateProfile'])
+    Route::put('/student/profile/update', [StudentDashboardController::class, 'updateProfile'])
         ->name('student.profile.update');
 
     // Hiển thị trang thay đổi mật khẩu
@@ -63,8 +62,8 @@ Route::middleware(['auth', 'verified', 'role:3'])->group(function () {
         ->name('student.profile.change-password');
 
     // Xử lý cập nhật mật khẩu mới
-    Route::post('/student/profile/update-password', [StudentDashboardController::class, 'updatePassword'])
-        ->name('student.profile.update-password');
+    Route::put('/student/profile/update-password', [StudentDashboardController::class, 'updatePassword'])
+        ->name('student.password.update');
 
     // Tải xuống tài liệu khóa học
     Route::get('/student/course/{courseId}/download/{documentId}', [CourseController::class, 'downloadDocument'])
@@ -77,3 +76,5 @@ Route::middleware(['auth', 'verified', 'role:3'])->group(function () {
     Route::get('/student/enrolled-courses', [StudentDashboardController::class, 'enrolledCourses'])
         ->name('student.enrolled-courses');
 });
+
+Route::get('vnpay_return', [CheckoutController::class, 'vnpay_return'])->name('vnpay.return');

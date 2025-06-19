@@ -183,4 +183,8 @@ class CourseService
 
         return asset('storage/' . $imagePath);
     }
+    public function isUserEnrolled($userId, $courseId)
+    {
+        return $this->CourseRepository->isUserEnrolled($userId, $courseId);
+    }
 }

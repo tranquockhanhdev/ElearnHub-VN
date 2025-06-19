@@ -4,7 +4,7 @@ import InfoStudent from '../../Components/InfoStudent';
 import { Link, usePage } from '@inertiajs/react';
 
 const CourseDetail = () => {
-	const { auth, flash_success, flash_error, course } = usePage().props;
+	const { auth, flash_success, flash_error, course, isEnrolled } = usePage().props;
 	const [isExpanded, setIsExpanded] = useState(false);
 	const [isCurriculumExpanded, setIsCurriculumExpanded] = useState(false);
 
@@ -51,6 +51,38 @@ const CourseDetail = () => {
 	const renderDescription = () => {
 		if (!course.description) return 'Chưa có mô tả cho khóa học này.';
 		return { __html: course.description };
+	};
+
+	// Render action button based on enrollment status
+	const renderActionButton = () => {
+		if (!auth?.user) {
+			return (
+				<Link href="/login" className="btn btn-success">
+					Đăng nhập để mua
+				</Link>
+			);
+		}
+
+		if (isEnrolled) {
+			return (
+				<Link
+					href={`/student/courses/${course.id}/learn`}
+					className="btn btn-primary"
+				>
+					<i className="fas fa-play me-2"></i>
+					Vào học ngay
+				</Link>
+			);
+		}
+
+		return (
+			<Link
+				href={`/student/checkout/${course.id}`}
+				className="btn btn-success"
+			>
+				Mua ngay
+			</Link>
+		);
 	};
 
 	return (
@@ -308,9 +340,16 @@ Page content START */}
 													{/* Price and share button */}
 													<div className="d-flex justify-content-between align-items-center">
 														{/* Price */}
-														<h3 className="fw-bold mb-0 me-2 text-success">
-															{formatPrice(course.price)}
-														</h3>
+														{!isEnrolled && (
+															<h3 className="fw-bold mb-0 me-2 text-success">
+																{formatPrice(course.price)}
+															</h3>
+														)}
+														{isEnrolled && (
+															<h3 className="fw-bold mb-0 me-2 text-primary">
+																Đã đăng ký
+															</h3>
+														)}
 														{/* Share button with dropdown */}
 														<div className="dropdown">
 															<button
@@ -354,18 +393,7 @@ Page content START */}
 
 													{/* Buttons */}
 													<div className="mt-3 d-grid">
-														{auth?.user ? (
-															<Link
-																href={`/student/checkout/${course.id}`}
-																className="btn btn-success"
-															>
-																Mua ngay
-															</Link>
-														) : (
-															<Link href="/login" className="btn btn-success">
-																Đăng nhập để mua
-															</Link>
-														)}
+														{renderActionButton()}
 													</div>
 
 													{/* Divider */}
