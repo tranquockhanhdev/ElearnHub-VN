@@ -19,7 +19,7 @@ class AdminCourseCategoryController extends Controller
         $query->where('name', 'like', '%' . $request->search . '%');
     }
 
-    // Status filter 👇
+    // Status filter 
     if ($request->filled('status')) {
         $query->where('status', $request->status);
     }
@@ -114,7 +114,7 @@ class AdminCourseCategoryController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:active,inactive,suspended',
+            'status' => 'required|in:active,inactive',
         ]);
 
         $category = Category::findOrFail($id);

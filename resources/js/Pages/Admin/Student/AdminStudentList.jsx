@@ -441,9 +441,17 @@ const AdminStudentList = ({ students }) => {
                                                             )}
                                                         </h6>
                                                         <div>
-                                                            <button className="btn btn-sm btn-outline-secondary me-2">
+                                                            <Link
+                                                                href={route(
+                                                                    "admin.students.show",
+                                                                    {
+                                                                        id: student.id,
+                                                                    }
+                                                                )}
+                                                                className="btn btn-sm btn-outline-secondary me-2"
+                                                            >
                                                                 <i className="bi bi-eye-fill"></i>
-                                                            </button>
+                                                            </Link>
                                                             <button
                                                                 className="btn btn-sm btn-outline-danger"
                                                                 onClick={() => {

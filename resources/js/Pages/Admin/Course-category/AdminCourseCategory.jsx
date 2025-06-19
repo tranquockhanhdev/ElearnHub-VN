@@ -278,9 +278,6 @@ const AdminCourseCategory = () => {
                                         <option value="inactive">
                                             Inactive
                                         </option>
-                                        <option value="suspended">
-                                            Suspended
-                                        </option>
                                     </select>
                                 </div>
 
@@ -357,7 +354,6 @@ const AdminCourseCategory = () => {
                                                         {[
                                                             "active",
                                                             "inactive",
-                                                            "suspended",
                                                         ].map(
                                                             (statusOption) => (
                                                                 <li

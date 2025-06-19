@@ -9,108 +9,109 @@ use App\Models\User;
 use Illuminate\Validation\Rule;
 use App\Models\Course;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Enrollment;
 
 
 class AdminUserController extends Controller
 {
     public function studentList(Request $request)
     {
-         $query = User::query()->where('role_id', 3);
+        $query = User::query()->where('role_id', 3);
 
-    // Tìm kiếm keyword (name hoặc email)
-    if ($request->filled('keyword')) {
-        $keyword = $request->keyword;
-        $query->where(function ($q) use ($keyword) {
-            $q->where('name', 'like', '%' . $keyword . '%')
-              ->orWhere('email', 'like', '%' . $keyword . '%');
-        });
-    }
+        // Tìm kiếm keyword (name hoặc email)
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $query->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('email', 'like', '%' . $keyword . '%');
+            });
+        }
 
-  
- if ($request->filled('name')) {
-    $query->where('name', 'like', '%' . $request->name . '%');
-}
 
-if ($request->filled('email')) {
-    $query->where('email', 'like', '%' . $request->email . '%');
-}
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
 
-    // Lọc theo trạng thái
-    if ($request->filled('status')) {
-        $query->where('status', $request->status);
-    }
+        if ($request->filled('email')) {
+            $query->where('email', 'like', '%' . $request->email . '%');
+        }
 
-    // Sắp xếp
-    switch ($request->get('sort')) {
-        case 'oldest':
-            $query->orderBy('created_at', 'asc');
-            break;
-        case 'az':
-            $query->orderBy('name', 'asc');
-            break;
-        case 'za':
-            $query->orderBy('name', 'desc');
-            break;
-        default:
-            $query->orderBy('created_at', 'desc'); // newest
-            break;
-    }
+        // Lọc theo trạng thái
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
-    $students = $query->paginate(6)->withQueryString();
+        // Sắp xếp
+        switch ($request->get('sort')) {
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'az':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'za':
+                $query->orderBy('name', 'desc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc'); // newest
+                break;
+        }
+
+        $students = $query->paginate(6)->withQueryString();
 
         return Inertia::render('Admin/Student/AdminStudentList', [
             'students' => $students
         ]);
     }
-public function instructorList(Request $request)
-{
-    $query = User::query()->where('role_id', 2);
+    public function instructorList(Request $request)
+    {
+        $query = User::query()->where('role_id', 2);
 
-    // Tìm kiếm keyword (name hoặc email)
-    if ($request->filled('keyword')) {
-        $keyword = $request->keyword;
-        $query->where(function ($q) use ($keyword) {
-            $q->where('name', 'like', '%' . $keyword . '%')
-              ->orWhere('email', 'like', '%' . $keyword . '%');
-        });
+        // Tìm kiếm keyword (name hoặc email)
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $query->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('email', 'like', '%' . $keyword . '%');
+            });
+        }
+
+
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
+
+        if ($request->filled('email')) {
+            $query->where('email', 'like', '%' . $request->email . '%');
+        }
+
+        // Lọc theo trạng thái
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Sắp xếp
+        switch ($request->get('sort')) {
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'az':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'za':
+                $query->orderBy('name', 'desc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc'); // newest
+                break;
+        }
+
+        $instructors = $query->paginate(6)->withQueryString();
+
+        return Inertia::render('Admin/Instructor/AdminInstructorList', [
+            'instructors' => $instructors,
+        ]);
     }
-
-  
- if ($request->filled('name')) {
-    $query->where('name', 'like', '%' . $request->name . '%');
-}
-
-if ($request->filled('email')) {
-    $query->where('email', 'like', '%' . $request->email . '%');
-}
-
-    // Lọc theo trạng thái
-    if ($request->filled('status')) {
-        $query->where('status', $request->status);
-    }
-
-    // Sắp xếp
-    switch ($request->get('sort')) {
-        case 'oldest':
-            $query->orderBy('created_at', 'asc');
-            break;
-        case 'az':
-            $query->orderBy('name', 'asc');
-            break;
-        case 'za':
-            $query->orderBy('name', 'desc');
-            break;
-        default:
-            $query->orderBy('created_at', 'desc'); // newest
-            break;
-    }
-
-    $instructors = $query->paginate(6)->withQueryString();
-
-    return Inertia::render('Admin/Instructor/AdminInstructorList', [
-        'instructors' => $instructors,
-    ]);
-}
 
 
     public function showInstructor($id)
@@ -126,6 +127,22 @@ if ($request->filled('email')) {
             'courses' => $courses,
         ]);
     }
+ public function showStudent(Request $request, $id)
+{
+    $student = User::where('role_id', 3)->findOrFail($id);
+
+    $enrollments = Enrollment::with('course')
+        ->where('student_id', $id)
+        ->orderByDesc('enrolled_at')
+        ->paginate(5) 
+        ->withQueryString(); 
+
+    return Inertia::render('Admin/Student/ShowStudent', [
+        'student' => $student,
+        'enrollments' => $enrollments, // Trả về sẽ có: data, links, meta
+    ]);
+}
+
     public function store(Request $request)
     {
         $validated = $request->validate([

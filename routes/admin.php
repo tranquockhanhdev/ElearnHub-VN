@@ -29,6 +29,8 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
         ->name('admin.instructors');
     Route::get('/admin/instructors/{id}', [AdminUserController::class, 'showInstructor'])
         ->name('admin.instructors.show');
+    Route::get('/admin/student/{id}', [AdminUserController::class, 'showStudent'])
+        ->name('admin.students.show');
     Route::get('/admin/settings', [AdminSettingController::class, 'index'])
         ->name('admin.settings');
     Route::post('/settings/update', [AdminSettingController::class, 'update'])
