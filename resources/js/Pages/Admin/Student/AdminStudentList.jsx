@@ -51,6 +51,7 @@ const AdminStudentList = ({ students }) => {
         for (let i = 1; i <= students.last_page; i++) {
             pages.push(
                 <Link
+                    preserveScroll
                     key={i}
                     href={`?page=${i}`}
                     className={`page-link ${

@@ -118,6 +118,7 @@ const AdminCourseCategory = () => {
         for (let i = 1; i <= categories.last_page; i++) {
             pages.push(
                 <Link
+                    preserveScroll
                     key={i}
                     href={`?page=${i}`}
                     className={`page-link ${

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { usePage } from "@inertiajs/react"; // THÊM
+import { usePage } from "@inertiajs/react";
 import AdminLayout from "@/Components/Layouts/AdminLayout";
 import { Link } from "@inertiajs/react";
 import EditUserModal from "@/Pages/Admin/User/EditUserModal";
@@ -54,6 +54,7 @@ const AdminInstructorList = ({ instructors }) => {
         for (let i = 1; i <= instructors.last_page; i++) {
             pages.push(
                 <Link
+                    preserveScroll
                     key={i}
                     href={`?page=${i}`}
                     className={`page-link ${

@@ -1,17 +1,20 @@
-import { useState } from "react";
-import { Head } from "@inertiajs/react";
+import { useState, useEffect } from "react";
+import { Link } from "@inertiajs/react";
+import { usePage, Head, router } from "@inertiajs/react";
 import AdminLayout from "../../../Components/Layouts/AdminLayout";
 import { route } from "ziggy-js";
-import { router } from "@inertiajs/react";
-export default function InstructorDetail({ instructor, courses }) {
-    const totalCourses = courses.length;
-    const activeCourses = courses.filter((c) => c.status === "active").length;
-    const pendingCourses = courses.filter((c) => c.status === "pending").length;
-    const inactiveCourses = courses.filter(
-        (c) => c.status === "inactive"
-    ).length;
-    const profile = instructor.instructor;
 
+export default function InstructorDetail({ instructor, courses }) {
+    const { courseStats } = usePage().props;
+
+    const totalCourses = courseStats.total;
+    const activeCourses = courseStats.active;
+    const pendingCourses = courseStats.pending;
+    const inactiveCourses = courseStats.inactive;
+    const profile = instructor.instructor;
+    const { flash } = usePage().props;
+
+    const [message, setMessage] = useState("");
     const [showEdit, setShowEdit] = useState(false);
     const [form, setForm] = useState({
         bio: profile?.bio || "",
@@ -20,6 +23,14 @@ export default function InstructorDetail({ instructor, courses }) {
         twitter_url: profile?.twitter_url || "",
         linkedin_url: profile?.linkedin_url || "",
     });
+
+    useEffect(() => {
+        if (flash.success) {
+            setMessage(flash.success);
+            const timeout = setTimeout(() => setMessage(""), 3000);
+            return () => clearTimeout(timeout);
+        }
+    }, [flash]);
 
     const [avatarFile, setAvatarFile] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(profile?.avatar || null);
@@ -48,19 +59,45 @@ export default function InstructorDetail({ instructor, courses }) {
             payload.append("avatar", avatarFile);
         }
 
-        // Đây là dòng quan trọng để spoof PUT
         payload.append("_method", "PUT");
-
-        console.log("FormData gửi đi:");
-        for (let [key, value] of payload.entries()) {
-            console.log(`${key}:`, value);
-        }
 
         router.post(route("admin.instructors.update", instructor.id), payload, {
             forceFormData: true,
             onSuccess: () => setShowEdit(false),
         });
     };
+
+    const renderPagination = () => {
+        const pages = [];
+
+        for (let i = 1; i <= courses.last_page; i++) {
+            pages.push(
+                <Link
+                    preserveScroll
+                    key={i}
+                    href={`?page=${i}`}
+                    className={`page-link ${
+                        courses.current_page === i ? "active" : ""
+                    }`}
+                >
+                    {i}
+                </Link>
+            );
+        }
+
+        return (
+            <nav className="mt-4">
+                <ul className="pagination justify-content-center">
+                    {pages.map((page, index) => (
+                        <li key={index} className="page-item">
+                            {page}
+                        </li>
+                    ))}
+                </ul>
+            </nav>
+        );
+    };
+
     const handleRemoveAvatar = () => {
         if (confirm("Bạn có chắc muốn xoá ảnh đại diện?")) {
             router.delete(
@@ -74,6 +111,7 @@ export default function InstructorDetail({ instructor, courses }) {
             );
         }
     };
+
     return (
         <AdminLayout>
             <Head title={`Instructor - ${instructor.full_name}`} />
@@ -85,7 +123,24 @@ export default function InstructorDetail({ instructor, courses }) {
                         <h1 className="h3 mb-0 text-dark">Instructor Detail</h1>
                     </div>
                 </div>
-
+                {/* FLASH MESSAGE đẹp và rõ */}
+                {message && (
+                    <div className="row mb-3">
+                        <div className="col-12">
+                            <div
+                                className="alert alert-success alert-dismissible fade show"
+                                role="alert"
+                            >
+                                {message}
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => setMessage("")}
+                                ></button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <div className="row g-4">
                     {/* Personal Info - Left Side */}
                     <div className="col-xxl-6 col-lg-8">
@@ -308,7 +363,7 @@ export default function InstructorDetail({ instructor, courses }) {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {courses.map((course) => (
+                                            {courses.data.map((course) => (
                                                 <tr key={course.id}>
                                                     <td className="text-dark">
                                                         <a
@@ -384,6 +439,8 @@ export default function InstructorDetail({ instructor, courses }) {
                                             )}
                                         </tbody>
                                     </table>
+                                    {courses.last_page > 1 &&
+                                        renderPagination()}
                                 </div>
                             </div>
                             {/* <div className="card-footer bg-transparent">Pagination here</div> */}

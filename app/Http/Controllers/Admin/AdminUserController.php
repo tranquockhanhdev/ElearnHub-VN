@@ -115,88 +115,102 @@ class AdminUserController extends Controller
     }
 
 
-public function showInstructor($id)
-{
-    $instructor = User::where('role_id', 2)
-        ->with('instructor') // <- đây là quan hệ từ User sang Instructor (1:1)
-        ->findOrFail($id);
+    public function showInstructor($id)
+    {
+        $instructor = User::where('role_id', 2)
+            ->with('instructor') // <- đây là quan hệ từ User sang Instructor (1:1)
+            ->findOrFail($id);
 
-    $courses = Course::with('categories')
-        ->where('instructor_id', $id)
-        ->get();
+        $courses = Course::with('categories')
+            ->where('instructor_id', $id)
+            ->paginate(5);
+        $total = Course::where('instructor_id', $id)->count();
+        $active = Course::where('instructor_id', $id)->where('status', 'active')->count();
+        $pending = Course::where('instructor_id', $id)->where('status', 'pending')->count();
+        $inactive = Course::where('instructor_id', $id)->where('status', 'inactive')->count();
 
-    return Inertia::render('Admin/Instructor/ShowInstructor', [
-        'instructor' => $instructor,
-        'courses' => $courses,
-    ]);
-}
-
-public function updateInstructor(Request $request, $id)
-{
-   
-    $request->validate([
-        'bio' => 'nullable|string',
-        'profession' => 'nullable|string|max:255',
-        'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        'facebook_url' => 'nullable|url',
-        'twitter_url' => 'nullable|url',
-        'linkedin_url' => 'nullable|url',
-    ]);
-
-    $instructor = Instructor::firstOrNew(['user_id' => $id]);
-
-    if ($request->hasFile('avatar')) {
-        $path = $request->file('avatar')->store('avatars', 'public');
-        $instructor->avatar = Storage::url($path);
+        return Inertia::render('Admin/Instructor/ShowInstructor', [
+            'instructor' => $instructor,
+            'courses' => $courses,
+            'courseStats' => [
+                'total' => $total,
+                'active' => $active,
+                'pending' => $pending,
+                'inactive' => $inactive,
+            ],
+        ]);
     }
 
-    $instructor->fill($request->only([
-        'bio', 'profession', 'facebook_url', 'twitter_url', 'linkedin_url'
-    ]));
-    $instructor->save();
+    public function updateInstructor(Request $request, $id)
+    {
 
-    return redirect()->back()->with('success', 'Thông tin giảng viên đã được cập nhật');
-}
+        $request->validate([
+            'bio' => 'nullable|string',
+            'profession' => 'nullable|string|max:255',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'facebook_url' => 'nullable|url',
+            'twitter_url' => 'nullable|url',
+            'linkedin_url' => 'nullable|url',
+        ]);
 
-public function removeInstructorAvatar($id)
-{
-    $instructor = Instructor::where('user_id', $id)->firstOrFail();
+        $instructor = Instructor::firstOrNew(['user_id' => $id]);
 
-    // Xoá file cũ nếu có
-    if ($instructor->avatar && Storage::disk('public')->exists(str_replace('/storage/', '', $instructor->avatar))) {
-       if ($instructor->avatar) {
-    $relativePath = str_replace('/storage/', '', $instructor->avatar);
+        if ($request->hasFile('avatar')) {
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $instructor->avatar = Storage::url($path);
+        }
 
-    if (Storage::disk('public')->exists($relativePath)) {
-        Storage::disk('public')->delete($relativePath);
+        $instructor->fill($request->only([
+            'bio',
+            'profession',
+            'facebook_url',
+            'twitter_url',
+            'linkedin_url'
+        ]));
+        $instructor->save();
+
+        return redirect()->back()->with('success', 'Thông tin giảng viên đã được cập nhật');
     }
 
-    $instructor->avatar = null;
-    $instructor->save();
-}
+    public function removeInstructorAvatar($id)
+    {
+        $instructor = Instructor::where('user_id', $id)->firstOrFail();
+
+        // Xoá file cũ nếu có
+        if ($instructor->avatar && Storage::disk('public')->exists(str_replace('/storage/', '', $instructor->avatar))) {
+            if ($instructor->avatar) {
+                $relativePath = str_replace('/storage/', '', $instructor->avatar);
+
+                if (Storage::disk('public')->exists($relativePath)) {
+                    Storage::disk('public')->delete($relativePath);
+                }
+
+                $instructor->avatar = null;
+                $instructor->save();
+            }
+        }
+
+        $instructor->avatar = null;
+        $instructor->save();
+
+        return redirect()->back()->with('success', 'Ảnh đại diện đã được xoá');
     }
 
-    $instructor->avatar = null;
-    $instructor->save();
+    public function showStudent($id)
+    {
+        $student = User::where('role_id', 3)->findOrFail($id);
 
-    return redirect()->back()->with('success', 'Ảnh đại diện đã được xoá');
-}
+        $enrollments = Enrollment::with('course')
+            ->where('student_id', $id)
+            ->orderByDesc('enrolled_at')
+            ->paginate(4)
+            ->withQueryString();
 
- public function showStudent($id)
-{
-    $student = User::where('role_id', 3)->findOrFail($id);
-
-    $enrollments = Enrollment::with('course')
-        ->where('student_id', $id)
-        ->orderByDesc('enrolled_at')
-        ->paginate(4) 
-        ->withQueryString(); 
-
-    return Inertia::render('Admin/Student/ShowStudent', [
-        'student' => $student,
-        'enrollments' => $enrollments, 
-    ]);
-}
+        return Inertia::render('Admin/Student/ShowStudent', [
+            'student' => $student,
+            'enrollments' => $enrollments,
+        ]);
+    }
 
     public function store(Request $request)
     {
