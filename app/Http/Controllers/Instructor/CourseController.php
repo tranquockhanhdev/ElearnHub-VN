@@ -18,12 +18,30 @@ class CourseController extends Controller
     {
         $this->CourseService = $CourseService;
     }
+
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $instructorId = Auth::user()->id;
+
+        $filters = [
+            'search' => $request->get('search'),
+            'status' => $request->get('status', 'all'),
+            'sort' => $request->get('sort', 'newest'),
+        ];
+
+        $courses = $this->CourseService->getCoursesByInstructorWithFilters(
+            $instructorId,
+            $filters,
+            $request->get('per_page', 6)
+        );
+
+        return Inertia::render('Intructors/MyCourse', [
+            'courses' => $courses,
+            'filters' => $filters,
+        ]);
     }
 
     /**
@@ -53,6 +71,7 @@ class CourseController extends Controller
             ->withErrors($result['errors'] ?? ['general' => $result['message']])
             ->withInput($request->except('course_image'));
     }
+
     /**
      * Show the success message after course creation.
      */
@@ -60,12 +79,25 @@ class CourseController extends Controller
     {
         return Inertia::render('Intructors/SuccessCourse');
     }
+
     /**
      * Display the specified resource.
      */
-    public function show(Course $course)
+    public function show($id)
     {
-        //
+        // Kiểm tra quyền sở hữu
+        $course = Course::with(['categories', 'lessons', 'enrollments.student'])
+            ->where('id', $id)
+            ->firstOrFail();
+        if ($course->instructor_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền truy cập khóa học này.');
+        }
+
+        $course->load(['categories', 'lessons', 'enrollments.student']);
+
+        return Inertia::render('Intructors/CourseDetail', [
+            'course' => $course,
+        ]);
     }
 
     /**
@@ -73,15 +105,40 @@ class CourseController extends Controller
      */
     public function edit(Course $course)
     {
-        //
+        // Kiểm tra quyền sở hữu
+        if ($course->instructor_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền chỉnh sửa khóa học này.');
+        }
+
+        $categories = $this->CourseService->getAllCategories();
+        $course->load('categories');
+
+        return Inertia::render('Intructors/EditCourse', [
+            'course' => $course,
+            'categories' => $categories,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Course $course)
+    public function update(CourseRequest $request, Course $course)
     {
-        //
+        // Kiểm tra quyền sở hữu
+        if ($course->instructor_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền chỉnh sửa khóa học này.');
+        }
+
+        $result = $this->CourseService->updateCourse($course->id, $request->all());
+
+        if ($result) {
+            return redirect()->route('instructor.courses.index')
+                ->with('success', 'Cập nhật khóa học thành công!');
+        }
+
+        return redirect()->back()
+            ->with('error', 'Có lỗi xảy ra khi cập nhật khóa học!')
+            ->withInput();
     }
 
     /**
@@ -89,6 +146,25 @@ class CourseController extends Controller
      */
     public function destroy(Course $course)
     {
-        //
+        // Kiểm tra quyền sở hữu
+        if ($course->instructor_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền xóa khóa học này.');
+        }
+
+        // Kiểm tra xem có học viên đã đăng ký chưa
+        if ($course->enrollments()->count() > 0) {
+            return redirect()->back()
+                ->with('error', 'Không thể xóa khóa học đã có học viên đăng ký!');
+        }
+
+        $result = $this->CourseService->deleteCourse($course->id);
+
+        if ($result) {
+            return redirect()->route('instructor.courses.index')
+                ->with('success', 'Xóa khóa học thành công!');
+        }
+
+        return redirect()->back()
+            ->with('error', 'Có lỗi xảy ra khi xóa khóa học!');
     }
 }

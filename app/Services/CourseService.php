@@ -177,4 +177,12 @@ class CourseService
     {
         return $this->CourseRepository->isUserEnrolled($userId, $courseId);
     }
+
+    /**
+     * Get courses by instructor with filters and pagination
+     */
+    public function getCoursesByInstructorWithFilters($instructorId, $filters = [], $perPage = 12)
+    {
+        return $this->CourseRepository->getCoursesByInstructorWithFilters($instructorId, $filters, $perPage);
+    }
 }

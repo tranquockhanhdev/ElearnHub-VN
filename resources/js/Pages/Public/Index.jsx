@@ -204,7 +204,7 @@ const Home = () => {
 												</div>
 											</div>
 											<h5 className="card-title mb-3">
-												<Link href={`/course/${course.slug}`} className="text-decoration-none text-dark">
+												<Link href={`/courses/${course.slug}`} className="text-decoration-none text-dark">
 													{course.title}
 												</Link>
 											</h5>
@@ -277,7 +277,7 @@ const Home = () => {
 														<span className="badge bg-success">Mới</span>
 													</div>
 													<h6 className="card-title mb-2">
-														<Link href={`/course/${course.slug}`} className="text-decoration-none text-dark">
+														<Link href={`/courses/${course.slug}`} className="text-decoration-none text-dark">
 															{course.title}
 														</Link>
 													</h6>
@@ -348,7 +348,7 @@ const Home = () => {
 												</div>
 											</div>
 											<h5 className="card-title mb-3">
-												<Link href={`/course/${course.slug}`} className="text-decoration-none text-dark">
+												<Link href={`/courses/${course.slug}`} className="text-decoration-none text-dark">
 													{course.title}
 												</Link>
 											</h5>
