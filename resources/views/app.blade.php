@@ -24,6 +24,8 @@
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/tiny-slider/tiny-slider.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/choices/css/choices.min.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/glightbox/css/glightbox.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/quill/css/quill.snow.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/stepper/css/bs-stepper.min.css') }}">
     <!-- Theme CSS -->
     <link id="style-switch" rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
 
@@ -51,7 +53,11 @@
     <script src="{{ asset('assets/vendor/glightbox/js/glightbox.js') }}"></script>
     <script src="{{ asset('assets/vendor/purecounterjs/dist/purecounter_vanilla.js') }}"></script>
     <script src="{{ asset('assets/vendor/choices/js/choices.min.js') }}"></script>
-
+    <script src="{{ asset('assets/vendor/quill/js/quill.min.js') }}"></script>
+    <script src="{{ asset('assets/vendor/stepper/js/bs-stepper.min.js') }}"></script>
+    <!-- Template JS -->
+    <script src="{{ asset('assets/js/functions.js') }}"></script>
+    <script src="{{ asset('assets/js/darkMode.js') }}"></script>
 </body>
 
 </html>

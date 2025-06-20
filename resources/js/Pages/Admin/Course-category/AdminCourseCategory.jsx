@@ -195,7 +195,7 @@ const AdminCourseCategory = () => {
                 <div className="row mb-3">
                     <div className="col-12 d-sm-flex justify-content-between align-items-center">
                         <h1 className="h3 mb-2 mb-sm-0">
-                            Course Categories{" "}
+                            Danh Mục Khóa Học{" "}
                             <span className="badge bg-orange bg-opacity-10 text-orange">
                                 {categories.total}
                             </span>

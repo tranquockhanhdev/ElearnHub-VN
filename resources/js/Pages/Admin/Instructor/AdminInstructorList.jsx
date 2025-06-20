@@ -106,7 +106,7 @@ const AdminInstructorList = ({ instructors }) => {
                 {/* Tiêu đề và nút thêm */}
                 <div className="row align-items-center mb-3">
                     <div className="col-md-6">
-                        <h1 className="h3 mb-0">Instructors</h1>
+                        <h1 className="h3 mb-0">Giảng Viên</h1>
                     </div>
                     <div className="col-md-6 text-end">
                         <button

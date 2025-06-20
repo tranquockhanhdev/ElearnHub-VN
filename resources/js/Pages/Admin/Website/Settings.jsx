@@ -76,7 +76,7 @@ export default function Settings({ setting, admins }) {
             <div className="page-content-wrapper border">
                 <div className="row">
                     <div className="col-12 mb-3">
-                        <h1 className="h3 mb-2 mb-sm-0">Admin Settings</h1>
+                        <h1 className="h3 mb-2 mb-sm-0">Admin Cài Đặt</h1>
                     </div>
                 </div>
                 {/* FLASH MESSAGE đẹp và rõ */}

@@ -53,5 +53,14 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
         ->name('admin.instructors.update');
     Route::delete('/admin/instructors/{id}/avatar', [AdminUserController::class, 'removeInstructorAvatar'])
         ->name('admin.instructors.remove-avatar');
+        // Hiển thị form tạo khóa học mới
+    Route::get('/admin/courses/create', [AdminCourseController::class, 'create'])
+        ->name('admin.courses.create');
+    //show success message after course creation
+    Route::get('/admin/courses/success', [AdminCourseController::class, 'success'])
+        ->name('admin.courses.success');
+    // Lưu thông tin khóa học mới
+    Route::post('/admin/courses/store', [AdminCourseController::class, 'store'])
+        ->name('admin.courses.store');
 
 });
