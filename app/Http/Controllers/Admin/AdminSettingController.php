@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\WebsiteSetting;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 class AdminSettingController extends Controller
 {
      public function index()
@@ -17,8 +18,8 @@ class AdminSettingController extends Controller
         // Lấy thông tin cấu hình website (bản ghi đầu tiên)
         $setting = WebsiteSetting::first();
 
-        // Lấy tài khoản admin đầu tiên (role_id = 1)
-        $admin = User::where('role_id', 1)->first();
+        $admin = Auth::user();
+        
         $admins = User::where('role_id', 1)->get();
 
        return Inertia::render('Admin/Website/Settings', [

@@ -6,7 +6,7 @@ import { router } from "@inertiajs/react";
 import AdminLayout from "../../../Components/Layouts/AdminLayout";
 import CreateUserModal from "@/Pages/Admin/User/CreateUserModal";
 import EditUserModal from "@/Pages/Admin/User/EditUserModal";
-export default function Settings({ setting, admin, admins }) {
+export default function Settings({ setting, admins }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         site_name: setting?.site_name || "",
         contact_email: setting?.contact_email || "",
@@ -24,6 +24,8 @@ export default function Settings({ setting, admin, admins }) {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const { flash } = usePage().props;
     const [message, setMessage] = useState("");
+    const { auth } = usePage().props;
+    const admin = auth.user;
     useEffect(() => {
         if (flash.success) {
             setMessage(flash.success);
@@ -106,7 +108,7 @@ export default function Settings({ setting, admin, admins }) {
                                     href="#tab-1"
                                 >
                                     <i className="fas fa-globe fa-fw me-2"></i>
-                                    Website Settings
+                                    Cài đặt website
                                 </a>
                             </li>
                             <li className="nav-item">
@@ -116,7 +118,7 @@ export default function Settings({ setting, admin, admins }) {
                                     href="#tab-4"
                                 >
                                     <i className="fas fa-user-circle fa-fw me-2"></i>
-                                    Account Settings
+                                    Cài đặt tài khoản
                                 </a>
                             </li>
                         </ul>
@@ -130,7 +132,7 @@ export default function Settings({ setting, admin, admins }) {
                                 <div className="card shadow">
                                     <div className="card-header border-bottom">
                                         <h5 className="card-header-title">
-                                            Website Settings
+                                            Cài đặt thông tin website
                                         </h5>
                                     </div>
                                     <div className="card-body">
@@ -364,7 +366,7 @@ export default function Settings({ setting, admin, admins }) {
                                 <div className="card shadow">
                                     <div className="card-header border-bottom">
                                         <h5 className="card-header-title">
-                                            Admin Information
+                                            Thông tin Quản trị viên
                                         </h5>
                                     </div>
                                     <div className="card-body">
@@ -418,13 +420,13 @@ export default function Settings({ setting, admin, admins }) {
                                 </div>
                                 <div className="mt-5">
                                     <div className="d-flex justify-content-between align-items-center mb-3">
-                                        <h5>Admin Accounts</h5>
+                                        <h5>Tài khoản Quản trị viên</h5>
                                         <button
                                             className="btn btn-primary"
                                             onClick={() => setShowModal(true)}
                                         >
                                             <i className="fas fa-plus me-1"></i>{" "}
-                                            Add Admin
+                                            Thêm tài khoản
                                         </button>
                                     </div>
 
@@ -436,6 +438,7 @@ export default function Settings({ setting, admin, admins }) {
                                                     <th>Name</th>
                                                     <th>Email</th>
                                                     <th>Phone</th>
+                                                    <th>Status</th>
                                                     <th>Actions</th>
                                                 </tr>
                                             </thead>
@@ -458,6 +461,29 @@ export default function Settings({ setting, admin, admins }) {
                                                                         "-"}
                                                                 </td>
                                                                 <td>
+                                                                    <span
+                                                                        className={`badge rounded-pill px-3 py-1 ${
+                                                                            item.status ===
+                                                                            "active"
+                                                                                ? "bg-success text-white"
+                                                                                : item.status ===
+                                                                                  "inactive"
+                                                                                ? "bg-danger text-white"
+                                                                                : "bg-secondary text-white"
+                                                                        }`}
+                                                                    >
+                                                                        {item.status
+                                                                            ?.charAt(
+                                                                                0
+                                                                            )
+                                                                            .toUpperCase() +
+                                                                            item.status?.slice(
+                                                                                1
+                                                                            ) ||
+                                                                            "N/A"}
+                                                                    </span>
+                                                                </td>
+                                                                <td>
                                                                     <button
                                                                         className="btn btn-sm btn-warning me-2"
                                                                         onClick={() => {
@@ -469,10 +495,10 @@ export default function Settings({ setting, admin, admins }) {
                                                                                         u.id ===
                                                                                         item.id
                                                                                 )
-                                                                            ); // Gán user được chọn
+                                                                            );
                                                                             setShowEditModal(
                                                                                 true
-                                                                            ); // Mở modal
+                                                                            );
                                                                         }}
                                                                     >
                                                                         <i className="fas fa-edit"></i>
@@ -504,7 +530,7 @@ export default function Settings({ setting, admin, admins }) {
                                                 ) : (
                                                     <tr>
                                                         <td
-                                                            colSpan="5"
+                                                            colSpan="6"
                                                             className="text-center"
                                                         >
                                                             No admin accounts
