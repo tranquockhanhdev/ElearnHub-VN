@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "@inertiajs/react";
+// import route from "ziggy-js";
 import AdminLayout from "../../../Components/Layouts/AdminLayout";
 // import route from "ziggy-js"; // hoặc usePage().props.ziggy nếu inject vào props
 const AdminCourseList = ({ courses }) => {
@@ -109,7 +110,7 @@ const AdminCourseList = ({ courses }) => {
                                                 <li>
                                                     <Link
                                                         className="dropdown-item"
-                                                        href={`/admin-course/${course.id}/edit`}
+                                                        href={`/admin/courses/${course.id}/edit`}
                                                     >
                                                         <i className="bi bi-pencil-square me-2"></i>
                                                         Edit

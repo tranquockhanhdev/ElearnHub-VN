@@ -62,5 +62,11 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
     // Lưu thông tin khóa học mới
     Route::post('/admin/courses/store', [AdminCourseController::class, 'store'])
         ->name('admin.courses.store');
+     // Hiển thị form chỉnh sửa khóa học
+    Route::get('/admin/courses/{id}/edit', [AdminCourseController::class, 'edit'])
+        ->name('admin.courses.edit');
+    // Cập nhật thông tin khóa học
+   Route::post('/admin/courses/{id}/update', [AdminCourseController::class, 'update'])
+    ->name('admin.courses.update');
 
 });

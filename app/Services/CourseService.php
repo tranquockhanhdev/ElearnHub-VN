@@ -114,27 +114,73 @@ class CourseService
     {
         $course = $this->getCourseById($id);
 
-        // Xử lý upload ảnh mới nếu có
-        if (isset($data['course_image']) && $data['course_image'] instanceof UploadedFile) {
-            // Xóa ảnh cũ
-            if ($course->course_image) {
-                $this->deleteCourseImage($course->course_image);
-            }
-
-            $data['course_image'] = $this->uploadCourseImage($data['course_image']);
+        // ✅ Nếu không tồn tại, có thể throw hoặc return lỗi tùy bạn xử lý
+        if (!$course) {
+            return [
+                'success' => false,
+                'message' => 'Khóa học không tồn tại.',
+            ];
         }
 
-        // Xử lý category_ids - sync vào bảng course_category
+        // ✅ Xử lý upload ảnh mới nếu có
+     if (isset($data['course_image']) && $data['course_image'] instanceof UploadedFile) {
+    if ($course->course_image) {
+        $this->deleteCourseImage($course->course_image);
+    }
+
+    $data['course_image'] = $this->uploadCourseImage($data['course_image']);
+    $data['img_url'] = $data['course_image']; // ✅ Thêm dòng này để update ảnh hiển thị
+}
+
+        // ✅ Xử lý danh mục
         if (isset($data['category_ids']) && is_array($data['category_ids'])) {
             $categoryIds = $data['category_ids'];
             unset($data['category_ids']);
-
-            // Sync categories (xóa cũ và thêm mới vào course_category)
             $course->categories()->sync($categoryIds);
         }
 
-        return $this->CourseRepository->updateCourse($id, $data);
+        // ✅ Nếu có cập nhật title, cập nhật lại slug
+        if (isset($data['title'])) {
+            $data['slug'] = Str::slug($data['title']);
+        }
+
+        // ✅ Cho phép chỉnh sửa instructor_id nếu có
+        if (isset($data['instructor_id'])) {
+            $data['instructor_id'] = (int) $data['instructor_id'];
+        }
+
+        // ✅ Cho phép chỉnh sửa status nếu có
+        if (isset($data['status'])) {
+            $data['status'] = $data['status']; // có thể kiểm tra thêm nếu cần
+        }
+        // ✅ Nếu có cập nhật title, tạo lại slug và kiểm tra trùng
+        if (isset($data['title'])) {
+            $newSlug = Str::slug($data['title']);
+
+            $slugExists = Course::where('slug', $newSlug)
+                ->where('id', '!=', $id) // tránh chính khóa học này
+                ->exists();
+
+            if ($slugExists) {
+                return [
+                    'success' => false,
+                    'message' => 'Tiêu đề đã tồn tại cho một khóa học khác.',
+                    'errors' => ['title' => 'Khóa học với tiêu đề này đã tồn tại.']
+                ];
+            }
+
+            $data['slug'] = $newSlug;
+        }
+        // ✅ Gửi đến repository xử lý update
+        $updated = $this->CourseRepository->updateCourse($id, $data);
+
+        return [
+            'success' => true,
+            'message' => 'Cập nhật khóa học thành công.',
+            'data' => $updated,
+        ];
     }
+
     public function getCourseBySlug($slug)
     {
         return $this->CourseRepository->getCourseBySlug($slug);

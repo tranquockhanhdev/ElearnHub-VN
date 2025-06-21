@@ -7,8 +7,10 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\User;
 use App\Http\Requests\CourseRequest;
 use App\Services\CourseService;
+
 
 class AdminCourseController extends Controller
 {
@@ -37,7 +39,7 @@ class AdminCourseController extends Controller
             ]
         );
     }
-      public function store(CourseRequest $request)
+    public function store(CourseRequest $request)
     {
         $result  = $this->CourseService->createCourse($request->all());
         if ($result['success']) {
@@ -47,8 +49,33 @@ class AdminCourseController extends Controller
             ->withErrors($result['errors'] ?? ['general' => $result['message']])
             ->withInput($request->except('course_image'));
     }
-      public function success()
+    public function success()
     {
         return Inertia::render('Admin/Course/SuccessCourse');
+    }
+    public function edit($id)
+    {
+        $course = Course::with('categories')->findOrFail($id);
+        $categories = $this->CourseService->getAllCategories();
+        $instructors = User::where('role_id', 2)->get(); // Giảng viên
+
+        return Inertia::render('Admin/Course/AdminEditCourse', [
+            'course' => $course,
+            'categories' => $categories,
+            'instructors' => $instructors,
+        ]);
+    }
+
+    public function update(CourseRequest $request, $id)
+    {
+        $result = $this->CourseService->updateCourse($id, $request->all());
+
+        if ($result['success']) {
+            return redirect()->route('admin.admin-course')->with('success', 'Cập nhật khóa học thành công!');
+        }
+
+        return redirect()->back()
+            ->withErrors($result['errors'] ?? ['general' => $result['message']])
+            ->withInput($request->except('course_image'));
     }
 }
