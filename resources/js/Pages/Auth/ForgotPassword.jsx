@@ -60,14 +60,25 @@ const ForgotPassword = () => {
                     <div className="row">
                         {/* Left */}
                         <div className="col-12 col-lg-6 d-md-flex align-items-center justify-content-center bg-primary bg-opacity-10 vh-lg-100">
-                            <div className="p-3 p-lg-5">
-                                <div className="text-center">
-                                    <h2 className="fw-bold">Chào mừng đến với cộng đồng lớn nhất của chúng tôi</h2>
-                                    <p className="mb-0 h6 fw-light">Không sao đâu, ai cũng có lúc quên. Cùng lấy lại mật khẩu nhé!</p>
+                            <div className="p-3 p-lg-5 text-center">
+                                <h2 className="fw-bold mb-3">
+                                    Quên thì sao? <span className="text-primary">Lấy lại mật khẩu</span> ngay!
+                                </h2>
+                                <p className="mb-4 h6 fw-light">
+                                    Không sao cả – ai rồi cũng có lúc quên. Chúng tôi sẽ giúp bạn khôi phục nhanh chóng.
+                                </p>
+
+                                <div className="d-flex justify-content-center border-r-amber-300">
+                                    <img
+                                        src="https://i.ibb.co/nsfN5Hbk/Chat-GPT-Image-14-16-00-19-thg-6-2025.png"
+                                        alt="Quên mật khẩu - quyết tâm khôi phục"
+                                        className="img-fluid rounded shadow-sm"
+                                        style={{ maxWidth: '420px' }}
+                                    />
                                 </div>
-                                <img src="/assets/images/element/02.svg" className="mt-5" alt="" />
                             </div>
                         </div>
+
                         {/* Right */}
                         <div className="col-12 col-lg-6 d-flex justify-content-center">
                             <div className="row my-5">

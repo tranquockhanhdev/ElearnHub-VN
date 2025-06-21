@@ -4,14 +4,14 @@ import InfoStudent from '../../Components/InfoStudent';
 import { Link, usePage, router, useForm } from '@inertiajs/react';
 
 const Profile = () => {
-    const { auth, flash } = usePage().props;
+    const { auths, flash } = usePage().props;
     const [activeTab, setActiveTab] = useState('profile');
 
     // Form cho cập nhật profile - chỉ 3 trường
     const { data, setData, put, processing, errors, reset } = useForm({
-        name: auth.user.name || '',
-        email: auth.user.email || '',
-        phone: auth.user.phone || '',
+        name: auths.user.name || '',
+        email: auths.user.email || '',
+        phone: auths.user.phone || '',
     });
 
     // Form cho đổi mật khẩu
@@ -64,16 +64,16 @@ const Profile = () => {
                                     <div className="offcanvas-body p-3 p-xl-0">
                                         <div className="bg-dark border rounded-3 pb-0 p-3 w-100">
                                             <div className="list-group list-group-dark list-group-borderless">
-                                                <Link className="list-group-item " href="/student/dashboard">
+                                                <Link className="list-group-item " href="/student/dashboard" preserveScroll>
                                                     <i className="bi bi-ui-checks-grid fa-fw me-2"></i>Bảng điều khiển
                                                 </Link>
-                                                <Link className="list-group-item" href="/student/courselist">
+                                                <Link className="list-group-item" href="/student/courselist" preserveScroll>
                                                     <i className="bi bi-basket fa-fw me-2"></i>Khóa học của tôi
                                                 </Link>
-                                                <Link className="list-group-item" href="/student/payments">
-                                                    <i className="bi bi-credit-card-2-front fa-fw me-2"></i>Thông tin thanh toán
+                                                <Link className="list-group-item" href="/student/payments" preserveScroll>
+                                                    <i className="bi bi-credit-card-2-front fa-fw me-2"></i>Lịch Sử thanh toán
                                                 </Link>
-                                                <Link className="list-group-item active" href="/student/profile">
+                                                <Link className="list-group-item active" href="/student/profile" preserveScroll>
                                                     <i className="bi bi-pencil-square fa-fw me-2"></i>Chỉnh sửa hồ sơ
                                                 </Link>
                                                 <Link className="list-group-item text-danger bg-danger-soft-hover" href="/logout" method="post" as="button">
@@ -152,10 +152,10 @@ const Profile = () => {
                                                             <i className="bi bi-person display-4 text-muted"></i>
                                                         </div>
                                                     </div>
-                                                    <h5 className="mb-1">{auth.user.name}</h5>
-                                                    <p className="text-muted mb-2">{auth.user.email}</p>
-                                                    <span className={`badge ${auth.user.status === 'active' ? 'bg-success' : 'bg-secondary'}`}>
-                                                        {auth.user.status === 'active' ? 'Đang hoạt động' : 'Không hoạt động'}
+                                                    <h5 className="mb-1">{auths.user.name}</h5>
+                                                    <p className="text-muted mb-2">{auths.user.email}</p>
+                                                    <span className={`badge ${auths.user.status === 'active' ? 'bg-success' : 'bg-secondary'}`}>
+                                                        {auths.user.status === 'active' ? 'Đang hoạt động' : 'Không hoạt động'}
                                                     </span>
                                                 </div>
                                                 <div className="col-md-8">
@@ -256,6 +256,17 @@ const Profile = () => {
                                                     </div>
 
                                                     <form onSubmit={handlePasswordSubmit}>
+                                                        {/* Hidden username field for accessibility */}
+                                                        <input
+                                                            type="text"
+                                                            name="username"
+                                                            value={auths.user.email}
+                                                            autoComplete="username"
+                                                            style={{ display: 'none' }}
+                                                            readOnly
+                                                            tabIndex="-1"
+                                                        />
+
                                                         <div className="mb-3">
                                                             <label className="form-label fw-medium">
                                                                 <i className="bi bi-lock me-2"></i>Mật khẩu hiện tại
@@ -266,6 +277,7 @@ const Profile = () => {
                                                                 value={passwordData.current_password}
                                                                 onChange={(e) => setPasswordData('current_password', e.target.value)}
                                                                 placeholder="Nhập mật khẩu hiện tại"
+                                                                autoComplete="current-password"
                                                                 required
                                                             />
                                                             {passwordErrors.current_password && (
@@ -282,6 +294,7 @@ const Profile = () => {
                                                                 value={passwordData.password}
                                                                 onChange={(e) => setPasswordData('password', e.target.value)}
                                                                 placeholder="Nhập mật khẩu mới (tối thiểu 8 ký tự)"
+                                                                autoComplete="new-password"
                                                                 required
                                                             />
                                                             {passwordErrors.password && (
@@ -298,6 +311,7 @@ const Profile = () => {
                                                                 value={passwordData.password_confirmation}
                                                                 onChange={(e) => setPasswordData('password_confirmation', e.target.value)}
                                                                 placeholder="Nhập lại mật khẩu mới"
+                                                                autoComplete="new-password"
                                                                 required
                                                             />
                                                             {passwordErrors.password_confirmation && (

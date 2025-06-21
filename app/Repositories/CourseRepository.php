@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Category;
 use App\Models\Course;
 use App\Models\PaymentMethod;
+use App\Models\Payment;
 use Exception;
 
 class CourseRepository
@@ -218,6 +219,72 @@ class CourseRepository
             ->get();
     }
 
+    /**
+     * Get featured courses.
+     *
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getFeaturedCourses($limit = 6)
+    {
+        return $this->course->with(['instructor:id,name', 'categories:id,name'])
+            ->where('status', 'active')
+            ->withCount('enrollments') // Đếm số lượng enrollments
+            ->orderBy('enrollments_count', 'desc')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Get latest courses.
+     *
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getLatestCourses($limit = 6)
+    {
+        return $this->course->with(['instructor:id,name', 'categories:id,name'])
+            ->where('status', 'active')
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Get best-selling courses.
+     *
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getBestSellingCourses($limit = 6)
+    {
+        return $this->course->with(['instructor:id,name', 'categories:id,name'])
+            ->where('status', 'active')
+            ->withCount('enrollments')
+            ->orderBy('enrollments_count', 'desc')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Get popular categories.
+     *
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getPopularCategories($limit = 8)
+    {
+        return $this->category->withCount([
+            'courses' => function ($query) {
+                $query->where('status', 'active');
+            }
+        ])
+            ->where('status', 'active')
+            ->having('courses_count', '>', 0)
+            ->orderBy('courses_count', 'desc')
+            ->limit($limit)
+            ->get();
+    }
     // Utility methods
     /**
      * Check if a user is enrolled in a course.
@@ -263,7 +330,10 @@ class CourseRepository
     {
         if (!empty($category) && $category !== 'All') {
             $query->whereHas('categories', function ($categoryQuery) use ($category) {
-                $categoryQuery->where('name', $category);
+                $categoryQuery->where(function ($q) use ($category) {
+                    $q->where('name', $category)
+                        ->orWhere('slug', $category);
+                });
             });
         }
     }
@@ -281,5 +351,55 @@ class CourseRepository
                 $query->orderBy('id', 'desc');
                 break;
         }
+    }
+
+    /**
+     * Get courses by instructor with filters and pagination.
+     *
+     * @param int $instructorId
+     * @param array $filters
+     * @param int $perPage
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getCoursesByInstructorWithFilters($instructorId, $filters = [], $perPage = 12)
+    {
+        $query = $this->course
+            ->with(['categories', 'enrollments'])
+            ->withCount('enrollments')
+            ->where('instructor_id', $instructorId);
+
+        // Apply search filter
+        if (!empty($filters['search'])) {
+            $query->where('title', 'LIKE', '%' . $filters['search'] . '%');
+        }
+
+        // Apply status filter
+        if (!empty($filters['status']) && $filters['status'] !== 'all') {
+            $query->where('status', $filters['status']);
+        }
+
+        // Apply sorting
+        switch ($filters['sort'] ?? 'newest') {
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'title':
+                $query->orderBy('title', 'asc');
+                break;
+            case 'price_low':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price_high':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'most_enrolled':
+                $query->orderBy('enrollments_count', 'desc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        return $query->paginate($perPage);
     }
 }

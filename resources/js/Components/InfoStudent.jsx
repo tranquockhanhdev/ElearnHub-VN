@@ -34,20 +34,7 @@ const InfoStudent = () => {
                                 <div className="col d-sm-flex justify-content-between align-items-center">
                                     <div>
                                         <h1 className="my-1 fs-4">{auth.user.name}</h1>
-                                        <ul className="list-inline mb-0">
-                                            <li className="list-inline-item me-3 mb-1 mb-sm-0">
-                                                <span className="h6">255</span>
-                                                <span className="text-body fw-light"> points</span>
-                                            </li>
-                                            <li className="list-inline-item me-3 mb-1 mb-sm-0">
-                                                <span className="h6">7</span>
-                                                <span className="text-body fw-light"> Completed courses</span>
-                                            </li>
-                                            <li className="list-inline-item me-3 mb-1 mb-sm-0">
-                                                <span className="h6">52</span>
-                                                <span className="text-body fw-light"> Completed lessons</span>
-                                            </li>
-                                        </ul>
+
                                     </div>
                                     {/* Button */}
                                     <div className="mt-2 mt-sm-0">

@@ -3,11 +3,21 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
-use App\Models\Lesson;
+use App\Services\LessonService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Course;
+use App\Models\Lesson;
 
 class LessonController extends Controller
 {
+    protected $lessonService;
+
+    public function __construct(LessonService $lessonService)
+    {
+        $this->lessonService = $lessonService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -29,7 +39,29 @@ class LessonController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'course_id' => 'required|exists:courses,id',
+            'title' => 'required|string|max:255',
+            'order' => 'required|integer|min:1'
+        ]);
+
+        // Kiểm tra quyền sở hữu khóa học
+        $course = Course::findOrFail($request->course_id);
+        if ($course->instructor_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền thêm bài giảng cho khóa học này.');
+        }
+
+        try {
+            $result = $this->lessonService->createLesson($request->all());
+
+            if ($result['success']) {
+                return redirect()->back()->with('success', $result['message']);
+            }
+
+            return redirect()->back()->withErrors(['general' => $result['message']]);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['general' => 'Có lỗi xảy ra khi tạo bài giảng.']);
+        }
     }
 
     /**
@@ -51,16 +83,41 @@ class LessonController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Lesson $lesson)
+    public function update(Request $request, $id)
     {
-        //
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'order' => 'required|integer|min:1'
+        ]);
+
+        try {
+            $result = $this->lessonService->updateLesson($id, $request->all());
+
+            if ($result['success']) {
+                return redirect()->back()->with('success', $result['message']);
+            }
+
+            return redirect()->back()->withErrors(['general' => $result['message']]);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['general' => 'Có lỗi xảy ra khi cập nhật bài giảng.']);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Lesson $lesson)
+    public function destroy($id)
     {
-        //
+        try {
+            $result = $this->lessonService->deleteLesson($id);
+
+            if ($result['success']) {
+                return redirect()->back()->with('success', $result['message']);
+            }
+
+            return redirect()->back()->withErrors(['general' => $result['message']]);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['general' => 'Có lỗi xảy ra khi xóa bài giảng.']);
+        }
     }
 }

@@ -250,7 +250,6 @@ class CheckoutController extends Controller
             'student'
         ])->findOrFail($paymentId);
 
-        // Kiểm tra xem payment có thuộc về user hiện tại không
         if ($payment->student_id !== Auth::id()) {
             abort(403, 'Unauthorized');
         }
@@ -305,7 +304,6 @@ class CheckoutController extends Controller
         $paymentId = $request->get('payment');
         $courseId = $request->get('course');
 
-        // Nếu có payment ID, cập nhật status thành cancelled
         if ($paymentId) {
             $payment = Payment::find($paymentId);
             if ($payment && $payment->student_id === Auth::id()) {
@@ -317,7 +315,6 @@ class CheckoutController extends Controller
                 $course = $payment->course;
             }
         } else if ($courseId) {
-            // Nếu chỉ có course ID
             $course = Course::find($courseId);
         }
 

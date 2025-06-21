@@ -157,16 +157,6 @@ class CourseService
         return $this->CourseRepository->getCoursesByInstructor($instructorId);
     }
 
-    public function searchCourses($keyword)
-    {
-        return $this->CourseRepository->searchCourses($keyword);
-    }
-
-    public function paginateCourses($perPage = 10)
-    {
-        return $this->CourseRepository->paginateCourses($perPage);
-    }
-
     public function getApprovedCourses()
     {
         return $this->CourseRepository->getApprovedCourses();
@@ -186,5 +176,13 @@ class CourseService
     public function isUserEnrolled($userId, $courseId)
     {
         return $this->CourseRepository->isUserEnrolled($userId, $courseId);
+    }
+
+    /**
+     * Get courses by instructor with filters and pagination
+     */
+    public function getCoursesByInstructorWithFilters($instructorId, $filters = [], $perPage = 12)
+    {
+        return $this->CourseRepository->getCoursesByInstructorWithFilters($instructorId, $filters, $perPage);
     }
 }

@@ -28,29 +28,25 @@ class StudentDashboardService
     }
 
     /**
-     * Lấy dữ liệu dashboard của học viên
+     * Lấy dữ liệu dashboard của học viên - Chỉ 5 khóa học gần đây
      */
-    public function getDashboardData(int $studentId, array $filters = []): array
+    public function getDashboardData(int $studentId): array
     {
         try {
-            // Lấy khóa học đã đăng ký với phân trang
-            $enrolledCourses = $this->enrollmentRepository->getStudentEnrollments($studentId, $filters);
-
-            // Xử lý dữ liệu khóa học với progress
-            $processedCourses = $enrolledCourses->getCollection()->map(function ($enrollment) use ($studentId) {
+            $recentEnrollments = $this->enrollmentRepository->getRecentStudentEnrollments($studentId, 5);
+            $processedCourses = $recentEnrollments->map(function ($enrollment) use ($studentId) {
                 return $this->processCourseWithProgress($enrollment, $studentId);
             });
-
-            // Cập nhật collection
-            $enrolledCourses->setCollection($processedCourses);
 
             // Lấy thống kê tổng quan
             $stats = $this->getStudentStats($studentId);
 
             return [
                 'stats' => $stats,
-                'enrolledCourses' => $enrolledCourses,
-                'filters' => $filters
+                'enrolledCourses' => [
+                    'data' => $processedCourses->toArray(),
+                    'total' => $this->enrollmentRepository->getTotalEnrollmentsCount($studentId)
+                ]
             ];
         } catch (\Exception $e) {
             Log::error('Lỗi khi lấy dữ liệu dashboard: ' . $e->getMessage());

@@ -17,6 +17,7 @@ use App\Repositories\EnrollmentRepository;
 use App\Repositories\LessonRepository;
 use App\Repositories\ProgressRepository;
 use App\Repositories\StudentRepository;
+use Illuminate\Console\Scheduling\Schedule;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -42,6 +43,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(LessonService::class, LessonService::class);
         $this->app->bind(StudentDashboardService::class, StudentDashboardService::class);
         $this->app->bind(CourseProgressService::class, CourseProgressService::class);
+    }
+    public function schedule(Schedule $schedule): void
+    {
+        $schedule->command('payments:expire')->everyMinute();
     }
 
     /**

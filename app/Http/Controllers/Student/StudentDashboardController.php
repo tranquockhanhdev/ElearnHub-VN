@@ -20,19 +20,15 @@ class StudentDashboardController extends Controller
     }
 
     /**
-     * Hiển thị dashboard chính
+     * Hiển thị dashboard chính - Chỉ hiển thị 5 khóa học gần đây
      */
     public function index(Request $request)
     {
         try {
             $studentId = Auth::id();
-            $filters = [
-                'search' => $request->get('search', ''),
-                'sort' => $request->get('sort', ''),
-                'per_page' => $request->get('per_page', 6)
-            ];
 
-            $dashboardData = $this->studentDashboardService->getDashboardData($studentId, $filters);
+            // Lấy dữ liệu dashboard với 5 khóa học gần đây
+            $dashboardData = $this->studentDashboardService->getDashboardData($studentId);
 
             return Inertia::render('Students/Dashboard', $dashboardData);
         } catch (\Exception $e) {
@@ -46,7 +42,7 @@ class StudentDashboardController extends Controller
     public function profile()
     {
         return Inertia::render('Students/Profile', [
-            'auth' => [
+            'auths' => [
                 'user' => Auth::user()
             ]
         ]);
@@ -81,7 +77,6 @@ class StudentDashboardController extends Controller
             return back()->withErrors(['error' => 'Có lỗi xảy ra khi cập nhật thông tin']);
         }
     }
-
 
     /**
      * Hiển thị form đổi mật khẩu
