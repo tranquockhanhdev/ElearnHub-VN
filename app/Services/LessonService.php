@@ -554,4 +554,65 @@ class LessonService
             throw $e;
         }
     }
+    /**
+     * Xử lý video cho bài học
+     */
+    public function handleLessonVideo(UploadedFile $file): string
+    {
+        try {
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('lessons/videos', $fileName, 'public');
+            return $path;
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi upload video bài học: ' . $e->getMessage());
+            throw new \Exception('Không thể upload video bài học');
+        }
+    }
+    public function updateLessonOrder(int $lessonId, int $courseId, int $newOrder): array
+    {
+        try {
+            DB::beginTransaction();
+
+            $course = $this->courseRepository->findById($courseId);
+            if (!$course || $course->instructor_id !== Auth::id()) {
+                throw new \Exception('Bạn không có quyền.');
+            }
+
+            $lesson = $this->lessonRepository->findById($lessonId);
+            $oldOrder = $lesson->order;
+
+            if ($newOrder === $oldOrder) {
+                return ['success' => true, 'message' => 'Không có thay đổi.'];
+            }
+
+            // Cập nhật các bài liên quan
+            if ($newOrder > $oldOrder) {
+                // Dịch chuyển xuống: giảm order của các bài ở giữa
+                $this->lessonRepository->model()
+                    ->where('course_id', $courseId)
+                    ->where('order', '>', $oldOrder)
+                    ->where('order', '<=', $newOrder)
+                    ->decrement('order');
+            } else {
+                // Dịch chuyển lên: tăng order của các bài ở giữa
+                $this->lessonRepository->model()
+                    ->where('course_id', $courseId)
+                    ->where('order', '>=', $newOrder)
+                    ->where('order', '<', $oldOrder)
+                    ->increment('order');
+            }
+
+            // Cập nhật bài giảng đang di chuyển
+            $lesson->order = $newOrder;
+            $lesson->save();
+
+            DB::commit();
+
+            return ['success' => true, 'message' => 'Cập nhật thứ tự thành công'];
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error($e);
+            return ['success' => false, 'message' => 'Lỗi cập nhật thứ tự'];
+        }
+    }
 }

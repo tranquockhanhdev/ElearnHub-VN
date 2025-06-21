@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import 'bs-stepper/dist/css/bs-stepper.min.css';
+@import './pdf-viewer.css';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';

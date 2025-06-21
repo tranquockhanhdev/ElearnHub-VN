@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import InstructorLayout from '../../Components/Layouts/InstructorLayout';
 import {
     PlusIcon,
@@ -12,9 +12,12 @@ import {
     UsersIcon,
     CalendarIcon,
     ChevronDownIcon,
-    ChevronRightIcon
+    ChevronRightIcon,
+    GlobeAltIcon,
+    LockClosedIcon
 } from '@heroicons/react/24/outline';
-
+import DocumentModal from '../../Components/DocumentModal';
+import { route } from 'ziggy-js';
 
 const CourseDetail = ({ course }) => {
     const [activeTab, setActiveTab] = useState('lessons');
@@ -22,6 +25,9 @@ const CourseDetail = ({ course }) => {
     const [showAddResource, setShowAddResource] = useState(null);
     const [showAddQuiz, setShowAddQuiz] = useState(null);
     const [expandedLessons, setExpandedLessons] = useState({});
+    const [editingOrder, setEditingOrder] = useState(null);
+    const [selectedDocument, setSelectedDocument] = useState(null);
+    const [showDocumentModal, setShowDocumentModal] = useState(false);
 
     // Form cho thêm bài giảng
     const lessonForm = useForm({
@@ -36,8 +42,8 @@ const CourseDetail = ({ course }) => {
         type: 'document',
         title: '',
         file: null,
-        is_preview: false,
-        order: 1
+        is_preview: 0,
+        order: 0
     });
 
     // Form cho thêm quiz
@@ -58,9 +64,16 @@ const CourseDetail = ({ course }) => {
         ]
     });
 
+    // Form cho cập nhật order
+    const orderForm = useForm({
+        order: 1
+    });
+
     const handleAddLesson = (e) => {
         e.preventDefault();
         lessonForm.post(route('instructor.courses.lessons.store', course.id), {
+            preserveScroll: true,
+            preserveState: true,
             onSuccess: () => {
                 setShowAddLesson(false);
                 lessonForm.reset();
@@ -70,7 +83,24 @@ const CourseDetail = ({ course }) => {
 
     const handleAddResource = (e) => {
         e.preventDefault();
-        resourceForm.post(route('instructor.courses.resources.store', course.id), {
+
+        console.log('Adding resource:', {
+            ...resourceForm.data,
+            lesson_id: showAddResource
+        });
+
+        // Chia route theo type với lesson_id trong URL
+        const routeName = resourceForm.data.type === 'document'
+            ? 'instructor.courses.lessons.documents.store'
+            : 'instructor.courses.lessons.videos.store';
+
+        // Gửi request với courseId và lessonId trong URL
+        resourceForm.post(route(routeName, {
+            id: course.id,
+            lessonId: showAddResource
+        }), {
+            preserveScroll: true,
+            preserveState: true,
             onSuccess: () => {
                 setShowAddResource(null);
                 resourceForm.reset();
@@ -81,6 +111,8 @@ const CourseDetail = ({ course }) => {
     const handleAddQuiz = (e) => {
         e.preventDefault();
         quizForm.post(route('instructor.courses.quizzes.store', course.id), {
+            preserveScroll: true,
+            preserveState: true,
             onSuccess: () => {
                 setShowAddQuiz(null);
                 quizForm.reset();
@@ -114,6 +146,32 @@ const CourseDetail = ({ course }) => {
         }));
     };
 
+    const handleUpdateOrder = (lessonId, currentOrder) => {
+        setEditingOrder(lessonId);
+        orderForm.setData('order', currentOrder);
+    };
+
+    const handleSaveOrder = (lessonId) => {
+        orderForm.put(route('instructor.courses.lessons.update-order', {
+            id: course.id,
+            lessonId: lessonId
+        }), {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                setEditingOrder(null);
+            },
+            onError: (errors) => {
+                console.error('Lỗi cập nhật order:', errors);
+            }
+        });
+    };
+
+    const handleCancelEditOrder = () => {
+        setEditingOrder(null);
+        orderForm.reset();
+    };
+
     const getFileIcon = (type) => {
         switch (type) {
             case 'video':
@@ -122,6 +180,35 @@ const CourseDetail = ({ course }) => {
                 return <DocumentTextIcon className="h-5 w-5 text-green-500" />;
             default:
                 return <DocumentTextIcon className="h-5 w-5 text-gray-500" />;
+        }
+    };
+
+    const handleViewDocument = (document) => {
+        console.log('Viewing document:', document);
+        setSelectedDocument(document);
+        setShowDocumentModal(true);
+    };
+
+    const closeDocumentModal = () => {
+        setShowDocumentModal(false);
+        setSelectedDocument(null);
+    };
+
+    // Function để xóa tài liệu
+    const handleDeleteResource = (lessonId, resourceId) => {
+        if (confirm('Bạn có chắc chắn muốn xóa tài liệu này?')) {
+            // Sử dụng router.delete với preserveScroll và preserveState
+            router.delete(route('instructor.courses.lessons.documents.delete', {
+                id: course.id,
+                lessonId: lessonId,
+                documentId: resourceId
+            }), {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    // Có thể thêm toast notification ở đây
+                }
+            });
         }
     };
 
@@ -138,6 +225,8 @@ const CourseDetail = ({ course }) => {
                                 <Link
                                     href={route('instructor.courses.index')}
                                     className="text-blue-600 hover:text-blue-800 mb-2 inline-block"
+                                    preserveScroll
+                                    preserveState
                                 >
                                     ← Quay lại danh sách khóa học
                                 </Link>
@@ -148,6 +237,8 @@ const CourseDetail = ({ course }) => {
                                 <Link
                                     href={route('instructor.courses.edit', course.id)}
                                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
+                                    preserveScroll
+                                    preserveState
                                 >
                                     <PencilIcon className="h-4 w-4 mr-2" />
                                     Chỉnh sửa
@@ -316,14 +407,57 @@ const CourseDetail = ({ course }) => {
                                                                     <ChevronRightIcon className="h-5 w-5" />
                                                                 )}
                                                             </button>
-                                                            <div>
-                                                                <h3 className="text-lg font-medium text-gray-900">
-                                                                    {lesson.order}. {lesson.title}
-                                                                </h3>
-                                                                <p className="text-sm text-gray-500">
-                                                                    {lesson.resources?.length || 0} tài liệu •
-                                                                    {lesson.quiz ? ' Có quiz' : ' Chưa có quiz'}
-                                                                </p>
+                                                            <div className="flex items-center space-x-3">
+                                                                {/* Order Display/Edit */}
+                                                                {editingOrder === lesson.id ? (
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <input
+                                                                            type="number"
+                                                                            value={orderForm.data.order}
+                                                                            onChange={(e) => orderForm.setData('order', parseInt(e.target.value) || 1)}
+                                                                            className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                            min="1"
+                                                                            max={course.lessons.length}
+                                                                        />
+                                                                        <button
+                                                                            onClick={() => handleSaveOrder(lesson.id)}
+                                                                            disabled={orderForm.processing}
+                                                                            className="text-green-600 hover:text-green-800 disabled:opacity-50"
+                                                                            title="Lưu"
+                                                                        >
+                                                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                            </svg>
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={handleCancelEditOrder}
+                                                                            className="text-gray-600 hover:text-gray-800"
+                                                                            title="Hủy"
+                                                                        >
+                                                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                            </svg>
+                                                                        </button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={() => handleUpdateOrder(lesson.id, lesson.order)}
+                                                                        className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                                                        title="Chỉnh sửa thứ tự"
+                                                                    >
+                                                                        <span>{lesson.order}</span>
+                                                                        <PencilIcon className="h-3 w-3" />
+                                                                    </button>
+                                                                )}
+                                                                <div>
+                                                                    <h3 className="text-lg font-medium text-gray-900">
+                                                                        {lesson.title}
+                                                                    </h3>
+                                                                    <p className="text-sm text-gray-500">
+                                                                        {lesson.resources?.length || 0} tài liệu •
+                                                                        {lesson.quiz ? ' Có quiz' : ' Chưa có quiz'}
+                                                                    </p>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
@@ -344,6 +478,13 @@ const CourseDetail = ({ course }) => {
                                                         </div>
                                                     </div>
 
+                                                    {/* Hiển thị lỗi order nếu có */}
+                                                    {orderForm.errors.order && editingOrder === lesson.id && (
+                                                        <div className="mt-2 text-red-500 text-sm">
+                                                            {orderForm.errors.order}
+                                                        </div>
+                                                    )}
+
                                                     {/* Expanded Content */}
                                                     {expandedLessons[lesson.id] && (
                                                         <div className="mt-4 pl-8">
@@ -356,18 +497,34 @@ const CourseDetail = ({ course }) => {
                                                                             <div key={resource.id} className="flex items-center justify-between bg-gray-50 p-3 rounded">
                                                                                 <div className="flex items-center">
                                                                                     {getFileIcon(resource.type)}
+
                                                                                     <span className="ml-2 text-sm">{resource.title}</span>
-                                                                                    {resource.is_preview && (
-                                                                                        <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                                                                            Preview
+
+                                                                                    {resource.is_preview ? (
+                                                                                        <span className="ml-2 inline-flex items-center text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                                                                            <GlobeAltIcon className="w-4 h-4 mr-1" />
+                                                                                            Public
+                                                                                        </span>
+                                                                                    ) : (
+                                                                                        <span className="ml-2 inline-flex items-center text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                                                                                            <LockClosedIcon className="w-4 h-4 mr-1" />
+                                                                                            Private
                                                                                         </span>
                                                                                     )}
                                                                                 </div>
                                                                                 <div className="flex items-center space-x-2">
-                                                                                    <button className="text-blue-600 hover:text-blue-800">
+                                                                                    <button
+                                                                                        onClick={() => handleViewDocument(resource)}
+                                                                                        className="text-blue-600 hover:text-blue-800"
+                                                                                        title="Xem tài liệu"
+                                                                                    >
                                                                                         <EyeIcon className="h-4 w-4" />
                                                                                     </button>
-                                                                                    <button className="text-red-600 hover:text-red-800">
+                                                                                    <button
+                                                                                        onClick={() => handleDeleteResource(lesson.id, resource.id)}
+                                                                                        className="text-red-600 hover:text-red-800"
+                                                                                        title="Xóa tài liệu"
+                                                                                    >
                                                                                         <TrashIcon className="h-4 w-4" />
                                                                                     </button>
                                                                                 </div>
@@ -411,7 +568,6 @@ const CourseDetail = ({ course }) => {
                                                     <div className="border-t p-4 bg-gray-50">
                                                         <h4 className="font-medium mb-3">Thêm tài liệu</h4>
                                                         <form onSubmit={handleAddResource}>
-                                                            <input type="hidden" value={lesson.id} onChange={(e) => resourceForm.setData('lesson_id', lesson.id)} />
                                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                                 <div>
                                                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -706,6 +862,13 @@ const CourseDetail = ({ course }) => {
                     </div>
                 </div>
             </div>
+
+            {/* Document Modal */}
+            <DocumentModal
+                isOpen={showDocumentModal}
+                onClose={closeDocumentModal}
+                document={selectedDocument}
+            />
         </InstructorLayout>
     );
 };

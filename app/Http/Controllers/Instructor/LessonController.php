@@ -120,4 +120,32 @@ class LessonController extends Controller
             return redirect()->back()->withErrors(['general' => 'Có lỗi xảy ra khi xóa bài giảng.']);
         }
     }
+    /**
+     * Update the order of lessons.
+     */
+    public function updateOrder(Request $request, $courseId, $lessonId)
+    {
+        $request->validate([
+            'order' => 'required|integer|min:1',
+            'order.*' => 'integer|min:1'
+        ]);
+
+        // Kiểm tra quyền sở hữu khóa học
+        $course = Course::findOrFail($courseId);
+        if ($course->instructor_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền cập nhật thứ tự bài giảng cho khóa học này.');
+        }
+
+        try {
+            $result = $this->lessonService->updateLessonOrder($lessonId, $courseId, $request->order);
+
+            if ($result['success']) {
+                return redirect()->back()->with('success', $result['message']);
+            }
+
+            return redirect()->back()->withErrors(['general' => $result['message']]);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['general' => 'Có lỗi xảy ra khi cập nhật thứ tự bài giảng.']);
+        }
+    }
 }

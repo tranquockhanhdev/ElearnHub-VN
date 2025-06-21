@@ -86,19 +86,24 @@ class CourseController extends Controller
     public function show($id)
     {
         // Kiểm tra quyền sở hữu
-        $course = Course::with(['categories', 'lessons', 'enrollments.student'])
-            ->where('id', $id)
-            ->firstOrFail();
+        $course = Course::with([
+            'categories',
+            'enrollments.student',
+            'lessons.resources',
+            'lessons' => function ($query) {
+                $query->orderBy('order', 'asc');
+            },
+        ])->where('id', $id)->firstOrFail();
+
         if ($course->instructor_id !== Auth::id()) {
             abort(403, 'Bạn không có quyền truy cập khóa học này.');
         }
-
-        $course->load(['categories', 'lessons', 'enrollments.student']);
 
         return Inertia::render('Intructors/CourseDetail', [
             'course' => $course,
         ]);
     }
+
 
     /**
      * Show the form for editing the specified resource.
