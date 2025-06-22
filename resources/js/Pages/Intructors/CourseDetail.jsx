@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import DocumentModal from '../../Components/DocumentModal';
 import { route } from 'ziggy-js';
+import axios from 'axios';
 
 const CourseDetail = ({ course }) => {
     const [activeTab, setActiveTab] = useState('lessons');
@@ -43,7 +44,8 @@ const CourseDetail = ({ course }) => {
         title: '',
         file: null,
         is_preview: 0,
-        order: 0
+        order: 0,
+        uploadProgress: 0 // Thêm trạng thái tiến trình upload
     });
 
     // Form cho thêm quiz
@@ -81,31 +83,14 @@ const CourseDetail = ({ course }) => {
         });
     };
 
-    const handleAddResource = (e) => {
+    const handleAddResource = async (e) => {
         e.preventDefault();
 
-        console.log('Adding resource:', {
-            ...resourceForm.data,
-            lesson_id: showAddResource
-        });
-
-        // Chia route theo type với lesson_id trong URL
-        const routeName = resourceForm.data.type === 'document'
-            ? 'instructor.courses.lessons.documents.store'
-            : 'instructor.courses.lessons.videos.store';
-
-        // Gửi request với courseId và lessonId trong URL
-        resourceForm.post(route(routeName, {
-            id: course.id,
-            lessonId: showAddResource
-        }), {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
-                setShowAddResource(null);
-                resourceForm.reset();
-            }
-        });
+        if (resourceForm.data.file) {
+            await handleChunkUpload(resourceForm.data.file, showAddResource);
+        } else {
+            alert('Vui lòng chọn file để tải lên.');
+        }
     };
 
     const handleAddQuiz = (e) => {
@@ -209,6 +194,62 @@ const CourseDetail = ({ course }) => {
                     // Có thể thêm toast notification ở đây
                 }
             });
+        }
+    };
+
+    const handleChunkUpload = async (file, lessonId) => {
+        const CHUNK_SIZE = 5 * 1024 * 1024;
+        const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+        const uploadId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+        const uploadUrl = route('instructor.courses.lessons.documents.chunkUpload', {
+            id: course.id,
+            lessonId: lessonId,
+        });
+
+        try {
+            for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+                const start = chunkIndex * CHUNK_SIZE;
+                const end = Math.min(file.size, start + CHUNK_SIZE);
+                const chunk = file.slice(start, end);
+
+                const formData = new FormData();
+                formData.append('file', chunk);
+                formData.append('chunkIndex', chunkIndex);
+                formData.append('totalChunks', totalChunks);
+                formData.append('fileName', file.name);
+                formData.append('uploadId', uploadId);
+
+                await axios.post(uploadUrl, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                    onUploadProgress: (progressEvent) => {
+                        const progress = Math.round(
+                            ((chunkIndex + progressEvent.loaded / progressEvent.total) / totalChunks) * 100
+                        );
+                        resourceForm.setData('uploadProgress', progress);
+                    },
+                });
+            }
+
+            // Reset progress và đóng modal
+            resourceForm.setData('uploadProgress', 0);
+            setShowAddResource(null);
+
+            // Reset form
+            resourceForm.reset();
+
+            // Reload trang để hiển thị tài liệu mới
+            router.reload({
+                preserveScroll: true,
+                preserveState: false
+            });
+
+        } catch (error) {
+            console.error('Error uploading chunk:', error);
+            alert('Có lỗi xảy ra khi tải lên file.');
+            resourceForm.setData('uploadProgress', 0);
         }
     };
 
@@ -655,6 +696,14 @@ const CourseDetail = ({ course }) => {
                                                                 </button>
                                                             </div>
                                                         </form>
+
+                                                        {/* Upload Progress */}
+                                                        {resourceForm.data.uploadProgress > 0 && (
+                                                            <div>
+                                                                <p>Đang tải lên: {resourceForm.data.uploadProgress}%</p>
+                                                                <progress value={resourceForm.data.uploadProgress} max="100"></progress>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
 

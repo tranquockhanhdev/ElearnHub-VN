@@ -47,6 +47,7 @@ Route::middleware(['auth', 'verified', 'role:2'])->prefix('instructor')->name('i
             Route::prefix('{lessonId}/documents')->name('documents.')->group(function () {
                 Route::get('/', [DocumentController::class, 'index'])->name('index');
                 Route::post('/store', [DocumentController::class, 'store'])->name('store');
+                Route::post('/chunkUpload', [DocumentController::class, 'chunkUpload'])->name('chunkUpload');
                 Route::delete('{documentId}/delete', [DocumentController::class, 'destroy'])->name('delete');
             });
 

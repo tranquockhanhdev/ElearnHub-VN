@@ -15,64 +15,38 @@ class DocumentService
     {
         $this->documentRepository = $documentRepository;
     }
-
-    public function createDocument(array $data)
+    /**
+     * Tạo tài liệu từ file hoặc URL
+     *
+     * @param mixed $file
+     * @param string $title
+     * @param int $lessonId
+     * @return mixed
+     */
+    public function createDocumentFromChunk(array $data, $fileName, $extension)
     {
         // Tính order mới
         $maxOrder = $this->documentRepository->getMaxOrderByLesson($data['lesson_id']);
         $newOrder = $maxOrder + 1;
 
-        // Xử lý file hoặc URL
-        $fileData = $this->processFile($data['file'], $data['title']);
+        // Validate file type
+        $allowedTypes = ['pdf', 'doc', 'docx'];
+        if (!in_array(strtolower($extension), $allowedTypes)) {
+            throw new \InvalidArgumentException('File type không được hỗ trợ. Chỉ chấp nhận: ' . implode(', ', $allowedTypes));
+        }
 
         // Chuẩn bị dữ liệu để lưu
         $documentData = [
             'lesson_id' => $data['lesson_id'],
             'type' => 'document',
             'title' => $data['title'],
-            'file_url' => $fileData['file_url'],
-            'file_type' => $fileData['file_type'],
+            'file_url' => 'storage/documents/' . $fileName,
+            'file_type' => strtolower($extension),
             'is_preview' => $data['is_preview'] ?? 0,
             'order' => $newOrder,
         ];
 
         return $this->documentRepository->create($documentData);
-    }
-
-    private function processFile($file, $title)
-    {
-        // Nếu là URL string
-        if (is_string($file) && filter_var($file, FILTER_VALIDATE_URL)) {
-            return [
-                'file_url' => $file,
-                'file_type' => 'pdf' // Mặc định là pdf cho URL
-            ];
-        }
-
-        // Nếu là uploaded file
-        if ($file instanceof UploadedFile) {
-            // Lấy extension
-            $extension = strtolower($file->getClientOriginalExtension());
-
-            // Validate file type
-            $allowedTypes = ['pdf', 'doc', 'docx'];
-            if (!in_array($extension, $allowedTypes)) {
-                throw new \InvalidArgumentException('File type không được hỗ trợ. Chỉ chấp nhận: ' . implode(', ', $allowedTypes));
-            }
-
-            // Tạo tên file unique
-            $fileName = Str::slug($title) . '_' . time() . '.' . $extension;
-
-            // Lưu file vào storage/app/public/documents
-            $filePath = $file->storeAs('documents', $fileName, 'public');
-
-            return [
-                'file_url' => 'storage/' . $filePath,
-                'file_type' => $extension
-            ];
-        }
-
-        throw new \InvalidArgumentException('File không hợp lệ');
     }
 
     public function getDocumentsByLesson($lessonId)
