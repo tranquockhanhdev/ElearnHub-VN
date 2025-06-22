@@ -19,29 +19,65 @@ class AdminCourseController extends Controller
     {
         $this->CourseService = $CourseService;
     }
-    public function index(Request $request)
-    {
-        $perPage = $request->input('per_page', 10);
-        $courses = $this->CourseService->paginateCourses($perPage);
+   public function index(Request $request)
+{
+    $perPage = $request->input('per_page', 10);
+    $search = $request->input('search');
+    $category = $request->input('category');
+    $status = $request->input('status');
+    $sortBy = $request->input('sort_by', 'created_at');
+    $sortOrder = $request->input('sort_order', 'desc');
+$instructor = $request->input('instructor');
+    $query = Course::with(['categories', 'instructor']);
 
-        // Gán lại img_url dạng public cho từng course
-        $courses->getCollection()->transform(function ($course) {
-            if ($course->img_url) {
-                // Nếu chỉ lưu tên file
-                $course->img_url = asset('storage/bannercourse/' . basename($course->img_url));
-            }
-            return $course;
-        });
 
-        return Inertia::render('Admin/Course/AdminCourseList', [
-            'courses' => $courses,
-            'stats' => [
-                'activated' => \App\Models\Course::where('status', 'active')->count(),
-                'inactivated' => \App\Models\Course::where('status', 'inactive')->count(),
-                'pending' => \App\Models\Course::where('status', 'pending')->count(),
-            ],
-        ]);
+if ($instructor) {
+    $query->where('instructor_id', $instructor);
+}
+    if ($search) {
+        $query->where('title', 'like', '%' . $search . '%');
     }
+
+    if ($category) {
+        $query->whereHas('categories', function ($q) use ($category) {
+            $q->where('category_id', $category);
+        });
+    }
+
+    if ($status) {
+        $query->where('status', $status);
+    }
+
+    $query->orderBy($sortBy, $sortOrder);
+
+   $courses = $query->paginate($perPage);
+
+    $courses->getCollection()->transform(function ($course) {
+        if ($course->img_url) {
+            $course->img_url = asset('storage/bannercourse/' . basename($course->img_url));
+        }
+        return $course;
+    });
+
+    return Inertia::render('Admin/Course/AdminCourseList', [
+        'courses' => $courses,
+        'instructors' => \App\Models\User::where('role_id', 2)->select('id', 'name')->get(),
+        'categories' => \App\Models\Category::select('id', 'name')->get(),
+        'filters' => [
+            'search' => $search,
+            'category' => $category,
+            'status' => $status,
+            'sort_by' => $sortBy,
+            'sort_order' => $sortOrder,
+        ],
+        'stats' => [
+            'activated' => Course::where('status', 'active')->count(),
+            'inactivated' => Course::where('status', 'inactive')->count(),
+            'pending' => Course::where('status', 'pending')->count(),
+        ],
+    ]);
+}
+
     public function create()
     {
         $categories = $this->CourseService->getAllCategories();

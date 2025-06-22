@@ -68,7 +68,35 @@ const AdminCourseList = ({ courses, stats }) => {
             </nav>
         );
     };
+    // Thêm vào đầu component:
+    const { filters, categories = [], instructors = [] } = usePage().props;
+    const [filterValues, setFilterValues] = useState({
+        search: filters?.search || "",
+        category: filters?.category || "",
+        status: filters?.status || "",
+        instructor: filters?.instructor || "",
+        sort_by: filters?.sort_by || "created_at",
+        sort_order: filters?.sort_order || "desc",
+    });
 
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilterValues((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const applyFilters = () => {
+        router.get(
+            route("admin.admin-course"), // Thay bằng route name nếu có
+            {
+                ...filterValues,
+                view: activeTab,
+            },
+            {
+                preserveScroll: true,
+                replace: true,
+            }
+        );
+    };
     return (
         <AdminLayout>
             <div className="page-content-wrapper border">
@@ -130,6 +158,139 @@ const AdminCourseList = ({ courses, stats }) => {
                         </div>
                     </div>
                 </div>
+                <div className="row g-2 align-items-end mb-4">
+                    <div className="col-md-3">
+                        <label className="form-label">Search</label>
+                        <input
+                            type="text"
+                            name="search"
+                            className="form-control"
+                            placeholder="Search by title..."
+                            value={filterValues.search}
+                            onChange={handleFilterChange}
+                        />
+                    </div>
+
+                    <div className="col-md-2">
+                        <label className="form-label">Category</label>
+                        <select
+                            name="category"
+                            className="form-select"
+                            value={filterValues.category}
+                            onChange={handleFilterChange}
+                        >
+                            <option value="">All Categories</option>
+                            {categories.map((cat) => (
+                                <option key={cat.id} value={cat.id}>
+                                    {cat.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="col-md-2">
+                        <label className="form-label">Status</label>
+                        <select
+                            name="status"
+                            className="form-select"
+                            value={filterValues.status}
+                            onChange={handleFilterChange}
+                        >
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+
+                    <div className="col-md-2">
+                        <label className="form-label">Instructor</label>
+                        <select
+                            name="instructor"
+                            className="form-select"
+                            value={filterValues.instructor}
+                            onChange={handleFilterChange}
+                        >
+                            <option value="">All Instructors</option>
+                            {instructors.map((instructor) => (
+                                <option
+                                    key={instructor.id}
+                                    value={instructor.id}
+                                >
+                                    {instructor.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="col-md-1">
+                        <label className="form-label">Sort By</label>
+                        <select
+                            name="sort_by"
+                            className="form-select"
+                            value={filterValues.sort_by}
+                            onChange={handleFilterChange}
+                        >
+                            <option value="created_at">Created Date</option>
+                            <option value="title">Title</option>
+                            <option value="price">Price</option>
+                        </select>
+                    </div>
+
+                    <div className="col-md-1">
+                        <label className="form-label">Order</label>
+                        <select
+                            name="sort_order"
+                            className="form-select"
+                            value={filterValues.sort_order}
+                            onChange={handleFilterChange}
+                        >
+                            <option value="asc">Asc</option>
+                            <option value="desc">Desc</option>
+                        </select>
+                    </div>
+
+                    <div className="col-md-1 d-flex gap-1">
+                        <button
+                            className="btn btn-outline-secondary w-50"
+                            title="Clear filters"
+                            onClick={() => {
+                                setFilterValues({
+                                    search: "",
+                                    category: "",
+                                    status: "",
+                                    instructor: "",
+                                    sort_by: "created_at",
+                                    sort_order: "desc",
+                                });
+
+                                const url = new URL(window.location.href);
+                                const view =
+                                    url.searchParams.get("view") || "grid";
+
+                                router.get(
+                                    route("admin.admin-course"),
+                                    { view },
+                                    {
+                                        preserveScroll: true,
+                                        replace: true,
+                                    }
+                                );
+                            }}
+                        >
+                            <i className="bi bi-x-circle"></i>
+                        </button>
+
+                        <button
+                            className="btn btn-primary w-50"
+                            title="Apply filters"
+                            onClick={applyFilters}
+                        >
+                            <i className="bi bi-funnel"></i>
+                        </button>
+                    </div>
+                </div>
+
                 {/* Tabs */}
                 <ul className="nav nav-tabs mb-3">
                     <li className="nav-item">
