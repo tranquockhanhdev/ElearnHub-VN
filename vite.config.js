@@ -13,7 +13,7 @@ export default defineConfig({
         react(),
     ],
     optimizeDeps: {
-        include: ['react-pdf'],
+        include: ['react-pdf', 'plyr-react', 'plyr'],
     },
     resolve: {
         alias: {

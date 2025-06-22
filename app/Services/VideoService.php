@@ -56,7 +56,7 @@ class VideoService
             'lesson_id' => $data['lesson_id'],
             'type' => 'video',
             'title' => $data['title'],
-            'file_url' => 'storage/' . $data['file'], // Đường dẫn file đã merge
+            'file_url' => 'storage/videos/' . $data['file'], // Đường dẫn file đã merge
             'file_type' => strtolower($extension),
             'is_preview' => $data['is_preview'] ?? false,
             'order' => $newOrder,

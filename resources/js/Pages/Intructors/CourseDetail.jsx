@@ -17,6 +17,7 @@ import {
     LockClosedIcon
 } from '@heroicons/react/24/outline';
 import DocumentModal from '../../Components/DocumentModal';
+import VideoModal from '../../Components/VideoModal';
 import { route } from 'ziggy-js';
 import axios from 'axios';
 
@@ -29,7 +30,8 @@ const CourseDetail = ({ course }) => {
     const [editingOrder, setEditingOrder] = useState(null);
     const [selectedDocument, setSelectedDocument] = useState(null);
     const [showDocumentModal, setShowDocumentModal] = useState(false);
-
+    const [selectedVideo, setSelectedVideo] = useState(null);
+    const [showVideoModal, setShowVideoModal] = useState(false);
     // Form cho thêm bài giảng
     const lessonForm = useForm({
         course_id: course.id,
@@ -246,11 +248,21 @@ const CourseDetail = ({ course }) => {
         setShowDocumentModal(true);
     };
 
+    const handleViewVideo = (video) => {
+        console.log('Viewing video:', video);
+        setSelectedVideo(video);
+        setShowVideoModal(true);
+    };
+
     const closeDocumentModal = () => {
         setShowDocumentModal(false);
         setSelectedDocument(null);
     };
 
+    const closeVideoModal = () => {
+        setShowVideoModal(false);
+        setSelectedVideo(null);
+    };
     // Function để xóa tài liệu
     const handleDeleteResource = (lessonId, resourceId, type) => {
         if (confirm('Bạn có chắc chắn muốn xóa tài liệu này?')) {
@@ -682,9 +694,12 @@ const CourseDetail = ({ course }) => {
                                                                                 </div>
                                                                                 <div className="flex items-center space-x-2">
                                                                                     <button
-                                                                                        onClick={() => handleViewDocument(resource)}
+                                                                                        onClick={() => resource.type === 'video'
+                                                                                            ? handleViewVideo(resource)
+                                                                                            : handleViewDocument(resource)
+                                                                                        }
                                                                                         className="text-blue-600 hover:text-blue-800"
-                                                                                        title="Xem tài liệu"
+                                                                                        title={resource.type === 'video' ? 'Xem video' : 'Xem tài liệu'}
                                                                                     >
                                                                                         <EyeIcon className="h-4 w-4" />
                                                                                     </button>
@@ -1246,6 +1261,13 @@ const CourseDetail = ({ course }) => {
                 isOpen={showDocumentModal}
                 onClose={closeDocumentModal}
                 document={selectedDocument}
+            />
+
+            {/* Video Modal */}
+            <VideoModal
+                isOpen={showVideoModal}
+                onClose={closeVideoModal}
+                video={selectedVideo}
             />
         </InstructorLayout>
     );
