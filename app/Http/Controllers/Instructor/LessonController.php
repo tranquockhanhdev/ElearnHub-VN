@@ -106,10 +106,16 @@ class LessonController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id, $lessonId)
     {
+        // Kiểm tra quyền sở hữu khóa học
+        $course = Course::findOrFail($id);
+        if ($course->instructor_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền xóa bài giảng cho khóa học này.');
+        }
+
         try {
-            $result = $this->lessonService->deleteLesson($id);
+            $result = $this->lessonService->deleteLesson($lessonId);
 
             if ($result['success']) {
                 return redirect()->back()->with('success', $result['message']);

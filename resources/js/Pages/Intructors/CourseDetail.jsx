@@ -288,6 +288,26 @@ const CourseDetail = ({ course }) => {
         }
     };
 
+    // Function để xóa bài giảng
+    const handleDeleteLesson = (lessonId, lessonTitle) => {
+        if (confirm(`Bạn có chắc chắn muốn xóa bài giảng "${lessonTitle}"? Tất cả tài liệu và quiz trong bài giảng này cũng sẽ bị xóa.`)) {
+            router.delete(route('instructor.courses.lessons.delete', {
+                id: course.id,
+                lessonId: lessonId
+            }), {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    // Có thể thêm toast notification ở đây
+                },
+                onError: (errors) => {
+                    console.error('Lỗi xóa bài giảng:', errors);
+                    alert('Có lỗi xảy ra khi xóa bài giảng.');
+                }
+            });
+        }
+    };
+
     const handleChunkUpload = async (file, lessonId, type) => {
         const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks
         const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
@@ -654,6 +674,13 @@ const CourseDetail = ({ course }) => {
                                                                 title="Thêm quiz"
                                                             >
                                                                 <QuestionMarkCircleIcon className="h-4 w-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteLesson(lesson.id, lesson.title)}
+                                                                className="text-red-600 hover:text-red-800 p-2"
+                                                                title="Xóa bài giảng"
+                                                            >
+                                                                <TrashIcon className="h-4 w-4" />
                                                             </button>
                                                         </div>
                                                     </div>
