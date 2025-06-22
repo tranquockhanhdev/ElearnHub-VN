@@ -34,7 +34,7 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
     Route::get('/admin/settings', [AdminSettingController::class, 'index'])
         ->name('admin.settings');
     Route::post('/settings/update', [AdminSettingController::class, 'update'])
-         ->name('admin.settings.update');
+        ->name('admin.settings.update');
     Route::post('/settings/upload-logo', [AdminSettingController::class, 'uploadLogo'])
         ->name('admin.settings.uploadLogo');
     Route::post('/admin/settings/remove-logo', [AdminSettingController::class, 'removeLogo'])
@@ -53,7 +53,7 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
         ->name('admin.instructors.update');
     Route::delete('/admin/instructors/{id}/avatar', [AdminUserController::class, 'removeInstructorAvatar'])
         ->name('admin.instructors.remove-avatar');
-        // Hiển thị form tạo khóa học mới
+    // Hiển thị form tạo khóa học mới
     Route::get('/admin/courses/create', [AdminCourseController::class, 'create'])
         ->name('admin.courses.create');
     //show success message after course creation
@@ -62,11 +62,12 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
     // Lưu thông tin khóa học mới
     Route::post('/admin/courses/store', [AdminCourseController::class, 'store'])
         ->name('admin.courses.store');
-     // Hiển thị form chỉnh sửa khóa học
+    // Hiển thị form chỉnh sửa khóa học
     Route::get('/admin/courses/{id}/edit', [AdminCourseController::class, 'edit'])
         ->name('admin.courses.edit');
     // Cập nhật thông tin khóa học
-   Route::post('/admin/courses/{id}/update', [AdminCourseController::class, 'update'])
-    ->name('admin.courses.update');
-
+    Route::post('/admin/courses/{id}/update', [AdminCourseController::class, 'update'])
+        ->name('admin.courses.update');
+    Route::delete('/admin/courses/{id}', [AdminCourseController::class, 'destroy'])
+        ->name('admin.courses.destroy');
 });

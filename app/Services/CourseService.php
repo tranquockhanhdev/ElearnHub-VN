@@ -18,6 +18,11 @@ class CourseService
     {
         $this->CourseRepository = $CourseRepository;
     }
+    //Phân trang
+    public function paginateCourses(int $perPage = 10)
+    {
+        return Course::with(['instructor', 'categories'])->paginate($perPage);
+    }
 
     public function getAllCategories()
     {
@@ -123,14 +128,14 @@ class CourseService
         }
 
         // ✅ Xử lý upload ảnh mới nếu có
-     if (isset($data['course_image']) && $data['course_image'] instanceof UploadedFile) {
-    if ($course->course_image) {
-        $this->deleteCourseImage($course->course_image);
-    }
+        if (isset($data['course_image']) && $data['course_image'] instanceof UploadedFile) {
+            if ($course->course_image) {
+                $this->deleteCourseImage($course->course_image);
+            }
 
-    $data['course_image'] = $this->uploadCourseImage($data['course_image']);
-    $data['img_url'] = $data['course_image']; // ✅ Thêm dòng này để update ảnh hiển thị
-}
+            $data['course_image'] = $this->uploadCourseImage($data['course_image']);
+            $data['img_url'] = $data['course_image']; // ✅ Thêm dòng này để update ảnh hiển thị
+        }
 
         // ✅ Xử lý danh mục
         if (isset($data['category_ids']) && is_array($data['category_ids'])) {
@@ -191,12 +196,14 @@ class CourseService
         $course = $this->getCourseById($id);
 
         // Xóa ảnh nếu có
-        if ($course->course_image) {
-            $this->deleteCourseImage($course->course_image);
-        }
+       if ($course->img_url) {
+    $this->deleteCourseImage($course->img_url);
+}
 
         return $this->CourseRepository->deleteCourse($id);
+        
     }
+    
 
     public function getCoursesByInstructor($instructorId)
     {

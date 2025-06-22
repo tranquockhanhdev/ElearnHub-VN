@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { router, usePage } from "@inertiajs/react";
 import { route } from "ziggy-js";
-import UserLayout from "@/Components/Layouts/UserLayout";
+import AdminLayout from "@/Components/Layouts/AdminLayout";
 import { useImage } from "@/hooks/useImage";
 
 const AdminEditCourse = () => {
@@ -250,7 +250,7 @@ const AdminEditCourse = () => {
     const shouldShowPreview = imagePreview || storedImageUrl;
     const hasImage = formData.course_image || storedImageUrl;
     return (
-        <UserLayout>
+        <AdminLayout>
             <main>
                 <section className="py-0 bg-blue h-100px align-items-center d-flex h-200px rounded-0">
                     <div className="container">
@@ -265,20 +265,6 @@ const AdminEditCourse = () => {
                 </section>
                 <section>
                     <div className="container">
-                        <div className="row">
-                            <div className="col-md-8 mx-auto text-center">
-                                <p className="text-center">
-                                    Sử dụng giao diện này để thêm Khóa học mới
-                                    vào cổng thông tin. Sau khi bạn hoàn tất
-                                    việc thêm mục, mục này sẽ được chuyển đến
-                                    giảng viên để thêm các thông tin tiếp theo
-                                    như nội dung, video, v.v. Bạn có thể chỉnh
-                                    sửa các thông tin này sau khi giảng viên đã
-                                    hoàn thành.
-                                </p>
-                            </div>
-                        </div>
-
                         <div className="card border rounded-3 mb-5">
                             <div
                                 id="stepper"
@@ -1637,7 +1623,7 @@ const AdminEditCourse = () => {
                     </div>
                 </section>
             </main>
-        </UserLayout>
+        </AdminLayout>
     );
 };
 

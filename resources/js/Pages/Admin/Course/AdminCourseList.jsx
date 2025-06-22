@@ -1,21 +1,83 @@
-import React, { useState } from "react";
-import { Link } from "@inertiajs/react";
-// import route from "ziggy-js";
+import React, { useState, useEffect } from "react";
+import { Link, usePage, router } from "@inertiajs/react";
 import AdminLayout from "../../../Components/Layouts/AdminLayout";
-// import route from "ziggy-js"; // hoặc usePage().props.ziggy nếu inject vào props
-const AdminCourseList = ({ courses }) => {
-    const [activeTab, setActiveTab] = useState("grid");
+import CourseCard from "../../../Components/Admin/CourseCard";
+import DeleteConfirmModal from "../../../Components/Common/DeleteConfirmModal";
+const AdminCourseList = ({ courses, stats }) => {
+    // --- Get tab from URL if exists
+    const searchParams = new URLSearchParams(window.location.search);
+    const defaultTab = searchParams.get("view") || "grid";
+    const [showModal, setShowModal] = useState(false);
+    const [selectedCourseId, setSelectedCourseId] = useState(null);
+    const [activeTab, setActiveTab] = useState(defaultTab);
+
+    // --- Update URL when tab changes (without full reload)
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        const url = new URL(window.location.href);
+        url.searchParams.set("view", tab);
+        router.get(
+            url.pathname + url.search,
+            {},
+            { preserveScroll: true, replace: true }
+        );
+    };
+
+    const openDeleteModal = (id) => {
+        setSelectedCourseId(id);
+        setShowModal(true);
+    };
+    const confirmDelete = () => {
+        router.delete(`/admin/courses/${selectedCourseId}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowModal(false);
+                setSelectedCourseId(null);
+            },
+        });
+    };
+
+    const renderPagination = () => {
+        const pages = [];
+        const viewParam = `&view=${activeTab}`; // 👈 preserve view in pagination
+
+        for (let i = 1; i <= courses.last_page; i++) {
+            pages.push(
+                <Link
+                    preserveScroll
+                    key={i}
+                    href={`?page=${i}${viewParam}`}
+                    className={`page-link ${
+                        courses.current_page === i ? "active" : ""
+                    }`}
+                >
+                    {i}
+                </Link>
+            );
+        }
+
+        return (
+            <nav className="mt-4">
+                <ul className="pagination justify-content-center">
+                    {pages.map((page, index) => (
+                        <li key={index} className="page-item">
+                            {page}
+                        </li>
+                    ))}
+                </ul>
+            </nav>
+        );
+    };
 
     return (
         <AdminLayout>
             <div className="page-content-wrapper border">
-                {/* Title */}
                 <div className="row mb-3">
                     <div className="col-12 d-sm-flex justify-content-between align-items-center">
                         <h1 className="h3 mb-2 mb-sm-0">
                             Course List{" "}
                             <span className="badge bg-orange bg-opacity-10 text-orange">
-                                {courses.length}
+                                {courses.total} total
                             </span>
                         </h1>
                         <Link
@@ -26,15 +88,56 @@ const AdminCourseList = ({ courses }) => {
                         </Link>
                     </div>
                 </div>
-
-                {/* Tabs for Grid / List view */}
+                {/* Stats cards */}
+                <div className="row mb-4">
+                    <div className="col-md-4">
+                        <div
+                            className="p-4 rounded border text-center"
+                            style={{
+                                backgroundColor: "#ecfdf5",
+                                borderColor: "#10b981",
+                                color: "#059669",
+                            }}
+                        >
+                            <h6 className="fw-semibold">Activated Courses</h6>
+                            <h2 className="fw-bold">{stats.activated}</h2>
+                        </div>
+                    </div>
+                    <div className="col-md-4">
+                        <div
+                            className="p-4 rounded border text-center"
+                            style={{
+                                backgroundColor: "#eef4ff",
+                                borderColor: "#3b82f6",
+                                color: "#1d4ed8",
+                            }}
+                        >
+                            <h6 className="fw-semibold">Inactive Courses</h6>
+                            <h2 className="fw-bold">{stats.inactivated}</h2>
+                        </div>
+                    </div>
+                    <div className="col-md-4">
+                        <div
+                            className="p-4 rounded border text-center"
+                            style={{
+                                backgroundColor: "#fffbeb",
+                                borderColor: "#f59e0b",
+                                color: "#d97706",
+                            }}
+                        >
+                            <h6 className="fw-semibold">Pending Courses</h6>
+                            <h2 className="fw-bold">{stats.pending}</h2>
+                        </div>
+                    </div>
+                </div>
+                {/* Tabs */}
                 <ul className="nav nav-tabs mb-3">
                     <li className="nav-item">
                         <button
                             className={`nav-link ${
                                 activeTab === "grid" ? "active" : ""
                             }`}
-                            onClick={() => setActiveTab("grid")}
+                            onClick={() => handleTabChange("grid")}
                         >
                             Grid View
                         </button>
@@ -44,150 +147,34 @@ const AdminCourseList = ({ courses }) => {
                             className={`nav-link ${
                                 activeTab === "list" ? "active" : ""
                             }`}
-                            onClick={() => setActiveTab("list")}
+                            onClick={() => handleTabChange("list")}
                         >
                             List View
                         </button>
                     </li>
                 </ul>
 
-                {/* Filter/Search Row */}
-                <div className="row mb-4">
-                    <div className="col-md-4">
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Search by title..."
-                        />
-                    </div>
-                    <div className="col-md-4">
-                        <select className="form-select">
-                            <option value="">All Categories</option>
-                            <option value="design">Design</option>
-                            <option value="development">Development</option>
-                            <option value="marketing">Marketing</option>
-                        </select>
-                    </div>
-                    <div className="col-md-4">
-                        <select className="form-select">
-                            <option value="">Sort by</option>
-                            <option value="price_low_high">
-                                Price: Low to High
-                            </option>
-                            <option value="price_high_low">
-                                Price: High to Low
-                            </option>
-                        </select>
-                    </div>
-                </div>
-
                 {/* Grid View */}
                 {activeTab === "grid" && (
-                    <div className="row g-4">
-                        {courses.map((course) => (
-                            <div className="col-md-6 col-xxl-4" key={course.id}>
-                                <div className="card bg-transparent border h-100">
-                                    <div className="card-header bg-transparent border-bottom d-flex justify-content-between">
-                                        <div>
-                                            <h5 className="mb-0">
-                                                <a href="#">{course.title}</a>
-                                            </h5>
-                                            <p className="mb-0 small">
-                                                {course.categories
-                                                    ?.map((c) => c.name)
-                                                    .join(", ") || "N/A"}
-                                            </p>
-                                        </div>
-                                        <div className="dropdown">
-                                            <a
-                                                href="#"
-                                                className="btn btn-sm btn-light btn-round"
-                                                data-bs-toggle="dropdown"
-                                            >
-                                                <i className="bi bi-three-dots fa-fw"></i>
-                                            </a>
-                                            <ul className="dropdown-menu dropdown-menu-end shadow rounded">
-                                                <li>
-                                                    <Link
-                                                        className="dropdown-item"
-                                                        href={`/admin/courses/${course.id}/edit`}
-                                                    >
-                                                        <i className="bi bi-pencil-square me-2"></i>
-                                                        Edit
-                                                    </Link>
-                                                </li>
-                                                <li>
-                                                    <button className="dropdown-item">
-                                                        <i className="bi bi-trash me-2"></i>
-                                                        Remove
-                                                    </button>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-
-                                    <div className="card-body">
-                                        {course.img_url && (
-                                            <div className="mb-3 text-center">
-                                                <img
-                                                    src={course.img_url}
-                                                    alt={course.title}
-                                                    className="img-fluid rounded"
-                                                    style={{
-                                                        maxHeight: "180px",
-                                                        objectFit: "cover",
-                                                        width: "100%",
-                                                    }}
-                                                />
-                                            </div>
-                                        )}
-                                        <p className="text-muted small">
-                                            {course.description?.slice(
-                                                0,
-                                                100
-                                            ) || "No description available..."}
-                                            ...
-                                        </p>
-                                        <div className="d-flex justify-content-between mb-2">
-                                            <h6 className="mb-0 fw-light">
-                                                Instructor
-                                            </h6>
-                                            <span className="fw-bold">
-                                                {course.instructor?.name ||
-                                                    "N/A"}
-                                            </span>
-                                        </div>
-                                        <div className="d-flex justify-content-between">
-                                            <h6 className="mb-0 fw-light">
-                                                Price
-                                            </h6>
-                                            <span className="fw-bold">
-                                                ${course.price}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="card-footer bg-transparent border-top d-flex justify-content-between align-items-center">
-                                        <span className="text-muted small">
-                                            ID: {course.id}
-                                        </span>
-                                        <a
-                                            href="#"
-                                            className="btn btn-link text-body p-0"
-                                            title="View"
-                                        >
-                                            <i className="bi bi-eye-fill"></i>
-                                        </a>
-                                    </div>
-                                </div>
+                    <>
+                        {courses.data.length > 0 ? (
+                            <div className="row g-4">
+                                {courses.data.map((course) => (
+                                    <CourseCard
+                                        key={course.id}
+                                        course={course}
+                                        onDelete={() =>
+                                            openDeleteModal(course.id)
+                                        }
+                                    />
+                                ))}
                             </div>
-                        ))}
-                        {courses.length === 0 && (
-                            <div className="text-center w-100">
+                        ) : (
+                            <div className="text-center py-5 border rounded">
                                 No courses found
                             </div>
                         )}
-                    </div>
+                    </>
                 )}
 
                 {/* List View */}
@@ -204,7 +191,7 @@ const AdminCourseList = ({ courses }) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {courses.map((course) => (
+                                {courses.data.map((course) => (
                                     <tr key={course.id}>
                                         <td>{course.title}</td>
                                         <td>
@@ -218,22 +205,24 @@ const AdminCourseList = ({ courses }) => {
                                         <td>${course.price}</td>
                                         <td>
                                             <Link
-                                                href={`/admin-course/${course.id}/edit`}
+                                                href={`/admin/courses/${course.id}/edit`}
                                                 className="btn btn-sm btn-outline-primary me-2"
                                             >
                                                 Edit
                                             </Link>
-                                            <a
-                                                href="#"
-                                                className="btn btn-sm btn-outline-secondary"
-                                                title="View"
+                                            <button
+                                                className="dropdown-item text-danger"
+                                                onClick={() =>
+                                                    openDeleteModal(course.id)
+                                                }
                                             >
-                                                <i className="bi bi-eye-fill"></i>
-                                            </a>
+                                                <i className="bi bi-trash me-2"></i>
+                                                Remove
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
-                                {courses.length === 0 && (
+                                {courses.data.length === 0 && (
                                     <tr>
                                         <td colSpan="5" className="text-center">
                                             No courses found
@@ -244,7 +233,16 @@ const AdminCourseList = ({ courses }) => {
                         </table>
                     </div>
                 )}
+
+                {courses.last_page > 1 && renderPagination()}
             </div>
+            <DeleteConfirmModal
+                show={showModal}
+                onClose={() => setShowModal(false)}
+                onConfirm={confirmDelete}
+                title="Delete Course"
+                message="Are you sure you want to delete this course? This action cannot be undone."
+            />
         </AdminLayout>
     );
 };

@@ -19,12 +19,27 @@ class AdminCourseController extends Controller
     {
         $this->CourseService = $CourseService;
     }
-    public function index()
+    public function index(Request $request)
     {
-        $courses = Course::with(['instructor', 'categories'])->get();
+        $perPage = $request->input('per_page', 10);
+        $courses = $this->CourseService->paginateCourses($perPage);
+
+        // Gán lại img_url dạng public cho từng course
+        $courses->getCollection()->transform(function ($course) {
+            if ($course->img_url) {
+                // Nếu chỉ lưu tên file
+                $course->img_url = asset('storage/bannercourse/' . basename($course->img_url));
+            }
+            return $course;
+        });
 
         return Inertia::render('Admin/Course/AdminCourseList', [
             'courses' => $courses,
+            'stats' => [
+                'activated' => \App\Models\Course::where('status', 'active')->count(),
+                'inactivated' => \App\Models\Course::where('status', 'inactive')->count(),
+                'pending' => \App\Models\Course::where('status', 'pending')->count(),
+            ],
         ]);
     }
     public function create()
@@ -77,5 +92,11 @@ class AdminCourseController extends Controller
         return redirect()->back()
             ->withErrors($result['errors'] ?? ['general' => $result['message']])
             ->withInput($request->except('course_image'));
+    }
+    public function destroy($id)
+    {
+        $this->CourseService->deleteCourse($id);
+
+        return redirect()->back()->with('success', 'Course deleted successfully.');
     }
 }

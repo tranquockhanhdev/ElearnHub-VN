@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { router, usePage } from "@inertiajs/react";
 import { route } from "ziggy-js";
-import UserLayout from "@/Components/Layouts/UserLayout";
+import AdminLayout from "@/Components/Layouts/AdminLayout";
 import { useImage } from "@/hooks/useImage";
 
 const AdminCreateCourse = () => {
@@ -236,7 +236,7 @@ const AdminCreateCourse = () => {
     }, []);
 
     return (
-        <UserLayout>
+        <AdminLayout>
             <main>
                 {/* Error Messages */}
                 {flash_error && (
@@ -319,20 +319,6 @@ const AdminCreateCourse = () => {
                 {/* Main Content */}
                 <section>
                     <div className="container">
-                        <div className="row">
-                            <div className="col-md-8 mx-auto text-center">
-                                <p className="text-center">
-                                    Sử dụng giao diện này để thêm Khóa học mới
-                                    vào cổng thông tin. Sau khi bạn hoàn tất
-                                    việc thêm mục, mục này sẽ được chuyển đến
-                                    giảng viên để thêm các thông tin tiếp theo
-                                    như nội dung, video, v.v. Bạn có thể chỉnh
-                                    sửa các thông tin này sau khi giảng viên đã
-                                    hoàn thành.
-                                </p>
-                            </div>
-                        </div>
-
                         <div className="card border rounded-3 mb-5">
                             <div
                                 id="stepper"
@@ -1688,7 +1674,7 @@ const AdminCreateCourse = () => {
                     </div>
                 </section>
             </main>
-        </UserLayout>
+        </AdminLayout>
     );
 };
 
