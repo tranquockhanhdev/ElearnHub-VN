@@ -38,7 +38,6 @@ const VideoModal = ({ isOpen, onClose, video }) => {
 
         if (!videoUrl) return null;
 
-        // Kiểm tra nếu là URL (YouTube, Vimeo, etc.)
         if (videoUrl.startsWith('http')) {
             return {
                 type: 'video',
@@ -51,18 +50,22 @@ const VideoModal = ({ isOpen, onClose, video }) => {
             };
         }
 
-        // Nếu là file video upload, đảm bảo có đường dẫn đầy đủ
-        if (!videoUrl.startsWith('/') && !videoUrl.startsWith('storage/')) {
-            videoUrl = `/storage/videos/${videoUrl}`;
-        } else if (videoUrl.startsWith('storage/')) {
-            videoUrl = `/${videoUrl}`;
+        // Nếu là file video upload, sử dụng streaming URL
+        let streamingUrl;
+        if (videoUrl.startsWith('storage/videos/')) {
+            const fileName = videoUrl.replace('storage/videos/', '');
+            streamingUrl = `/video/${fileName}`;
+        } else if (!videoUrl.startsWith('/')) {
+            streamingUrl = `/video/${videoUrl}`;
+        } else {
+            streamingUrl = videoUrl;
         }
 
         return {
             type: 'video',
             sources: [
                 {
-                    src: videoUrl,
+                    src: streamingUrl,
                     type: getVideoType(videoUrl),
                 }
             ]
@@ -111,10 +114,6 @@ const VideoModal = ({ isOpen, onClose, video }) => {
             'fullscreen'
         ],
         settings: ['captions', 'quality', 'speed'],
-        quality: {
-            default: 720,
-            options: [1080, 720, 480, 360]
-        },
         speed: {
             selected: 1,
             options: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
@@ -130,7 +129,11 @@ const VideoModal = ({ isOpen, onClose, video }) => {
         captions: {
             active: false,
             language: 'vi'
-        }
+        },
+        // Tối ưu cho streaming
+        preload: 'metadata',
+        autopause: true,
+        hideControls: false
     };
 
     if (!isOpen) return null;
@@ -162,47 +165,77 @@ const VideoModal = ({ isOpen, onClose, video }) => {
                 {/* Video Content */}
                 <div className="p-4">
                     {videoSource ? (
-                        <div className="w-full">
+                        <div className="w-full relative">
                             {(() => {
                                 const videoUrl = video.file_url || video.file;
                                 const provider = getVideoProvider(videoUrl);
 
                                 if (provider === 'youtube') {
                                     return (
-                                        <Plyr
-                                            source={{
-                                                type: 'video',
-                                                sources: [
-                                                    {
-                                                        src: extractYouTubeId(videoUrl),
-                                                        provider: 'youtube'
-                                                    }
-                                                ]
-                                            }}
-                                            options={plyrOptions}
-                                        />
+                                        <div className="relative">
+                                            <Plyr
+                                                source={{
+                                                    type: 'video',
+                                                    sources: [
+                                                        {
+                                                            src: extractYouTubeId(videoUrl),
+                                                            provider: 'youtube'
+                                                        }
+                                                    ]
+                                                }}
+                                                options={plyrOptions}
+                                            />
+                                            {/* Logo Watermark */}
+                                            <div className="absolute top-4 right-4 z-10 pointer-events-none">
+                                                <img
+                                                    src="/assets/images/avatar/kedu.png"
+                                                    alt="K-EDU"
+                                                    className="w-36 h-36 opacity-80"
+                                                />
+                                            </div>
+                                        </div>
                                     );
                                 } else if (provider === 'vimeo') {
                                     return (
-                                        <Plyr
-                                            source={{
-                                                type: 'video',
-                                                sources: [
-                                                    {
-                                                        src: extractVimeoId(videoUrl),
-                                                        provider: 'vimeo'
-                                                    }
-                                                ]
-                                            }}
-                                            options={plyrOptions}
-                                        />
+                                        <div className="relative">
+                                            <Plyr
+                                                source={{
+                                                    type: 'video',
+                                                    sources: [
+                                                        {
+                                                            src: extractVimeoId(videoUrl),
+                                                            provider: 'vimeo'
+                                                        }
+                                                    ]
+                                                }}
+                                                options={plyrOptions}
+                                            />
+                                            {/* Logo Watermark */}
+                                            <div className="absolute top-4 right-4 z-10 pointer-events-none">
+                                                <img
+                                                    src="/assets/images/avatar/kedu.png"
+                                                    alt="K-EDU"
+                                                    className="w-36 h-36 opacity-80"
+                                                />
+                                            </div>
+                                        </div>
                                     );
                                 } else {
                                     return (
-                                        <Plyr
-                                            source={videoSource}
-                                            options={plyrOptions}
-                                        />
+                                        <div className="relative">
+                                            <Plyr
+                                                source={videoSource}
+                                                options={plyrOptions}
+                                            />
+                                            {/* Logo Watermark */}
+                                            <div className="absolute top-4 right-4 z-10 pointer-events-none">
+                                                <img
+                                                    src="/assets/images/avatar/kedu.png"
+                                                    alt="K-EDU"
+                                                    className="w-36 h-36 opacity-80"
+                                                />
+                                            </div>
+                                        </div>
                                     );
                                 }
                             })()}
@@ -220,9 +253,9 @@ const VideoModal = ({ isOpen, onClose, video }) => {
                 {/* Footer */}
                 <div className="px-4 pb-4">
                     <div className="flex justify-end space-x-2">
-                        {/* Debug info - có thể xóa sau khi test */}
+                        {/* Debug info */}
                         <span className="text-xs text-gray-500">
-                            File: {video?.file_url || video?.file || 'N/A'}
+                            URL: {videoSource?.sources?.[0]?.src || 'N/A'}
                         </span>
                         <button
                             onClick={onClose}
