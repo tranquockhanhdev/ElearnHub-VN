@@ -581,6 +581,11 @@ const CourseDetail = ({ course }) => {
                                                                         <option value="document">Tài liệu</option>
                                                                         <option value="video">Video</option>
                                                                     </select>
+                                                                    {resourceForm.errors.type && (
+                                                                        <div className="text-red-600 text-sm mt-1">
+                                                                            {resourceForm.errors.type}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                                 <div>
                                                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -593,6 +598,11 @@ const CourseDetail = ({ course }) => {
                                                                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                                         required
                                                                     />
+                                                                    {resourceForm.errors.title && (
+                                                                        <div className="text-red-600 text-sm mt-1">
+                                                                            {resourceForm.errors.title}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                                 <div className="md:col-span-2">
                                                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -605,6 +615,11 @@ const CourseDetail = ({ course }) => {
                                                                         accept={resourceForm.data.type === 'video' ? 'video/*' : '.pdf,.doc,.docx'}
                                                                         required
                                                                     />
+                                                                    {resourceForm.errors.file && (
+                                                                        <div className="text-red-600 text-sm mt-1">
+                                                                            {resourceForm.errors.file}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                                 <div className="md:col-span-2">
                                                                     <label className="flex items-center">
@@ -616,6 +631,11 @@ const CourseDetail = ({ course }) => {
                                                                         />
                                                                         Cho phép xem trước (không cần đăng ký)
                                                                     </label>
+                                                                    {resourceForm.errors.is_preview && (
+                                                                        <div className="text-red-600 text-sm mt-1">
+                                                                            {resourceForm.errors.is_preview}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                             <div className="flex justify-end space-x-3 mt-4">
@@ -731,6 +751,11 @@ const CourseDetail = ({ course }) => {
                                                                                         rows="2"
                                                                                         required
                                                                                     />
+                                                                                    {quizForm.errors[`questions.${index}.question_text`] && (
+                                                                                        <div className="text-red-600 text-sm mt-1">
+                                                                                            {quizForm.errors[`questions.${index}.question_text`]}
+                                                                                        </div>
+                                                                                    )}
                                                                                 </div>
 
                                                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -750,6 +775,11 @@ const CourseDetail = ({ course }) => {
                                                                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                                                                 required
                                                                                             />
+                                                                                            {quizForm.errors[`questions.${index}.option_${option.toLowerCase()}`] && (
+                                                                                                <div className="text-red-600 text-sm mt-1">
+                                                                                                    {quizForm.errors[`questions.${index}.option_${option.toLowerCase()}`]}
+                                                                                                </div>
+                                                                                            )}
                                                                                         </div>
                                                                                     ))}
                                                                                 </div>
@@ -773,6 +803,11 @@ const CourseDetail = ({ course }) => {
                                                                                         <option value="C">C</option>
                                                                                         <option value="D">D</option>
                                                                                     </select>
+                                                                                    {quizForm.errors[`questions.${index}.correct_option`] && (
+                                                                                        <div className="text-red-600 text-sm mt-1">
+                                                                                            {quizForm.errors[`questions.${index}.correct_option`]}
+                                                                                        </div>
+                                                                                    )}
                                                                                 </div>
                                                                             </div>
                                                                         </div>
