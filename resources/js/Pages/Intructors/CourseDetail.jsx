@@ -37,17 +37,28 @@ const CourseDetail = ({ course }) => {
         order: course.lessons?.length + 1 || 1
     });
 
-    // Form cho thêm tài liệu
-    const resourceForm = useForm({
+    // Form cho thêm tài liệu (document)
+    const documentForm = useForm({
         lesson_id: '',
         type: 'document',
         title: '',
         file: null,
         is_preview: 0,
         order: 0,
-        uploadProgress: 0 // Thêm trạng thái tiến trình upload
+        uploadProgress: 0
     });
-
+    // Form cho thêm video
+    const videoForm = useForm({
+        lesson_id: '',
+        type: 'video',
+        title: '',
+        file: null,
+        url: '',
+        uploadMethod: 'file',
+        is_preview: 0,
+        order: 0,
+        uploadProgress: 0
+    });
     // Form cho thêm quiz
     const quizForm = useForm({
         lesson_id: '',
@@ -83,13 +94,74 @@ const CourseDetail = ({ course }) => {
         });
     };
 
-    const handleAddResource = async (e) => {
+    const handleAddDocument = async (e) => {
         e.preventDefault();
 
-        if (resourceForm.data.file) {
-            await handleChunkUpload(resourceForm.data.file, showAddResource);
+        if (documentForm.data.file) {
+            await handleChunkUpload(documentForm.data.file, showAddResource, 'document');
         } else {
             alert('Vui lòng chọn file để tải lên.');
+        }
+    };
+
+    const handleAddVideo = async (e) => {
+        e.preventDefault();
+
+        if (videoForm.data.uploadMethod === 'file') {
+            if (videoForm.data.file) {
+                await handleChunkUpload(videoForm.data.file, showAddResource, 'video');
+            } else {
+                alert('Vui lòng chọn file video để tải lên.');
+            }
+        } else if (videoForm.data.uploadMethod === 'url') {
+            if (videoForm.data.url) {
+                await handleVideoUrlUpload();
+            } else {
+                alert('Vui lòng nhập URL video.');
+            }
+        }
+    };
+
+    const handleVideoUrlUpload = async () => {
+        const formData = new FormData();
+        formData.append('title', videoForm.data.title);
+        formData.append('file', videoForm.data.url);
+        formData.append('is_preview', videoForm.data.is_preview ? 1 : 0);
+
+        let fileType = 'url';
+        if (videoForm.data.url.includes('youtube.com') || videoForm.data.url.includes('youtu.be')) {
+            fileType = 'youtube';
+        } else if (videoForm.data.url.includes('vimeo.com')) {
+            fileType = 'vimeo';
+        }
+        formData.append('file_type', fileType);
+
+        try {
+            const response = await axios.post(
+                route('instructor.courses.lessons.videos.store', {
+                    id: course.id,
+                    lessonId: showAddResource,
+                }),
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                }
+            );
+
+            setShowAddResource(null);
+            videoForm.reset();
+
+            // Reload trang để hiển thị video mới
+            router.reload({
+                preserveScroll: true,
+                preserveState: false
+            });
+
+        } catch (error) {
+            console.error('Error uploading video URL:', error);
+            alert('Có lỗi xảy ra khi thêm video từ URL.');
         }
     };
 
@@ -180,14 +252,21 @@ const CourseDetail = ({ course }) => {
     };
 
     // Function để xóa tài liệu
-    const handleDeleteResource = (lessonId, resourceId) => {
+    const handleDeleteResource = (lessonId, resourceId, type) => {
         if (confirm('Bạn có chắc chắn muốn xóa tài liệu này?')) {
-            // Sử dụng router.delete với preserveScroll và preserveState
-            router.delete(route('instructor.courses.lessons.documents.delete', {
-                id: course.id,
-                lessonId: lessonId,
-                documentId: resourceId
-            }), {
+            const deleteRoute = type === 'video'
+                ? route('instructor.courses.lessons.videos.delete', {
+                    id: course.id,
+                    lessonId: lessonId,
+                    videoId: resourceId
+                })
+                : route('instructor.courses.lessons.documents.delete', {
+                    id: course.id,
+                    lessonId: lessonId,
+                    documentId: resourceId
+                });
+
+            router.delete(deleteRoute, {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
@@ -197,48 +276,96 @@ const CourseDetail = ({ course }) => {
         }
     };
 
-    const handleChunkUpload = async (file, lessonId) => {
-        const CHUNK_SIZE = 5 * 1024 * 1024;
+    const handleChunkUpload = async (file, lessonId, type) => {
+        const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks
         const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
         const uploadId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
-        const uploadUrl = route('instructor.courses.lessons.documents.chunkUpload', {
-            id: course.id,
-            lessonId: lessonId,
-        });
+        let uploadUrl, form;
+        if (type === 'video') {
+            // Upload video qua VideoController với chunk
+            uploadUrl = route('instructor.courses.lessons.videos.store', {
+                id: course.id,
+                lessonId: lessonId,
+            });
+            form = videoForm;
+        } else {
+            // Upload document qua DocumentController (chunk upload)
+            uploadUrl = route('instructor.courses.lessons.documents.chunkUpload', {
+                id: course.id,
+                lessonId: lessonId,
+            });
+            form = documentForm;
+        }
 
         try {
-            for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-                const start = chunkIndex * CHUNK_SIZE;
-                const end = Math.min(file.size, start + CHUNK_SIZE);
-                const chunk = file.slice(start, end);
+            if (type === 'video') {
+                // Đối với video, sử dụng chunk upload
+                for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+                    const start = chunkIndex * CHUNK_SIZE;
+                    const end = Math.min(file.size, start + CHUNK_SIZE);
+                    const chunk = file.slice(start, end);
 
-                const formData = new FormData();
-                formData.append('file', chunk);
-                formData.append('chunkIndex', chunkIndex);
-                formData.append('totalChunks', totalChunks);
-                formData.append('fileName', file.name);
-                formData.append('uploadId', uploadId);
+                    const formData = new FormData();
+                    formData.append('file', chunk);
+                    formData.append('chunkIndex', chunkIndex);
+                    formData.append('totalChunks', totalChunks);
+                    formData.append('fileName', file.name);
+                    formData.append('uploadId', uploadId);
+                    formData.append('title', form.data.title);
+                    formData.append('is_preview', form.data.is_preview ? 1 : 0);
 
-                await axios.post(uploadUrl, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                    onUploadProgress: (progressEvent) => {
-                        const progress = Math.round(
-                            ((chunkIndex + progressEvent.loaded / progressEvent.total) / totalChunks) * 100
-                        );
-                        resourceForm.setData('uploadProgress', progress);
-                    },
-                });
+                    const response = await axios.post(uploadUrl, formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                        onUploadProgress: (progressEvent) => {
+                            const progress = Math.round(
+                                ((chunkIndex + progressEvent.loaded / progressEvent.total) / totalChunks) * 100
+                            );
+                            form.setData('uploadProgress', progress);
+                        },
+                    });
+
+                    // Kiểm tra xem upload đã hoàn thành chưa
+                    if (response.data.isComplete) {
+                        break;
+                    }
+                }
+            } else {
+                // Đối với document, sử dụng chunk upload (logic cũ)
+                for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+                    const start = chunkIndex * CHUNK_SIZE;
+                    const end = Math.min(file.size, start + CHUNK_SIZE);
+                    const chunk = file.slice(start, end);
+
+                    const formData = new FormData();
+                    formData.append('file', chunk);
+                    formData.append('chunkIndex', chunkIndex);
+                    formData.append('totalChunks', totalChunks);
+                    formData.append('fileName', file.name);
+                    formData.append('uploadId', uploadId);
+
+                    await axios.post(uploadUrl, formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                        onUploadProgress: (progressEvent) => {
+                            const progress = Math.round(
+                                ((chunkIndex + progressEvent.loaded / progressEvent.total) / totalChunks) * 100
+                            );
+                            form.setData('uploadProgress', progress);
+                        },
+                    });
+                }
             }
 
             // Reset progress và đóng modal
-            resourceForm.setData('uploadProgress', 0);
+            form.setData('uploadProgress', 0);
             setShowAddResource(null);
 
             // Reset form
-            resourceForm.reset();
+            form.reset();
 
             // Reload trang để hiển thị tài liệu mới
             router.reload({
@@ -247,9 +374,9 @@ const CourseDetail = ({ course }) => {
             });
 
         } catch (error) {
-            console.error('Error uploading chunk:', error);
+            console.error('Error uploading file:', error);
             alert('Có lỗi xảy ra khi tải lên file.');
-            resourceForm.setData('uploadProgress', 0);
+            form.setData('uploadProgress', 0);
         }
     };
 
@@ -562,7 +689,7 @@ const CourseDetail = ({ course }) => {
                                                                                         <EyeIcon className="h-4 w-4" />
                                                                                     </button>
                                                                                     <button
-                                                                                        onClick={() => handleDeleteResource(lesson.id, resource.id)}
+                                                                                        onClick={() => handleDeleteResource(lesson.id, resource.id, resource.type)}
                                                                                         className="text-red-600 hover:text-red-800"
                                                                                         title="Xóa tài liệu"
                                                                                     >
@@ -608,101 +735,268 @@ const CourseDetail = ({ course }) => {
                                                 {showAddResource === lesson.id && (
                                                     <div className="border-t p-4 bg-gray-50">
                                                         <h4 className="font-medium mb-3">Thêm tài liệu</h4>
-                                                        <form onSubmit={handleAddResource}>
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                <div>
-                                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                                        Loại tài liệu
-                                                                    </label>
-                                                                    <select
-                                                                        value={resourceForm.data.type}
-                                                                        onChange={(e) => resourceForm.setData('type', e.target.value)}
-                                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                                    >
-                                                                        <option value="document">Tài liệu</option>
-                                                                        <option value="video">Video</option>
-                                                                    </select>
-                                                                    {resourceForm.errors.type && (
-                                                                        <div className="text-red-600 text-sm mt-1">
-                                                                            {resourceForm.errors.type}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                                <div>
-                                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                                        Tiêu đề
-                                                                    </label>
-                                                                    <input
-                                                                        type="text"
-                                                                        value={resourceForm.data.title}
-                                                                        onChange={(e) => resourceForm.setData('title', e.target.value)}
-                                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                                        required
-                                                                    />
-                                                                    {resourceForm.errors.title && (
-                                                                        <div className="text-red-600 text-sm mt-1">
-                                                                            {resourceForm.errors.title}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                                <div className="md:col-span-2">
-                                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                                        File
-                                                                    </label>
-                                                                    <input
-                                                                        type="file"
-                                                                        onChange={(e) => resourceForm.setData('file', e.target.files[0])}
-                                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                                        accept={resourceForm.data.type === 'video' ? 'video/*' : '.pdf,.doc,.docx'}
-                                                                        required
-                                                                    />
-                                                                    {resourceForm.errors.file && (
-                                                                        <div className="text-red-600 text-sm mt-1">
-                                                                            {resourceForm.errors.file}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                                <div className="md:col-span-2">
-                                                                    <label className="flex items-center">
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            checked={resourceForm.data.is_preview}
-                                                                            onChange={(e) => resourceForm.setData('is_preview', e.target.checked)}
-                                                                            className="mr-2"
-                                                                        />
-                                                                        Cho phép xem trước (không cần đăng ký)
-                                                                    </label>
-                                                                    {resourceForm.errors.is_preview && (
-                                                                        <div className="text-red-600 text-sm mt-1">
-                                                                            {resourceForm.errors.is_preview}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex justify-end space-x-3 mt-4">
+
+                                                        {/* Tab chọn loại tài liệu */}
+                                                        <div className="mb-4">
+                                                            <div className="flex space-x-4">
                                                                 <button
                                                                     type="button"
-                                                                    onClick={() => setShowAddResource(null)}
-                                                                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                                                                    onClick={() => {
+                                                                        documentForm.setData('type', 'document');
+                                                                        videoForm.setData('type', 'document');
+                                                                    }}
+                                                                    className={`px-4 py-2 rounded-md ${documentForm.data.type === 'document'
+                                                                        ? 'bg-blue-600 text-white'
+                                                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                                        }`}
                                                                 >
-                                                                    Hủy
+                                                                    <DocumentTextIcon className="h-4 w-4 inline mr-2" />
+                                                                    Tài liệu
                                                                 </button>
                                                                 <button
-                                                                    type="submit"
-                                                                    disabled={resourceForm.processing}
-                                                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        documentForm.setData('type', 'video');
+                                                                        videoForm.setData('type', 'video');
+                                                                    }}
+                                                                    className={`px-4 py-2 rounded-md ${documentForm.data.type === 'video'
+                                                                        ? 'bg-blue-600 text-white'
+                                                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                                        }`}
                                                                 >
-                                                                    {resourceForm.processing ? 'Đang thêm...' : 'Thêm tài liệu'}
+                                                                    <PlayCircleIcon className="h-4 w-4 inline mr-2" />
+                                                                    Video
                                                                 </button>
                                                             </div>
-                                                        </form>
+                                                        </div>
 
-                                                        {/* Upload Progress */}
-                                                        {resourceForm.data.uploadProgress > 0 && (
-                                                            <div>
-                                                                <p>Đang tải lên: {resourceForm.data.uploadProgress}%</p>
-                                                                <progress value={resourceForm.data.uploadProgress} max="100"></progress>
-                                                            </div>
+                                                        {/* Form cho Document */}
+                                                        {documentForm.data.type === 'document' && (
+                                                            <form onSubmit={handleAddDocument}>
+                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                    <div>
+                                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                            Tiêu đề
+                                                                        </label>
+                                                                        <input
+                                                                            type="text"
+                                                                            value={documentForm.data.title}
+                                                                            onChange={(e) => documentForm.setData('title', e.target.value)}
+                                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                            required
+                                                                        />
+                                                                        {documentForm.errors.title && (
+                                                                            <div className="text-red-600 text-sm mt-1">
+                                                                                {documentForm.errors.title}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="md:col-span-2">
+                                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                            File tài liệu
+                                                                        </label>
+                                                                        <input
+                                                                            type="file"
+                                                                            onChange={(e) => documentForm.setData('file', e.target.files[0])}
+                                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                            accept=".pdf,.doc,.docx"
+                                                                            required
+                                                                        />
+                                                                        {documentForm.errors.file && (
+                                                                            <div className="text-red-600 text-sm mt-1">
+                                                                                {documentForm.errors.file}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="md:col-span-2">
+                                                                        <label className="flex items-center">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={documentForm.data.is_preview}
+                                                                                onChange={(e) => documentForm.setData('is_preview', e.target.checked)}
+                                                                                className="mr-2"
+                                                                            />
+                                                                            Cho phép xem trước (không cần đăng ký)
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex justify-end space-x-3 mt-4">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setShowAddResource(null)}
+                                                                        className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                                                                    >
+                                                                        Hủy
+                                                                    </button>
+                                                                    <button
+                                                                        type="submit"
+                                                                        disabled={documentForm.processing}
+                                                                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                                                    >
+                                                                        {documentForm.processing ? 'Đang thêm...' : 'Thêm tài liệu'}
+                                                                    </button>
+                                                                </div>
+
+                                                                {/* Upload Progress cho Document */}
+                                                                {documentForm.data.uploadProgress > 0 && (
+                                                                    <div className="mt-3">
+                                                                        <p className="text-sm text-gray-600">Đang tải lên: {documentForm.data.uploadProgress}%</p>
+                                                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                                                            <div
+                                                                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                                                                style={{ width: `${documentForm.data.uploadProgress}%` }}
+                                                                            ></div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </form>
+                                                        )}
+
+                                                        {/* Form cho Video */}
+                                                        {documentForm.data.type === 'video' && (
+                                                            <form onSubmit={handleAddVideo}>
+                                                                <div className="space-y-4">
+                                                                    <div>
+                                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                            Tiêu đề video
+                                                                        </label>
+                                                                        <input
+                                                                            type="text"
+                                                                            value={videoForm.data.title}
+                                                                            onChange={(e) => videoForm.setData('title', e.target.value)}
+                                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                            required
+                                                                        />
+                                                                        {videoForm.errors.title && (
+                                                                            <div className="text-red-600 text-sm mt-1">
+                                                                                {videoForm.errors.title}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {/* Chọn cách thêm video */}
+                                                                    <div>
+                                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                                            Cách thêm video
+                                                                        </label>
+                                                                        <div className="flex space-x-4">
+                                                                            <label className="flex items-center">
+                                                                                <input
+                                                                                    type="radio"
+                                                                                    name="uploadMethod"
+                                                                                    value="file"
+                                                                                    checked={videoForm.data.uploadMethod === 'file'}
+                                                                                    onChange={(e) => videoForm.setData('uploadMethod', e.target.value)}
+                                                                                    className="mr-2"
+                                                                                />
+                                                                                Upload file video
+                                                                            </label>
+                                                                            <label className="flex items-center">
+                                                                                <input
+                                                                                    type="radio"
+                                                                                    name="uploadMethod"
+                                                                                    value="url"
+                                                                                    checked={videoForm.data.uploadMethod === 'url'}
+                                                                                    onChange={(e) => videoForm.setData('uploadMethod', e.target.value)}
+                                                                                    className="mr-2"
+                                                                                />
+                                                                                Nhập URL (YouTube, Vimeo, v.v.)
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* File upload cho video */}
+                                                                    {videoForm.data.uploadMethod === 'file' && (
+                                                                        <div>
+                                                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                                File video
+                                                                            </label>
+                                                                            <input
+                                                                                type="file"
+                                                                                onChange={(e) => videoForm.setData('file', e.target.files[0])}
+                                                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                accept="video/*"
+                                                                                required
+                                                                            />
+                                                                            {videoForm.errors.file && (
+                                                                                <div className="text-red-600 text-sm mt-1">
+                                                                                    {videoForm.errors.file}
+                                                                                </div>
+                                                                            )}
+                                                                            <p className="text-xs text-gray-500 mt-1">
+                                                                                Hỗ trợ: MP4, AVI, MOV, WMV, WebM (tối đa 100MB)
+                                                                            </p>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* URL input cho video */}
+                                                                    {videoForm.data.uploadMethod === 'url' && (
+                                                                        <div>
+                                                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                                URL video
+                                                                            </label>
+                                                                            <input
+                                                                                type="url"
+                                                                                value={videoForm.data.url}
+                                                                                onChange={(e) => videoForm.setData('url', e.target.value)}
+                                                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                placeholder="https://www.youtube.com/watch?v=..."
+                                                                                required
+                                                                            />
+                                                                            {videoForm.errors.url && (
+                                                                                <div className="text-red-600 text-sm mt-1">
+                                                                                    {videoForm.errors.url}
+                                                                                </div>
+                                                                            )}
+                                                                            <p className="text-xs text-gray-500 mt-1">
+                                                                                Hỗ trợ: YouTube, Vimeo và các URL video khác
+                                                                            </p>
+                                                                        </div>
+                                                                    )}
+
+                                                                    <div>
+                                                                        <label className="flex items-center">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={videoForm.data.is_preview}
+                                                                                onChange={(e) => videoForm.setData('is_preview', e.target.checked)}
+                                                                                className="mr-2"
+                                                                            />
+                                                                            Cho phép xem trước (không cần đăng ký)
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="flex justify-end space-x-3 mt-4">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setShowAddResource(null)}
+                                                                        className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                                                                    >
+                                                                        Hủy
+                                                                    </button>
+                                                                    <button
+                                                                        type="submit"
+                                                                        disabled={videoForm.processing}
+                                                                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                                                    >
+                                                                        {videoForm.processing ? 'Đang thêm...' : 'Thêm video'}
+                                                                    </button>
+                                                                </div>
+
+                                                                {/* Upload Progress cho Video */}
+                                                                {videoForm.data.uploadProgress > 0 && (
+                                                                    <div className="mt-3">
+                                                                        <p className="text-sm text-gray-600">Đang tải lên: {videoForm.data.uploadProgress}%</p>
+                                                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                                                            <div
+                                                                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                                                                style={{ width: `${videoForm.data.uploadProgress}%` }}
+                                                                            ></div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </form>
                                                         )}
                                                     </div>
                                                 )}

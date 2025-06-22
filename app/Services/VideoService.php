@@ -39,6 +39,32 @@ class VideoService
         return $this->videoRepository->create($videoData);
     }
 
+    /**
+     * Tạo video từ đường dẫn file (dành cho chunk upload)
+     */
+    public function createVideoFromPath(array $data)
+    {
+        // Tính order mới
+        $maxOrder = $this->videoRepository->getMaxOrderByLesson($data['lesson_id']);
+        $newOrder = $maxOrder + 1;
+
+        // Lấy extension từ file path
+        $extension = pathinfo($data['file'], PATHINFO_EXTENSION);
+
+        // Chuẩn bị dữ liệu để lưu
+        $videoData = [
+            'lesson_id' => $data['lesson_id'],
+            'type' => 'video',
+            'title' => $data['title'],
+            'file_url' => 'storage/' . $data['file'], // Đường dẫn file đã merge
+            'file_type' => strtolower($extension),
+            'is_preview' => $data['is_preview'] ?? false,
+            'order' => $newOrder,
+        ];
+
+        return $this->videoRepository->create($videoData);
+    }
+
     private function processFile($file, $title)
     {
         // Nếu là URL string (YouTube, Vimeo, etc.)
