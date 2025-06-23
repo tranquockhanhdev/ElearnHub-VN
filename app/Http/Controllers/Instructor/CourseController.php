@@ -172,4 +172,32 @@ class CourseController extends Controller
         return redirect()->back()
             ->with('error', 'Có lỗi xảy ra khi xóa khóa học!');
     }
+
+    /**
+     * Submit course for approval - chuyển status từ draft thành pending
+     */
+    public function submitForApproval($id)
+    {
+        // Kiểm tra quyền sở hữu
+        $course = Course::with([
+            'lessons.resources',
+            'lessons.quiz'
+        ])->where('id', $id)->firstOrFail();
+
+        if ($course->instructor_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền truy cập khóa học này.');
+        }
+
+        try {
+            $result = $this->CourseService->submitForApproval($course);
+            
+            if ($result['success']) {
+                return redirect()->back()->with('success', $result['message']);
+            } else {
+                return redirect()->back()->with('error', $result['message']);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi gửi phê duyệt!');
+        }
+    }
 }

@@ -270,6 +270,37 @@ const CourseDetail = ({ course }) => {
         orderForm.reset();
     };
 
+    const handleSubmitForApproval = () => {
+        if (confirm('Bạn có chắc chắn muốn gửi khóa học này để phê duyệt? Tất cả nội dung có trạng thái "Nháp" sẽ được chuyển thành "Chờ phê duyệt".')) {
+            router.post(route('instructor.courses.submit-for-approval', course.id), {}, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    router.reload({ only: ['course'] });
+                }
+            });
+        }
+    };
+
+    const hasDraftContent = () => {
+        // Kiểm tra course
+        if (course.status === 'draft') return true;
+
+        // Kiểm tra lessons
+        if (course.lessons?.some(lesson => {
+            if (lesson.status === 'draft') return true;
+
+            // Kiểm tra resources
+            if (lesson.resources?.some(resource => resource.status === 'draft')) return true;
+
+            // Kiểm tra quiz
+            if (lesson.quiz && lesson.quiz.status === 'draft') return true;
+
+            return false;
+        })) return true;
+
+        return false;
+    };
+
     const getFileIcon = (type) => {
         switch (type) {
             case 'video':
@@ -518,6 +549,17 @@ const CourseDetail = ({ course }) => {
                                 <p className="mt-2 text-gray-600">{course.description}</p>
                             </div>
                             <div className="flex space-x-3">
+                                {hasDraftContent() && (
+                                    <button
+                                        onClick={handleSubmitForApproval}
+                                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center"
+                                    >
+                                        <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Gửi phê duyệt
+                                    </button>
+                                )}
                                 <Link
                                     href={route('instructor.courses.edit', course.id)}
                                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
@@ -529,7 +571,23 @@ const CourseDetail = ({ course }) => {
                                 </Link>
                             </div>
                         </div>
-
+                        {hasDraftContent() && (
+                            <div className="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                                <div className="flex">
+                                    <div className="flex-shrink-0">
+                                        <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div className="ml-3">
+                                        <p className="text-sm text-yellow-700">
+                                            <strong>Thông báo:</strong> Khóa học này có nội dung ở trạng thái "Nháp".
+                                            Bạn có thể gửi phê duyệt để chuyển tất cả nội dung "Nháp" thành "Chờ phê duyệt".
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         {/* Course Stats */}
                         <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div className="bg-white p-4 rounded-lg shadow">
@@ -794,127 +852,256 @@ const CourseDetail = ({ course }) => {
                                                     {/* Expanded Content */}
                                                     {expandedLessons[lesson.id] && (
                                                         <div className="mt-4 pl-8">
-                                                            {/* Resources */}
+                                                            {/* Sắp xếp và hiển thị resources theo thứ tự: documents trước, videos sau */}
                                                             {lesson.resources?.length > 0 && (
                                                                 <div className="mb-4">
                                                                     <h4 className="font-medium text-gray-700 mb-2">Tài liệu:</h4>
                                                                     <div className="space-y-2">
-                                                                        {lesson.resources.map((resource) => (
-                                                                            <div key={resource.id} className="bg-gray-50 p-3 rounded border">
-                                                                                <div className="flex items-start justify-between">
-                                                                                    <div className="flex-1">
-                                                                                        <div className="flex items-center space-x-2 mb-2">
-                                                                                            {/* Resource Order Display/Edit */}
-                                                                                            {editingResourceOrder === resource.id ? (
-                                                                                                <div className="flex items-center space-x-2">
-                                                                                                    <input
-                                                                                                        type="number"
-                                                                                                        value={resourceOrderForm.data.order}
-                                                                                                        onChange={(e) => resourceOrderForm.setData('order', parseInt(e.target.value) || 1)}
-                                                                                                        className="w-12 px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                                                                        min="1"
-                                                                                                    />
+                                                                        {/* Documents trước */}
+                                                                        {lesson.resources
+                                                                            .filter(resource => resource.type === 'document')
+                                                                            .sort((a, b) => a.order - b.order)
+                                                                            .map((resource) => (
+                                                                                <div key={resource.id} className="bg-gray-50 p-3 rounded border">
+                                                                                    <div className="flex items-start justify-between">
+                                                                                        <div className="flex-1">
+                                                                                            <div className="flex items-center space-x-2 mb-2">
+                                                                                                {/* Resource Order Display/Edit */}
+                                                                                                {editingResourceOrder === resource.id ? (
+                                                                                                    <div className="flex items-center space-x-2">
+                                                                                                        <input
+                                                                                                            type="number"
+                                                                                                            value={resourceOrderForm.data.order}
+                                                                                                            onChange={(e) => resourceOrderForm.setData('order', parseInt(e.target.value) || 1)}
+                                                                                                            className="w-12 px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                                            min="1"
+                                                                                                        />
+                                                                                                        <button
+                                                                                                            onClick={() => handleSaveResourceOrder(lesson.id, resource.id, resource.type)}
+                                                                                                            disabled={resourceOrderForm.processing}
+                                                                                                            className="text-green-600 hover:text-green-800 disabled:opacity-50"
+                                                                                                            title="Lưu"
+                                                                                                        >
+                                                                                                            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                                                            </svg>
+                                                                                                        </button>
+                                                                                                        <button
+                                                                                                            onClick={handleCancelEditResourceOrder}
+                                                                                                            className="text-gray-600 hover:text-gray-800"
+                                                                                                            title="Hủy"
+                                                                                                        >
+                                                                                                            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                                                            </svg>
+                                                                                                        </button>
+                                                                                                    </div>
+                                                                                                ) : (
                                                                                                     <button
-                                                                                                        onClick={() => handleSaveResourceOrder(lesson.id, resource.id, resource.type)}
-                                                                                                        disabled={resourceOrderForm.processing}
-                                                                                                        className="text-green-600 hover:text-green-800 disabled:opacity-50"
-                                                                                                        title="Lưu"
+                                                                                                        onClick={() => handleUpdateResourceOrder(resource.id, resource.order)}
+                                                                                                        className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-xs font-medium min-w-[2rem]"
+                                                                                                        title="Chỉnh sửa thứ tự"
                                                                                                     >
-                                                                                                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                                                                        </svg>
+                                                                                                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">{resource.order}</span>
+                                                                                                        <PencilIcon className="h-2 w-2" />
                                                                                                     </button>
-                                                                                                    <button
-                                                                                                        onClick={handleCancelEditResourceOrder}
-                                                                                                        className="text-gray-600 hover:text-gray-800"
-                                                                                                        title="Hủy"
-                                                                                                    >
-                                                                                                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                                                                        </svg>
-                                                                                                    </button>
-                                                                                                </div>
-                                                                                            ) : (
-                                                                                                <button
-                                                                                                    onClick={() => handleUpdateResourceOrder(resource.id, resource.order)}
-                                                                                                    className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-xs font-medium min-w-[2rem]"
-                                                                                                    title="Chỉnh sửa thứ tự"
-                                                                                                >
-                                                                                                    <span>{resource.order}</span>
-                                                                                                    <PencilIcon className="h-2 w-2" />
-                                                                                                </button>
-                                                                                            )}
+                                                                                                )}
 
-                                                                                            {getFileIcon(resource.type)}
-                                                                                            <span className="text-sm font-medium">{resource.title}</span>
+                                                                                                {getFileIcon(resource.type)}
+                                                                                                <span className="text-sm font-medium">{resource.title}</span>
 
-                                                                                            {/* Resource Status Badge */}
-                                                                                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium border ${getStatusColor(resource.status)}`}>
-                                                                                                <span className="mr-1">{getStatusIcon(resource.status)}</span>
-                                                                                                {getStatusText(resource.status)}
-                                                                                            </span>
-
-                                                                                            {/* Preview Status */}
-                                                                                            {resource.is_preview ? (
-                                                                                                <span className="inline-flex items-center text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                                                                                    <GlobeAltIcon className="w-3 h-3 mr-1" />
-                                                                                                    Public
+                                                                                                {/* Document Badge */}
+                                                                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                                                                    📄 Document
                                                                                                 </span>
-                                                                                            ) : (
-                                                                                                <span className="inline-flex items-center text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
-                                                                                                    <LockClosedIcon className="w-3 h-3 mr-1" />
-                                                                                                    Private
-                                                                                                </span>
-                                                                                            )}
-                                                                                        </div>
 
-                                                                                        {/* Resource Note */}
-                                                                                        {resource.note && (
-                                                                                            <div className="mt-2 text-xs text-gray-600 italic bg-white px-2 py-1 rounded border-l-2 border-blue-200">
-                                                                                                <span className="font-medium">Ghi chú:</span> {resource.note}
+                                                                                                {/* Resource Status Badge */}
+                                                                                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium border ${getStatusColor(resource.status)}`}>
+                                                                                                    <span className="mr-1">{getStatusIcon(resource.status)}</span>
+                                                                                                    {getStatusText(resource.status)}
+                                                                                                </span>
+
+                                                                                                {/* Preview Status */}
+                                                                                                {resource.is_preview ? (
+                                                                                                    <span className="inline-flex items-center text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                                                                                        <GlobeAltIcon className="w-3 h-3 mr-1" />
+                                                                                                        Public
+                                                                                                    </span>
+                                                                                                ) : (
+                                                                                                    <span className="inline-flex items-center text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                                                                                                        <LockClosedIcon className="w-3 h-3 mr-1" />
+                                                                                                        Private
+                                                                                                    </span>
+                                                                                                )}
                                                                                             </div>
-                                                                                        )}
 
-                                                                                        {/* File Type Info */}
-                                                                                        <div className="mt-1 text-xs text-gray-500">
-                                                                                            Loại: {resource.file_type || resource.type}
+                                                                                            {/* Resource Note */}
+                                                                                            {resource.note && (
+                                                                                                <div className="mt-2 text-xs text-gray-600 italic bg-white px-2 py-1 rounded border-l-2 border-green-200">
+                                                                                                    <span className="font-medium">Ghi chú:</span> {resource.note}
+                                                                                                </div>
+                                                                                            )}
+
+                                                                                            {/* File Type Info */}
+                                                                                            <div className="mt-1 text-xs text-gray-500">
+                                                                                                Loại: {resource.file_type || resource.type}
+                                                                                            </div>
                                                                                         </div>
-                                                                                    </div>
 
-                                                                                    <div className="flex items-center space-x-2 ml-3">
-                                                                                        <button
-                                                                                            onClick={() => resource.type === 'video'
-                                                                                                ? handleViewVideo(resource)
-                                                                                                : handleViewDocument(resource)
-                                                                                            }
-                                                                                            className="text-blue-600 hover:text-blue-800 p-1"
-                                                                                            title={resource.type === 'video' ? 'Xem video' : 'Xem tài liệu'}
-                                                                                        >
-                                                                                            <EyeIcon className="h-4 w-4" />
-                                                                                        </button>
-                                                                                        <button
-                                                                                            onClick={() => handleDeleteResource(lesson.id, resource.id, resource.type)}
-                                                                                            className="text-red-600 hover:text-red-800 p-1"
-                                                                                            title="Xóa tài liệu"
-                                                                                        >
-                                                                                            <TrashIcon className="h-4 w-4" />
-                                                                                        </button>
+                                                                                        <div className="flex items-center space-x-2 ml-3">
+                                                                                            <button
+                                                                                                onClick={() => handleViewDocument(resource)}
+                                                                                                className="text-blue-600 hover:text-blue-800 p-1"
+                                                                                                title="Xem tài liệu"
+                                                                                            >
+                                                                                                <EyeIcon className="h-4 w-4" />
+                                                                                            </button>
+                                                                                            <button
+                                                                                                onClick={() => handleDeleteResource(lesson.id, resource.id, resource.type)}
+                                                                                                className="text-red-600 hover:text-red-800 p-1"
+                                                                                                title="Xóa tài liệu"
+                                                                                            >
+                                                                                                <TrashIcon className="h-4 w-4" />
+                                                                                            </button>
+                                                                                        </div>
                                                                                     </div>
                                                                                 </div>
-                                                                            </div>
-                                                                        ))}
+                                                                            ))}
                                                                     </div>
                                                                 </div>
                                                             )}
 
-                                                            {/* Quiz */}
+                                                            {/* Videos - hiển thị sau documents */}
+                                                            {lesson.resources?.filter(resource => resource.type === 'video').length > 0 && (
+                                                                <div className="mb-4">
+                                                                    <h4 className="font-medium text-gray-700 mb-2">Video:</h4>
+                                                                    <div className="space-y-2">
+                                                                        {lesson.resources
+                                                                            .filter(resource => resource.type === 'video')
+                                                                            .sort((a, b) => a.order - b.order)
+                                                                            .map((resource) => (
+                                                                                <div key={resource.id} className="bg-blue-50 p-3 rounded border border-blue-200">
+                                                                                    <div className="flex items-start justify-between">
+                                                                                        <div className="flex-1">
+                                                                                            <div className="flex items-center space-x-2 mb-2">
+                                                                                                {/* Resource Order Display/Edit */}
+                                                                                                {editingResourceOrder === resource.id ? (
+                                                                                                    <div className="flex items-center space-x-2">
+                                                                                                        <input
+                                                                                                            type="number"
+                                                                                                            value={resourceOrderForm.data.order}
+                                                                                                            onChange={(e) => resourceOrderForm.setData('order', parseInt(e.target.value) || 1)}
+                                                                                                            className="w-12 px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                                            min="1"
+                                                                                                        />
+                                                                                                        <button
+                                                                                                            onClick={() => handleSaveResourceOrder(lesson.id, resource.id, resource.type)}
+                                                                                                            disabled={resourceOrderForm.processing}
+                                                                                                            className="text-green-600 hover:text-green-800 disabled:opacity-50"
+                                                                                                            title="Lưu"
+                                                                                                        >
+                                                                                                            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                                                            </svg>
+                                                                                                        </button>
+                                                                                                        <button
+                                                                                                            onClick={handleCancelEditResourceOrder}
+                                                                                                            className="text-gray-600 hover:text-gray-800"
+                                                                                                            title="Hủy"
+                                                                                                        >
+                                                                                                            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                                                            </svg>
+                                                                                                        </button>
+                                                                                                    </div>
+                                                                                                ) : (
+                                                                                                    <button
+                                                                                                        onClick={() => handleUpdateResourceOrder(resource.id, resource.order)}
+                                                                                                        className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-xs font-medium min-w-[2rem]"
+                                                                                                        title="Chỉnh sửa thứ tự"
+                                                                                                    >
+                                                                                                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">{resource.order}</span>
+                                                                                                        <PencilIcon className="h-2 w-2" />
+                                                                                                    </button>
+                                                                                                )}
+
+                                                                                                {getFileIcon(resource.type)}
+                                                                                                <span className="text-sm font-medium">{resource.title}</span>
+
+                                                                                                {/* Video Badge */}
+                                                                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                                                                    🎥 Video
+                                                                                                </span>
+
+                                                                                                {/* Resource Status Badge */}
+                                                                                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium border ${getStatusColor(resource.status)}`}>
+                                                                                                    <span className="mr-1">{getStatusIcon(resource.status)}</span>
+                                                                                                    {getStatusText(resource.status)}
+                                                                                                </span>
+
+                                                                                                {/* Preview Status */}
+                                                                                                {resource.is_preview ? (
+                                                                                                    <span className="inline-flex items-center text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                                                                                        <GlobeAltIcon className="w-3 h-3 mr-1" />
+                                                                                                        Public
+                                                                                                    </span>
+                                                                                                ) : (
+                                                                                                    <span className="inline-flex items-center text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                                                                                                        <LockClosedIcon className="w-3 h-3 mr-1" />
+                                                                                                        Private
+                                                                                                    </span>
+                                                                                                )}
+                                                                                            </div>
+
+                                                                                            {/* Resource Note */}
+                                                                                            {resource.note && (
+                                                                                                <div className="mt-2 text-xs text-gray-600 italic bg-white px-2 py-1 rounded border-l-2 border-blue-200">
+                                                                                                    <span className="font-medium">Ghi chú:</span> {resource.note}
+                                                                                                </div>
+                                                                                            )}
+
+                                                                                            {/* File Type Info */}
+                                                                                            <div className="mt-1 text-xs text-gray-500">
+                                                                                                Loại: {resource.file_type || resource.type}
+                                                                                                {resource.file_type === 'youtube' && ' • YouTube'}
+                                                                                                {resource.file_type === 'vimeo' && ' • Vimeo'}
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                        <div className="flex items-center space-x-2 ml-3">
+                                                                                            <button
+                                                                                                onClick={() => handleViewVideo(resource)}
+                                                                                                className="text-blue-600 hover:text-blue-800 p-1"
+                                                                                                title="Xem video"
+                                                                                            >
+                                                                                                <EyeIcon className="h-4 w-4" />
+                                                                                            </button>
+                                                                                            <button
+                                                                                                onClick={() => handleDeleteResource(lesson.id, resource.id, resource.type)}
+                                                                                                className="text-red-600 hover:text-red-800 p-1"
+                                                                                                title="Xóa video"
+                                                                                            >
+                                                                                                <TrashIcon className="h-4 w-4" />
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Quiz - hiển thị cuối cùng */}
                                                             {lesson.quiz && (
                                                                 <div className="mb-4">
                                                                     <h4 className="font-medium text-gray-700 mb-2">Quiz:</h4>
-                                                                    <div className="bg-yellow-50 p-3 rounded border">
+                                                                    <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
                                                                         <div className="flex items-center justify-between">
                                                                             <div className="flex-1">
                                                                                 <div className="flex items-center space-x-2 mb-1">
+                                                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                                                        ❓ Quiz
+                                                                                    </span>
                                                                                     <p className="font-medium">{lesson.quiz.title}</p>
                                                                                     {/* Quiz Status Badge if available */}
                                                                                     {lesson.quiz.status && (
@@ -926,7 +1113,8 @@ const CourseDetail = ({ course }) => {
                                                                                 </div>
                                                                                 <p className="text-sm text-gray-600">
                                                                                     {lesson.quiz.duration_minutes} phút •
-                                                                                    Điểm đậu: {lesson.quiz.pass_score}%
+                                                                                    Điểm đậu: {lesson.quiz.pass_score}% •
+                                                                                    {lesson.quiz.questions?.length || 0} câu hỏi
                                                                                 </p>
                                                                                 {/* Quiz Note if available */}
                                                                                 {lesson.quiz.note && (
@@ -936,10 +1124,10 @@ const CourseDetail = ({ course }) => {
                                                                                 )}
                                                                             </div>
                                                                             <div className="flex items-center space-x-2">
-                                                                                <button className="text-blue-600 hover:text-blue-800 p-1">
+                                                                                <button className="text-blue-600 hover:text-blue-800 p-1" title="Chỉnh sửa quiz">
                                                                                     <PencilIcon className="h-4 w-4" />
                                                                                 </button>
-                                                                                <button className="text-red-600 hover:text-red-800 p-1">
+                                                                                <button className="text-red-600 hover:text-red-800 p-1" title="Xóa quiz">
                                                                                     <TrashIcon className="h-4 w-4" />
                                                                                 </button>
                                                                             </div>

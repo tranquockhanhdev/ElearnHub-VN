@@ -30,6 +30,9 @@ Route::middleware(['auth', 'verified', 'role:2'])->prefix('instructor')->name('i
         Route::put('{id}/update', [CourseController::class, 'update'])->name('update');
         Route::delete('{id}/delete', [CourseController::class, 'destroy'])->name('delete');
 
+        // ✅ Thêm route gửi phê duyệt
+        Route::post('{id}/submit-for-approval', [CourseController::class, 'submitForApproval'])->name('submit-for-approval');
+
         // 👥 Học viên
         Route::get('{id}/enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index');
 
