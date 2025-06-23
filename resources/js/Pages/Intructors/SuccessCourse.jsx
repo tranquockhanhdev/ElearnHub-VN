@@ -22,7 +22,7 @@ const SuccessCourse = () => {
                                             {/* Background Circle */}
                                             <div
                                                 className="bg-success rounded-circle d-flex align-items-center justify-content-center mx-auto"
-                                                style={{ width: '150px', height: '150px' }}
+                                                s style={{ width: '150px', height: '150px' }}
                                             >
                                                 <i className="bi bi-check-lg text-white" style={{ fontSize: '4rem' }}></i>
                                             </div>

@@ -10,6 +10,7 @@ use App\Http\Controllers\Instructor\{
     QuizController,
     ProfileController,
     RevenueController,
+    StudentController,
     VideoController
 };
 
@@ -19,6 +20,8 @@ Route::middleware(['auth', 'verified', 'role:2'])->prefix('instructor')->name('i
     Route::get('/dashboard', [InstructorDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/revenue-chart', [InstructorDashboardController::class, 'getRevenueChart'])->name('dashboard.revenue-chart');
 
+    // student
+    Route::get('/students', [StudentController::class, 'index'])->name('students');
     // 🔹 Khóa học
     Route::prefix('courses')->name('courses.')->group(function () {
         Route::get('/', [CourseController::class, 'index'])->name('index');
