@@ -412,6 +412,51 @@ const CourseDetail = ({ course }) => {
         }
     };
 
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'approved':
+                return 'bg-green-100 text-green-800 border-green-200';
+            case 'draft':
+                return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            case 'pending':
+                return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'rejected':
+                return 'bg-red-100 text-red-800 border-red-200';
+            default:
+                return 'bg-gray-100 text-gray-800 border-gray-200';
+        }
+    };
+
+    const getStatusText = (status) => {
+        switch (status) {
+            case 'approved':
+                return 'Đã duyệt';
+            case 'draft':
+                return 'Bản nháp';
+            case 'pending':
+                return 'Chờ duyệt';
+            case 'rejected':
+                return 'Bị từ chối';
+            default:
+                return status || 'Không xác định';
+        }
+    };
+
+    const getStatusIcon = (status) => {
+        switch (status) {
+            case 'approved':
+                return '✓';
+            case 'draft':
+                return '📝';
+            case 'pending':
+                return '⏳';
+            case 'rejected':
+                return '✗';
+            default:
+                return '❓';
+        }
+    };
+
     return (
         <InstructorLayout>
             <Head title={`Chi tiết khóa học - ${course.title}`} />
@@ -649,14 +694,29 @@ const CourseDetail = ({ course }) => {
                                                                         <PencilIcon className="h-3 w-3" />
                                                                     </button>
                                                                 )}
-                                                                <div>
-                                                                    <h3 className="text-lg font-medium text-gray-900">
-                                                                        {lesson.title}
-                                                                    </h3>
-                                                                    <p className="text-sm text-gray-500">
-                                                                        {lesson.resources?.length || 0} tài liệu •
-                                                                        {lesson.quiz ? ' Có quiz' : ' Chưa có quiz'}
-                                                                    </p>
+                                                                <div className="flex-1">
+                                                                    <div className="flex items-center space-x-3">
+                                                                        <h3 className="text-lg font-medium text-gray-900">
+                                                                            {lesson.title}
+                                                                        </h3>
+                                                                        {/* Lesson Status Badge */}
+                                                                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(lesson.status)}`}>
+                                                                            <span className="mr-1">{getStatusIcon(lesson.status)}</span>
+                                                                            {getStatusText(lesson.status)}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="mt-1 space-y-1">
+                                                                        <p className="text-sm text-gray-500">
+                                                                            {lesson.resources?.length || 0} tài liệu •
+                                                                            {lesson.quiz ? ' Có quiz' : ' Chưa có quiz'}
+                                                                        </p>
+                                                                        {/* Lesson Note */}
+                                                                        {lesson.note && (
+                                                                            <p className="text-sm text-gray-600 italic bg-gray-50 px-2 py-1 rounded">
+                                                                                <span className="font-medium">Ghi chú:</span> {lesson.note}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -701,42 +761,65 @@ const CourseDetail = ({ course }) => {
                                                                     <h4 className="font-medium text-gray-700 mb-2">Tài liệu:</h4>
                                                                     <div className="space-y-2">
                                                                         {lesson.resources.map((resource) => (
-                                                                            <div key={resource.id} className="flex items-center justify-between bg-gray-50 p-3 rounded">
-                                                                                <div className="flex items-center">
-                                                                                    {getFileIcon(resource.type)}
+                                                                            <div key={resource.id} className="bg-gray-50 p-3 rounded border">
+                                                                                <div className="flex items-start justify-between">
+                                                                                    <div className="flex-1">
+                                                                                        <div className="flex items-center space-x-2 mb-2">
+                                                                                            {getFileIcon(resource.type)}
+                                                                                            <span className="text-sm font-medium">{resource.title}</span>
 
-                                                                                    <span className="ml-2 text-sm">{resource.title}</span>
+                                                                                            {/* Resource Status Badge */}
+                                                                                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium border ${getStatusColor(resource.status)}`}>
+                                                                                                <span className="mr-1">{getStatusIcon(resource.status)}</span>
+                                                                                                {getStatusText(resource.status)}
+                                                                                            </span>
 
-                                                                                    {resource.is_preview ? (
-                                                                                        <span className="ml-2 inline-flex items-center text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                                                                            <GlobeAltIcon className="w-4 h-4 mr-1" />
-                                                                                            Public
-                                                                                        </span>
-                                                                                    ) : (
-                                                                                        <span className="ml-2 inline-flex items-center text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
-                                                                                            <LockClosedIcon className="w-4 h-4 mr-1" />
-                                                                                            Private
-                                                                                        </span>
-                                                                                    )}
-                                                                                </div>
-                                                                                <div className="flex items-center space-x-2">
-                                                                                    <button
-                                                                                        onClick={() => resource.type === 'video'
-                                                                                            ? handleViewVideo(resource)
-                                                                                            : handleViewDocument(resource)
-                                                                                        }
-                                                                                        className="text-blue-600 hover:text-blue-800"
-                                                                                        title={resource.type === 'video' ? 'Xem video' : 'Xem tài liệu'}
-                                                                                    >
-                                                                                        <EyeIcon className="h-4 w-4" />
-                                                                                    </button>
-                                                                                    <button
-                                                                                        onClick={() => handleDeleteResource(lesson.id, resource.id, resource.type)}
-                                                                                        className="text-red-600 hover:text-red-800"
-                                                                                        title="Xóa tài liệu"
-                                                                                    >
-                                                                                        <TrashIcon className="h-4 w-4" />
-                                                                                    </button>
+                                                                                            {/* Preview Status */}
+                                                                                            {resource.is_preview ? (
+                                                                                                <span className="inline-flex items-center text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                                                                                    <GlobeAltIcon className="w-3 h-3 mr-1" />
+                                                                                                    Public
+                                                                                                </span>
+                                                                                            ) : (
+                                                                                                <span className="inline-flex items-center text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                                                                                                    <LockClosedIcon className="w-3 h-3 mr-1" />
+                                                                                                    Private
+                                                                                                </span>
+                                                                                            )}
+                                                                                        </div>
+
+                                                                                        {/* Resource Note */}
+                                                                                        {resource.note && (
+                                                                                            <div className="mt-2 text-xs text-gray-600 italic bg-white px-2 py-1 rounded border-l-2 border-blue-200">
+                                                                                                <span className="font-medium">Ghi chú:</span> {resource.note}
+                                                                                            </div>
+                                                                                        )}
+
+                                                                                        {/* File Type Info */}
+                                                                                        <div className="mt-1 text-xs text-gray-500">
+                                                                                            Loại: {resource.file_type || resource.type} • Thứ tự: {resource.order}
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                    <div className="flex items-center space-x-2 ml-3">
+                                                                                        <button
+                                                                                            onClick={() => resource.type === 'video'
+                                                                                                ? handleViewVideo(resource)
+                                                                                                : handleViewDocument(resource)
+                                                                                            }
+                                                                                            className="text-blue-600 hover:text-blue-800 p-1"
+                                                                                            title={resource.type === 'video' ? 'Xem video' : 'Xem tài liệu'}
+                                                                                        >
+                                                                                            <EyeIcon className="h-4 w-4" />
+                                                                                        </button>
+                                                                                        <button
+                                                                                            onClick={() => handleDeleteResource(lesson.id, resource.id, resource.type)}
+                                                                                            className="text-red-600 hover:text-red-800 p-1"
+                                                                                            title="Xóa tài liệu"
+                                                                                        >
+                                                                                            <TrashIcon className="h-4 w-4" />
+                                                                                        </button>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         ))}
@@ -748,20 +831,35 @@ const CourseDetail = ({ course }) => {
                                                             {lesson.quiz && (
                                                                 <div className="mb-4">
                                                                     <h4 className="font-medium text-gray-700 mb-2">Quiz:</h4>
-                                                                    <div className="bg-yellow-50 p-3 rounded">
+                                                                    <div className="bg-yellow-50 p-3 rounded border">
                                                                         <div className="flex items-center justify-between">
-                                                                            <div>
-                                                                                <p className="font-medium">{lesson.quiz.title}</p>
+                                                                            <div className="flex-1">
+                                                                                <div className="flex items-center space-x-2 mb-1">
+                                                                                    <p className="font-medium">{lesson.quiz.title}</p>
+                                                                                    {/* Quiz Status Badge if available */}
+                                                                                    {lesson.quiz.status && (
+                                                                                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium border ${getStatusColor(lesson.quiz.status)}`}>
+                                                                                            <span className="mr-1">{getStatusIcon(lesson.quiz.status)}</span>
+                                                                                            {getStatusText(lesson.quiz.status)}
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
                                                                                 <p className="text-sm text-gray-600">
                                                                                     {lesson.quiz.duration_minutes} phút •
                                                                                     Điểm đậu: {lesson.quiz.pass_score}%
                                                                                 </p>
+                                                                                {/* Quiz Note if available */}
+                                                                                {lesson.quiz.note && (
+                                                                                    <div className="mt-2 text-xs text-gray-600 italic bg-white px-2 py-1 rounded border-l-2 border-yellow-300">
+                                                                                        <span className="font-medium">Ghi chú:</span> {lesson.quiz.note}
+                                                                                    </div>
+                                                                                )}
                                                                             </div>
                                                                             <div className="flex items-center space-x-2">
-                                                                                <button className="text-blue-600 hover:text-blue-800">
+                                                                                <button className="text-blue-600 hover:text-blue-800 p-1">
                                                                                     <PencilIcon className="h-4 w-4" />
                                                                                 </button>
-                                                                                <button className="text-red-600 hover:text-red-800">
+                                                                                <button className="text-red-600 hover:text-red-800 p-1">
                                                                                     <TrashIcon className="h-4 w-4" />
                                                                                 </button>
                                                                             </div>

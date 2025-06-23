@@ -17,6 +17,8 @@ class Lesson extends Model
         'course_id',
         'title',
         'order',
+        'status',
+        'note'
     ];
 
     public $timestamps = true;
