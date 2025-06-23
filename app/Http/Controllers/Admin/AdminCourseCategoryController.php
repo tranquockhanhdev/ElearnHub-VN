@@ -5,121 +5,57 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Str;
-use App\Models\Category;
+use App\Http\Requests\Admin\Category\StoreCategoryRequest;
+use App\Http\Requests\Admin\Category\UpdateCategoryRequest;
+use App\Services\Admin\Category\CategoryService;
 
 class AdminCourseCategoryController extends Controller
 {
-  public function index(Request $request)
-{
-    $query = Category::query();
+    protected $categoryService;
 
-    // Search
-    if ($request->filled('search')) {
-        $query->where('name', 'like', '%' . $request->search . '%');
-    }
-
-    // Status filter 
-    if ($request->filled('status')) {
-        $query->where('status', $request->status);
-    }
-
-    // Sort
-    if ($request->filled('sort')) {
-        $sortOption = $request->sort === 'oldest' ? 'asc' : 'desc';
-        $query->orderBy('created_at', $sortOption);
-    } else {
-        $query->orderBy('created_at', 'desc');
-    }
-
-    $categories = $query->paginate(10)->withQueryString();
-
-    return Inertia::render('Admin/Course-category/AdminCourseCategory', [
-        'categories' => $categories,
-        'filters' => $request->only(['search', 'sort', 'status']), // 👈 THÊM status
-    ]);
-}
-
-
-
-    public function store(Request $request)
+    public function __construct(CategoryService $categoryService)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name',
-            'status' => 'required|in:active,inactive,suspended',
-        ]);
-
-        // Tạo slug và đảm bảo không trùng
-        $slug = Str::slug($validated['name']);
-        $originalSlug = $slug;
-        $count = 1;
-
-        while (Category::where('slug', $slug)->exists()) {
-            $slug = $originalSlug . '-' . $count;
-            $count++;
-        }
-
-        Category::create([
-            'name' => $validated['name'],
-            'slug' => $slug,
-            'status' => $validated['status'],
-        ]);
-
-        return redirect()->route('admin.admin-course-category')->with('success', 'Category created successfully.');
+        $this->categoryService = $categoryService;
     }
 
-    public function update(Request $request, $id)
+    public function index(Request $request)
     {
-        $category = Category::findOrFail($id);
+        $categories = $this->categoryService->getFilteredCategories($request);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255',
-            'status' => 'required|in:active,inactive,suspended',
+        return Inertia::render('Admin/Course-category/AdminCourseCategory', [
+            'categories' => $categories,
+            'filters' => $request->only(['search', 'sort', 'status']),
         ]);
+    }
 
-        $slug = $validated['slug'] ?? Str::slug($validated['name']);
+    public function store(StoreCategoryRequest $request)
+    {
+        $this->categoryService->createCategory($request->validated());
 
-        // Kiểm tra name đã tồn tại chưa (trừ chính record đang sửa)
-        $nameExists = Category::where('name', $validated['name'])->where('id', '!=', $id)->exists();
-        if ($nameExists) {
-            return back()
-                ->withErrors(['name' => 'Tên danh mục đã tồn tại. Hãy dùng tên khác.'])
-                ->withInput();
-        }
+        return redirect()->route('admin.admin-course-category')->with('success', 'Thêm danh mục thành công.');
+    }
 
-        // Kiểm tra slug đã tồn tại chưa (trừ chính record đang sửa)
-        $slugExists = Category::where('slug', $slug)->where('id', '!=', $id)->exists();
-        if ($slugExists) {
-            return back()
-                ->withErrors(['slug' => 'Slug đã tồn tại. Hãy dùng slug khác.'])
-                ->withInput();
-        }
-
-        $category->update([
-            'name' => $validated['name'],
-            'slug' => $slug,
-            'status' => $validated['status'],
-        ]);
+    public function update(UpdateCategoryRequest $request, $id)
+    {
+        $this->categoryService->updateCategory($id, $request->validated());
 
         return redirect()->route('admin.admin-course-category')->with('success', 'Cập nhật danh mục thành công.');
     }
+
     public function destroy($id)
     {
-        $category = Category::findOrFail($id);
-        $category->delete();
+        $this->categoryService->deleteCategory($id);
 
         return redirect()->route('admin.admin-course-category')->with('success', 'Xóa danh mục thành công.');
     }
+
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
             'status' => 'required|in:active,inactive',
         ]);
 
-        $category = Category::findOrFail($id);
-        $category->status = $request->status;
-        $category->save();
+        $this->categoryService->updateStatus($id, $request->status);
 
         return redirect()->route('admin.admin-course-category')->with('success', 'Cập nhật trạng thái danh mục thành công.');
     }

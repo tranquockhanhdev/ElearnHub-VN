@@ -3,7 +3,11 @@ import { usePage, router } from "@inertiajs/react";
 import { route } from "ziggy-js";
 import slugify from "slugify";
 import AdminLayout from "../../../Components/Layouts/AdminLayout";
+import CreateCategoryModal from "@/Components/Admin/Common/CourseCategory/CreateCategoryModal";
+import EditCategoryModal from "@/Components/Admin/Common/CourseCategory/EditCategoryModal";
+import DeleteConfirmModal from "@/Components/Admin/Common/CourseCategory/DeleteConfirmModal";
 import { Link } from "@inertiajs/react";
+import { toast } from "react-toastify";
 const AdminCourseCategory = () => {
     const { categories, errors, flash } = usePage().props;
 
@@ -20,18 +24,16 @@ const AdminCourseCategory = () => {
 
     const [deleteId, setDeleteId] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-
+    const [isDeleting, setIsDeleting] = useState(false);
     const [flashMessage, setFlashMessage] = useState(null);
     const [localErrors, setLocalErrors] = useState({});
-
+    const [isSubmitting, setIsSubmitting] = useState(false);
     useEffect(() => {
         if (flash.success) {
-            setFlashMessage({ type: "success", message: flash.success });
-            setTimeout(() => setFlashMessage(null), 3000);
+            toast.success(flash.success);
         }
         if (flash.error) {
-            setFlashMessage({ type: "danger", message: flash.error });
-            setTimeout(() => setFlashMessage(null), 3000);
+            toast.error(flash.error);
         }
     }, [flash]);
     useEffect(() => {
@@ -59,12 +61,15 @@ const AdminCourseCategory = () => {
 
     const handleCreateSubmit = (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
+
         router.post(route("admin.course-category.store"), formData, {
             onSuccess: () => {
                 setFormData({ name: "", slug: "", status: "active" });
                 setManualSlug(false);
                 setShowCreateModal(false);
             },
+            onFinish: () => setIsSubmitting(false),
         });
     };
     const handleOpenCreateModal = () => {
@@ -82,6 +87,8 @@ const AdminCourseCategory = () => {
 
     const handleEditSubmit = (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
+
         router.put(
             route("admin.course-category.update", editData.id),
             editData,
@@ -90,6 +97,7 @@ const AdminCourseCategory = () => {
                     setShowEditModal(false);
                     setEditData(null);
                 },
+                onFinish: () => setIsSubmitting(false),
             }
         );
     };
@@ -100,11 +108,13 @@ const AdminCourseCategory = () => {
     };
 
     const handleDelete = () => {
+        setIsDeleting(true);
         router.delete(route("admin.course-category.destroy", deleteId), {
             onSuccess: () => {
                 setShowDeleteModal(false);
                 setDeleteId(null);
             },
+            onFinish: () => setIsDeleting(false),
         });
     };
     const handleChangeStatus = (id, newStatus) => {
@@ -178,20 +188,6 @@ const AdminCourseCategory = () => {
     return (
         <AdminLayout>
             <div className="page-content-wrapper border">
-                {flashMessage && (
-                    <div
-                        className={`alert alert-${flashMessage.type} alert-dismissible fade show`}
-                        role="alert"
-                    >
-                        {flashMessage.message}
-                        <button
-                            type="button"
-                            className="btn-close"
-                            onClick={() => setFlashMessage(null)}
-                        ></button>
-                    </div>
-                )}
-
                 <div className="row mb-3">
                     <div className="col-12 d-sm-flex justify-content-between align-items-center">
                         <h1 className="h3 mb-2 mb-sm-0">
@@ -204,7 +200,7 @@ const AdminCourseCategory = () => {
                             onClick={handleOpenCreateModal}
                             className="btn btn-sm btn-primary mb-0"
                         >
-                            Create a Category
+                            Thêm danh mục
                         </button>
                     </div>
                 </div>
@@ -224,7 +220,7 @@ const AdminCourseCategory = () => {
                                         type="text"
                                         className="form-control ps-4"
                                         name="search"
-                                        placeholder="Search categories..."
+                                        placeholder="Tìm kiếm danh mục..."
                                         value={filters.search}
                                         onChange={(e) =>
                                             setFilters((prev) => ({
@@ -252,9 +248,9 @@ const AdminCourseCategory = () => {
                                             applyFilter(updated); // Áp dụng ngay
                                         }}
                                     >
-                                        <option value="">Sort by</option>
-                                        <option value="newest">Newest</option>
-                                        <option value="oldest">Oldest</option>
+                                        <option value="">Sắp xếp theo</option>
+                                        <option value="newest">Mới nhất</option>
+                                        <option value="oldest">Cũ nhất</option>
                                     </select>
                                 </div>
 
@@ -274,10 +270,14 @@ const AdminCourseCategory = () => {
                                             applyFilter(updated); // Áp dụng ngay
                                         }}
                                     >
-                                        <option value="">All Status</option>
-                                        <option value="active">Active</option>
+                                        <option value="">
+                                            Tất cả trang thái
+                                        </option>
+                                        <option value="active">
+                                            Hoạt động
+                                        </option>
                                         <option value="inactive">
-                                            Inactive
+                                            Không hoạt động
                                         </option>
                                     </select>
                                 </div>
@@ -297,7 +297,7 @@ const AdminCourseCategory = () => {
                                             applyFilter(reset);
                                         }}
                                     >
-                                        Clear Filters
+                                        Xóa Bộ Lọc
                                     </button>
                                 </div>
                             </div>
@@ -310,11 +310,11 @@ const AdminCourseCategory = () => {
                                 <thead className="table-light">
                                     <tr>
                                         <th>#</th>
-                                        <th>Name</th>
+                                        <th>Tên</th>
                                         <th>Slug</th>
-                                        <th>Status</th>
-                                        <th>Created At</th>
-                                        <th>Actions</th>
+                                        <th>Trạng Thái</th>
+                                        <th>Ngày Thêm</th>
+                                        <th>Hành Động</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -406,7 +406,7 @@ const AdminCourseCategory = () => {
                                                         )
                                                     }
                                                 >
-                                                    Edit
+                                                    Chỉnh sửa
                                                 </button>
                                                 <button
                                                     className="btn btn-sm btn-danger"
@@ -416,7 +416,7 @@ const AdminCourseCategory = () => {
                                                         )
                                                     }
                                                 >
-                                                    Delete
+                                                    Xóa
                                                 </button>
                                             </td>
                                         </tr>
@@ -427,7 +427,7 @@ const AdminCourseCategory = () => {
                                                 colSpan="6"
                                                 className="text-center"
                                             >
-                                                No categories found.
+                                                Không tìm thấy danh mục nào.
                                             </td>
                                         </tr>
                                     )}
@@ -441,299 +441,37 @@ const AdminCourseCategory = () => {
             </div>
 
             {/* Modal - Create */}
-            {showCreateModal && (
-                <div
-                    className="modal fade show d-block"
-                    tabIndex="-1"
-                    style={{ background: "rgba(0,0,0,0.5)" }}
-                >
-                    <div className="modal-dialog">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title">
-                                    Create New Category
-                                </h5>
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    onClick={() => setShowCreateModal(false)}
-                                ></button>
-                            </div>
-                            <form onSubmit={handleCreateSubmit}>
-                                <div className="modal-body">
-                                    <div className="mb-3">
-                                        <label className="form-label">
-                                            Name
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className={`form-control ${
-                                                localErrors.name
-                                                    ? "is-invalid"
-                                                    : ""
-                                            }`}
-                                            value={formData.name}
-                                            onChange={(e) => {
-                                                setFormData({
-                                                    ...formData,
-                                                    name: e.target.value,
-                                                });
-                                                if (!manualSlug) {
-                                                    const generatedSlug =
-                                                        slugify(
-                                                            e.target.value,
-                                                            {
-                                                                lower: true,
-                                                                strict: true,
-                                                            }
-                                                        );
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        slug: generatedSlug,
-                                                    }));
-                                                }
-                                            }}
-                                        />
-                                        {localErrors.name && (
-                                            <div className="invalid-feedback">
-                                                {localErrors.name}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="mb-3">
-                                        <label className="form-label">
-                                            Slug
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className={`form-control ${
-                                                errors.slug ? "is-invalid" : ""
-                                            }`}
-                                            value={formData.slug}
-                                            onChange={(e) => {
-                                                setFormData({
-                                                    ...formData,
-                                                    slug: e.target.value,
-                                                });
-                                                setManualSlug(true);
-                                            }}
-                                        />
-                                        {localErrors.slug && (
-                                            <div className="invalid-feedback">
-                                                {localErrors.slug}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="mb-3">
-                                        <label className="form-label">
-                                            Status
-                                        </label>
-                                        <select
-                                            className="form-select"
-                                            value={formData.status}
-                                            onChange={(e) =>
-                                                setFormData({
-                                                    ...formData,
-                                                    status: e.target.value,
-                                                })
-                                            }
-                                        >
-                                            <option value="active">
-                                                Active
-                                            </option>
-                                            <option value="inactive">
-                                                Inactive
-                                            </option>
-                                            <option value="suspended">
-                                                Suspended
-                                            </option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="modal-footer">
-                                    <button
-                                        type="button"
-                                        className="btn btn-secondary"
-                                        onClick={() =>
-                                            setShowCreateModal(false)
-                                        }
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="btn btn-primary"
-                                    >
-                                        Create
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <CreateCategoryModal
+                show={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                onSubmit={handleCreateSubmit}
+                formData={formData}
+                setFormData={setFormData}
+                errors={localErrors}
+                manualSlug={manualSlug}
+                setManualSlug={setManualSlug}
+                isSubmitting={isSubmitting}
+            />
 
             {/* Modal - Edit */}
-            {showEditModal && editData && (
-                <div
-                    className="modal fade show d-block"
-                    tabIndex="-1"
-                    style={{ background: "rgba(0,0,0,0.5)" }}
-                >
-                    <div className="modal-dialog">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title">Edit Category</h5>
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    onClick={() => setShowEditModal(false)}
-                                ></button>
-                            </div>
-                            <form onSubmit={handleEditSubmit}>
-                                <div className="modal-body">
-                                    <div className="mb-3">
-                                        <label className="form-label">
-                                            Name
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className={`form-control ${
-                                                localErrors.name
-                                                    ? "is-invalid"
-                                                    : ""
-                                            }`}
-                                            value={editData.name}
-                                            onChange={(e) =>
-                                                setEditData({
-                                                    ...editData,
-                                                    name: e.target.value,
-                                                })
-                                            }
-                                        />
-                                        {localErrors.name && (
-                                            <div className="invalid-feedback">
-                                                {localErrors.name}
-                                            </div>
-                                        )}
-                                    </div>
 
-                                    <div className="mb-3">
-                                        <label className="form-label">
-                                            Slug
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className={`form-control ${
-                                                localErrors.slug
-                                                    ? "is-invalid"
-                                                    : ""
-                                            }`}
-                                            value={editData.slug || ""}
-                                            onChange={(e) =>
-                                                setEditData({
-                                                    ...editData,
-                                                    slug: e.target.value,
-                                                })
-                                            }
-                                        />
-                                        {localErrors.slug && (
-                                            <div className="invalid-feedback">
-                                                {localErrors.slug}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="mb-3">
-                                        <label className="form-label">
-                                            Status
-                                        </label>
-                                        <select
-                                            className="form-select"
-                                            value={editData.status}
-                                            onChange={(e) =>
-                                                setEditData({
-                                                    ...editData,
-                                                    status: e.target.value,
-                                                })
-                                            }
-                                        >
-                                            <option value="active">
-                                                Active
-                                            </option>
-                                            <option value="inactive">
-                                                Inactive
-                                            </option>
-                                            <option value="suspended">
-                                                Suspended
-                                            </option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="modal-footer">
-                                    <button
-                                        type="button"
-                                        className="btn btn-secondary"
-                                        onClick={() => setShowEditModal(false)}
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="btn btn-primary"
-                                    >
-                                        Update
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <EditCategoryModal
+                show={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                onSubmit={handleEditSubmit}
+                editData={editData}
+                setEditData={setEditData}
+                errors={localErrors}
+                isSubmitting={isSubmitting}
+            />
 
             {/* Modal - Delete Confirmation */}
-            {showDeleteModal && (
-                <div
-                    className="modal fade show d-block"
-                    tabIndex="-1"
-                    style={{ background: "rgba(0,0,0,0.5)" }}
-                >
-                    <div className="modal-dialog modal-dialog-centered">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title text-danger">
-                                    Confirm Delete
-                                </h5>
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    onClick={() => setShowDeleteModal(false)}
-                                ></button>
-                            </div>
-                            <div className="modal-body">
-                                Are you sure you want to delete this category?
-                                This action cannot be undone.
-                            </div>
-                            <div className="modal-footer">
-                                <button
-                                    className="btn btn-secondary"
-                                    onClick={() => setShowDeleteModal(false)}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className="btn btn-danger"
-                                    onClick={handleDelete}
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <DeleteConfirmModal
+                show={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={handleDelete}
+                isDeleting={isDeleting}
+            />
         </AdminLayout>
     );
 };

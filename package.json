@@ -19,6 +19,7 @@
         "@inertiajs/progress": "^0.1.2",
         "@inertiajs/react": "^2.0.11",
         "react-dom": "^19.1.0",
+        "react-toastify": "^11.0.5",
         "slugify": "^1.6.6",
         "tiny-slider": "^2.9.4"
     }

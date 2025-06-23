@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { Link, usePage } from "@inertiajs/react";
 import "../../../public/css/style_admin.css";
 import "../../../public/js/script.js";
-
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const AdminLayout = ({ children }) => {
     const { auth, setting } = usePage().props;
 
@@ -438,6 +439,17 @@ const AdminLayout = ({ children }) => {
             <div className="back-top">
                 <i className="bi bi-arrow-up-short position-absolute top-50 start-50 translate-middle"></i>
             </div>
+            <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={true}
+                closeOnClick
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+            />
         </>
     );
 };
