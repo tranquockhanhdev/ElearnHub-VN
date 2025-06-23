@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Repositories\VideoRepository;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -19,7 +21,7 @@ class VideoService
     public function createVideo(array $data)
     {
         // Tính order mới
-        $maxOrder = $this->videoRepository->getMaxOrderByLesson($data['lesson_id']);
+        $maxOrder = $this->videoRepository->getMaxOrderByLessonAndType($data['lesson_id']);
         $newOrder = $maxOrder + 1;
 
         // Xử lý file hoặc URL
@@ -45,7 +47,7 @@ class VideoService
     public function createVideoFromPath(array $data)
     {
         // Tính order mới
-        $maxOrder = $this->videoRepository->getMaxOrderByLesson($data['lesson_id']);
+        $maxOrder = $this->videoRepository->getMaxOrderByLessonAndType($data['lesson_id']);
         $newOrder = $maxOrder + 1;
 
         // Lấy extension từ file path
@@ -128,5 +130,54 @@ class VideoService
         }
 
         return $this->videoRepository->delete($id);
+    }
+
+    public function updateVideoOrder(int $videoId, int $lessonId, int $newOrder): array
+    {
+        try {
+            DB::beginTransaction();
+
+            $video = $this->videoRepository->findById($videoId);
+            if (!$video || $video->lesson_id !== $lessonId) {
+                throw new \Exception('Video không tồn tại hoặc không thuộc bài giảng này.');
+            }
+
+            $oldOrder = $video->order;
+
+            if ($newOrder === $oldOrder) {
+                return ['success' => true, 'message' => 'Không có thay đổi.'];
+            }
+
+            // Cập nhật các video liên quan
+            if ($newOrder > $oldOrder) {
+                // Dịch chuyển xuống: giảm order của các video ở giữa
+                $this->videoRepository->model()
+                    ->where('lesson_id', $lessonId)
+                    ->where('type', 'video')
+                    ->where('order', '>', $oldOrder)
+                    ->where('order', '<=', $newOrder)
+                    ->decrement('order');
+            } else {
+                // Dịch chuyển lên: tăng order của các video ở giữa
+                $this->videoRepository->model()
+                    ->where('lesson_id', $lessonId)
+                    ->where('type', 'video')
+                    ->where('order', '>=', $newOrder)
+                    ->where('order', '<', $oldOrder)
+                    ->increment('order');
+            }
+
+            // Cập nhật video đang di chuyển
+            $video->order = $newOrder;
+            $video->save();
+
+            DB::commit();
+
+            return ['success' => true, 'message' => 'Cập nhật thứ tự video thành công'];
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Lỗi khi cập nhật thứ tự video: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Lỗi cập nhật thứ tự video'];
+        }
     }
 }

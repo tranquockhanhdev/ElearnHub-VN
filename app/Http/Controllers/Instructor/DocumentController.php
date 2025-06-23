@@ -189,4 +189,30 @@ class DocumentController extends Controller
             rmdir($tempDir);
         }
     }
+
+    /**
+     * Update the order of documents.
+     */
+    public function updateOrder(Request $request, $courseId, $lessonId, $documentId)
+    {
+        $request->validate([
+            'order' => 'required|integer|min:1'
+        ]);
+
+        try {
+            // Kiểm tra quyền truy cập
+            $course = Course::where('instructor_id', Auth::id())->findOrFail($courseId);
+            $lesson = $course->lessons()->findOrFail($lessonId);
+
+            $result = $this->documentService->updateDocumentOrder($documentId, $lessonId, $request->order);
+
+            if ($result['success']) {
+                return redirect()->back()->with('success', $result['message']);
+            }
+
+            return redirect()->back()->withErrors(['general' => $result['message']]);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['general' => 'Có lỗi xảy ra khi cập nhật thứ tự tài liệu.']);
+        }
+    }
 }

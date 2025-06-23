@@ -48,13 +48,15 @@ Route::middleware(['auth', 'verified', 'role:2'])->prefix('instructor')->name('i
                 Route::get('/', [DocumentController::class, 'index'])->name('index');
                 Route::post('/store', [DocumentController::class, 'store'])->name('store');
                 Route::post('/chunkUpload', [DocumentController::class, 'chunkUpload'])->name('chunkUpload');
+                Route::put('/{documentId}/updateOrder', [DocumentController::class, 'updateOrder'])->name('update-order');
                 Route::delete('{documentId}/delete', [DocumentController::class, 'destroy'])->name('delete');
             });
 
             // 🎥 Video Resources
             Route::prefix('{lessonId}/videos')->name('videos.')->group(function () {
                 Route::get('/', [VideoController::class, 'index'])->name('index');
-                Route::post('/store', [VideoController::class, 'store'])->name('store'); // Thêm route store cho video
+                Route::post('/store', [VideoController::class, 'store'])->name('store');
+                Route::put('/{videoId}/updateOrder', [VideoController::class, 'updateOrder'])->name('update-order');
                 Route::delete('{videoId}/delete', [VideoController::class, 'destroy'])->name('delete');
             });
         });

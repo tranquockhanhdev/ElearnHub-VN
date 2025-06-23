@@ -32,6 +32,8 @@ const CourseDetail = ({ course }) => {
     const [showDocumentModal, setShowDocumentModal] = useState(false);
     const [selectedVideo, setSelectedVideo] = useState(null);
     const [showVideoModal, setShowVideoModal] = useState(false);
+    const [editingResourceOrder, setEditingResourceOrder] = useState(null);
+
     // Form cho thêm bài giảng
     const lessonForm = useForm({
         course_id: course.id,
@@ -83,7 +85,9 @@ const CourseDetail = ({ course }) => {
     const orderForm = useForm({
         order: 1
     });
-
+    const resourceOrderForm = useForm({
+        order: 1
+    });
     const handleAddLesson = (e) => {
         e.preventDefault();
         lessonForm.post(route('instructor.courses.lessons.store', course.id), {
@@ -224,6 +228,41 @@ const CourseDetail = ({ course }) => {
                 console.error('Lỗi cập nhật order:', errors);
             }
         });
+    };
+
+    const handleUpdateResourceOrder = (resourceId, currentOrder) => {
+        setEditingResourceOrder(resourceId);
+        resourceOrderForm.setData('order', currentOrder);
+    };
+
+    const handleSaveResourceOrder = (lessonId, resourceId, resourceType) => {
+        const updateRoute = resourceType === 'video'
+            ? route('instructor.courses.lessons.videos.update-order', {
+                id: course.id,
+                lessonId: lessonId,
+                videoId: resourceId
+            })
+            : route('instructor.courses.lessons.documents.update-order', {
+                id: course.id,
+                lessonId: lessonId,
+                documentId: resourceId
+            });
+
+        resourceOrderForm.put(updateRoute, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                setEditingResourceOrder(null);
+            },
+            onError: (errors) => {
+                console.error('Lỗi cập nhật order tài liệu:', errors);
+            }
+        });
+    };
+
+    const handleCancelEditResourceOrder = () => {
+        setEditingResourceOrder(null);
+        resourceOrderForm.reset();
     };
 
     const handleCancelEditOrder = () => {
@@ -765,6 +804,47 @@ const CourseDetail = ({ course }) => {
                                                                                 <div className="flex items-start justify-between">
                                                                                     <div className="flex-1">
                                                                                         <div className="flex items-center space-x-2 mb-2">
+                                                                                            {/* Resource Order Display/Edit */}
+                                                                                            {editingResourceOrder === resource.id ? (
+                                                                                                <div className="flex items-center space-x-2">
+                                                                                                    <input
+                                                                                                        type="number"
+                                                                                                        value={resourceOrderForm.data.order}
+                                                                                                        onChange={(e) => resourceOrderForm.setData('order', parseInt(e.target.value) || 1)}
+                                                                                                        className="w-12 px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                                        min="1"
+                                                                                                    />
+                                                                                                    <button
+                                                                                                        onClick={() => handleSaveResourceOrder(lesson.id, resource.id, resource.type)}
+                                                                                                        disabled={resourceOrderForm.processing}
+                                                                                                        className="text-green-600 hover:text-green-800 disabled:opacity-50"
+                                                                                                        title="Lưu"
+                                                                                                    >
+                                                                                                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                                                        </svg>
+                                                                                                    </button>
+                                                                                                    <button
+                                                                                                        onClick={handleCancelEditResourceOrder}
+                                                                                                        className="text-gray-600 hover:text-gray-800"
+                                                                                                        title="Hủy"
+                                                                                                    >
+                                                                                                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                                                        </svg>
+                                                                                                    </button>
+                                                                                                </div>
+                                                                                            ) : (
+                                                                                                <button
+                                                                                                    onClick={() => handleUpdateResourceOrder(resource.id, resource.order)}
+                                                                                                    className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-xs font-medium min-w-[2rem]"
+                                                                                                    title="Chỉnh sửa thứ tự"
+                                                                                                >
+                                                                                                    <span>{resource.order}</span>
+                                                                                                    <PencilIcon className="h-2 w-2" />
+                                                                                                </button>
+                                                                                            )}
+
                                                                                             {getFileIcon(resource.type)}
                                                                                             <span className="text-sm font-medium">{resource.title}</span>
 
@@ -797,7 +877,7 @@ const CourseDetail = ({ course }) => {
 
                                                                                         {/* File Type Info */}
                                                                                         <div className="mt-1 text-xs text-gray-500">
-                                                                                            Loại: {resource.file_type || resource.type} • Thứ tự: {resource.order}
+                                                                                            Loại: {resource.file_type || resource.type}
                                                                                         </div>
                                                                                     </div>
 

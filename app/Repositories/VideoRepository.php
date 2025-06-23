@@ -13,15 +13,20 @@ class VideoRepository
         $this->model = $model;
     }
 
+    public function model()
+    {
+        return $this->model;
+    }
+
     public function create(array $data)
     {
         return $this->model->create($data);
     }
 
-    public function getMaxOrderByLesson($lessonId)
+    public function getMaxOrderByLessonAndType($lessonId, $type = 'video')
     {
         return $this->model->where('lesson_id', $lessonId)
-            ->where('type', 'video')
+            ->where('type', $type)
             ->max('order') ?? 0;
     }
 

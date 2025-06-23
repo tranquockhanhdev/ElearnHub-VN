@@ -303,4 +303,30 @@ class VideoController extends Controller
             return back()->withErrors(['error' => 'Có lỗi xảy ra khi xóa video: ' . $e->getMessage()]);
         }
     }
+
+    /**
+     * Update the order of videos.
+     */
+    public function updateOrder(Request $request, $courseId, $lessonId, $videoId)
+    {
+        $request->validate([
+            'order' => 'required|integer|min:1'
+        ]);
+
+        try {
+            // Kiểm tra quyền truy cập
+            $course = Course::where('instructor_id', Auth::id())->findOrFail($courseId);
+            $lesson = $course->lessons()->findOrFail($lessonId);
+
+            $result = $this->videoService->updateVideoOrder($videoId, $lessonId, $request->order);
+
+            if ($result['success']) {
+                return redirect()->back()->with('success', $result['message']);
+            }
+
+            return redirect()->back()->withErrors(['general' => $result['message']]);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['general' => 'Có lỗi xảy ra khi cập nhật thứ tự video.']);
+        }
+    }
 }
