@@ -10,7 +10,15 @@ const AdminCourseList = ({ courses, stats }) => {
     const [showModal, setShowModal] = useState(false);
     const [selectedCourseId, setSelectedCourseId] = useState(null);
     const [activeTab, setActiveTab] = useState(defaultTab);
-
+    const { flash } = usePage().props;
+    const [message, setMessage] = useState("");
+    useEffect(() => {
+        if (flash.success) {
+            setMessage(flash.success);
+            const timeout = setTimeout(() => setMessage(""), 3000);
+            return () => clearTimeout(timeout);
+        }
+    }, [flash]);
     // --- Update URL when tab changes (without full reload)
     const handleTabChange = (tab) => {
         setActiveTab(tab);
@@ -116,6 +124,24 @@ const AdminCourseList = ({ courses, stats }) => {
                         </Link>
                     </div>
                 </div>
+                {/* FLASH MESSAGE*/}
+                {message && (
+                    <div className="row mb-3">
+                        <div className="col-12">
+                            <div
+                                className="alert alert-success alert-dismissible fade show"
+                                role="alert"
+                            >
+                                {message}
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => setMessage("")}
+                                ></button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 {/* Stats cards */}
                 <div className="row mb-4">
                     <div className="col-md-4">
@@ -367,7 +393,7 @@ const AdminCourseList = ({ courses, stats }) => {
                                         <td>
                                             <Link
                                                 href={`/admin/courses/${course.id}/edit`}
-                                                className="btn btn-sm btn-outline-primary me-2"
+                                                className="dropdown-item text-primary"
                                             >
                                                 Edit
                                             </Link>
