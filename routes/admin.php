@@ -43,12 +43,15 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
         ->name('admin.users.store');
     Route::put('/users/{user}', [AdminUserController::class, 'update'])
         ->name('admin.users.update');
-    Route::delete('/admin/users/{id}', [AdminUserController::class, 'destroy'])
+    Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy'])
         ->name('admin.users.destroy');
     Route::put('/admin/instructors/{user}/block', [AdminUserController::class, 'block'])
         ->name('admin.instructors.block');
-    Route::put('/admin/instructors/{id}/block', [AdminUserController::class, 'block'])
-        ->name('admin.instructors.block');
+    // Route::put('/admin/instructors/{id}/block', [AdminUserController::class, 'block'])
+    //     ->name('admin.instructors.block');
+
+Route::put('/admin/instructors/{user}/unblock', [AdminUserController::class, 'unblock'])
+        ->name('admin.instructors.unblock');
     Route::put('/admin/instructors/{id}', [AdminUserController::class, 'updateInstructor'])
         ->name('admin.instructors.update');
     Route::delete('/admin/instructors/{id}/avatar', [AdminUserController::class, 'removeInstructorAvatar'])

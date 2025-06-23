@@ -153,11 +153,11 @@ export default function InstructorDetail({ instructor, courses }) {
                             <div className="card-body">
                                 {/* Avatar & Name */}
                                 <div className="d-flex align-items-center mb-4 gap-3">
-                                    {instructor.instructor?.avatar ? (
+                                    {instructor?.instructor?.avatar ? (
                                         <img
                                             src={instructor.instructor.avatar}
                                             alt="Instructor Avatar"
-                                            className="rounded-circle"
+                                            className="rounded-circle object-fit-cover"
                                             width="80"
                                             height="80"
                                         />
@@ -510,6 +510,7 @@ export default function InstructorDetail({ instructor, courses }) {
                                         accept="image/*"
                                         onChange={handleAvatarChange}
                                         className="form-control"
+                                        key={avatarPreview}
                                     />
                                 </div>
 
