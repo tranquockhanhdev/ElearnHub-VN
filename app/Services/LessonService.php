@@ -198,8 +198,23 @@ class LessonService
                 $this->deleteVideoFile($lesson->video_url);
             }
 
+            // Xóa tất cả documents/resources liên quan
+            if ($lesson->resources && is_array($lesson->resources)) {
+                foreach ($lesson->resources as $resource) {
+                    if (isset($resource['file_path'])) {
+                        $this->deleteResourceFile($resource['file_path']);
+                    }
+                }
+            }
+
+            // Xóa documents từ database nếu có bảng riêng
+            $this->deleteLessonDocuments($id);
+
             // Xóa progress liên quan
             $this->progressRepository->delete($id);
+
+            // Xóa quiz liên quan nếu có
+            $this->deleteLessonQuiz($id);
 
             $success = $this->lessonRepository->delete($id);
 
@@ -211,12 +226,81 @@ class LessonService
 
             return [
                 'success' => true,
-                'message' => 'Xóa bài học thành công'
+                'message' => 'Xóa bài học và tất cả tài liệu liên quan thành công'
             ];
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Lỗi khi xóa bài học: ' . $e->getMessage());
             throw $e;
+        }
+    }
+
+    /**
+     * Xóa file tài liệu/document
+     */
+    private function deleteResourceFile(string $filePath): void
+    {
+        try {
+            if (Storage::disk('public')->exists($filePath)) {
+                Storage::disk('public')->delete($filePath);
+                Log::info('Đã xóa file tài liệu: ' . $filePath);
+            }
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi xóa file tài liệu: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Xóa documents từ database
+     */
+    private function deleteLessonDocuments(int $lessonId): void
+    {
+        try {
+            // Nếu bạn có bảng lesson_documents riêng
+            DB::table('lesson_documents')
+                ->where('lesson_id', $lessonId)
+                ->get()
+                ->each(function ($document) {
+                    // Xóa file từ storage
+                    if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
+                        Storage::disk('public')->delete($document->file_path);
+                    }
+                });
+
+            // Xóa records từ database
+            DB::table('lesson_documents')->where('lesson_id', $lessonId)->delete();
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi xóa documents từ database: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Xóa quiz liên quan
+     */
+    private function deleteLessonQuiz(int $lessonId): void
+    {
+        try {
+            // Nếu quiz có file đính kèm
+            $quiz = DB::table('lesson_quizzes')->where('lesson_id', $lessonId)->first();
+            if ($quiz && $quiz->attachment_path) {
+                if (Storage::disk('public')->exists($quiz->attachment_path)) {
+                    Storage::disk('public')->delete($quiz->attachment_path);
+                }
+            }
+
+            // Xóa quiz questions và answers
+            DB::table('quiz_answers')
+                ->whereIn('question_id', function ($query) use ($lessonId) {
+                    $query->select('id')
+                        ->from('quiz_questions')
+                        ->where('lesson_id', $lessonId);
+                })
+                ->delete();
+
+            DB::table('quiz_questions')->where('lesson_id', $lessonId)->delete();
+            DB::table('lesson_quizzes')->where('lesson_id', $lessonId)->delete();
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi xóa quiz: ' . $e->getMessage());
         }
     }
 
@@ -552,6 +636,67 @@ class LessonService
             DB::rollback();
             Log::error('Lỗi khi cập nhật hàng loạt bài học: ' . $e->getMessage());
             throw $e;
+        }
+    }
+    /**
+     * Xử lý video cho bài học
+     */
+    public function handleLessonVideo(UploadedFile $file): string
+    {
+        try {
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('lessons/videos', $fileName, 'public');
+            return $path;
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi upload video bài học: ' . $e->getMessage());
+            throw new \Exception('Không thể upload video bài học');
+        }
+    }
+    public function updateLessonOrder(int $lessonId, int $courseId, int $newOrder): array
+    {
+        try {
+            DB::beginTransaction();
+
+            $course = $this->courseRepository->findById($courseId);
+            if (!$course || $course->instructor_id !== Auth::id()) {
+                throw new \Exception('Bạn không có quyền.');
+            }
+
+            $lesson = $this->lessonRepository->findById($lessonId);
+            $oldOrder = $lesson->order;
+
+            if ($newOrder === $oldOrder) {
+                return ['success' => true, 'message' => 'Không có thay đổi.'];
+            }
+
+            // Cập nhật các bài liên quan
+            if ($newOrder > $oldOrder) {
+                // Dịch chuyển xuống: giảm order của các bài ở giữa
+                $this->lessonRepository->model()
+                    ->where('course_id', $courseId)
+                    ->where('order', '>', $oldOrder)
+                    ->where('order', '<=', $newOrder)
+                    ->decrement('order');
+            } else {
+                // Dịch chuyển lên: tăng order của các bài ở giữa
+                $this->lessonRepository->model()
+                    ->where('course_id', $courseId)
+                    ->where('order', '>=', $newOrder)
+                    ->where('order', '<', $oldOrder)
+                    ->increment('order');
+            }
+
+            // Cập nhật bài giảng đang di chuyển
+            $lesson->order = $newOrder;
+            $lesson->save();
+
+            DB::commit();
+
+            return ['success' => true, 'message' => 'Cập nhật thứ tự thành công'];
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error($e);
+            return ['success' => false, 'message' => 'Lỗi cập nhật thứ tự'];
         }
     }
 }

@@ -1,0 +1,25 @@
+/* Custom Plyr styles */
+.plyr {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.plyr__video-wrapper {
+    background: #000;
+}
+
+.plyr--full-ui input[type=range] {
+    color: #3b82f6;
+}
+
+.plyr__control--overlaid {
+    background: rgba(59, 130, 246, 0.9);
+}
+
+.plyr__control--overlaid:hover {
+    background: rgba(59, 130, 246, 1);
+}
+
+.plyr__menu__container .plyr__control[role=menuitemradio][aria-checked=true]::before {
+    background: #3b82f6;
+}

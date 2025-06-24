@@ -8,6 +8,9 @@ use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Models\Intructor;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class InstructorRepository
 {
@@ -139,5 +142,64 @@ class InstructorRepository
             ->having('total_revenue', '>', 0)
             ->orderBy('total_revenue', 'desc')
             ->get();
+    }
+
+    public function getInstructorByUserId($userId)
+    {
+        return Intructor::where('user_id', $userId)->first();
+    }
+
+    public function getInstructorWithUser($userId)
+    {
+        return Intructor::with('user')->where('user_id', $userId)->first();
+    }
+
+    public function createOrUpdateInstructor($userId, array $data)
+    {
+        return Intructor::updateOrCreate(
+            ['user_id' => $userId],
+            $data
+        );
+    }
+
+    public function updateInstructorProfile($userId, array $data)
+    {
+        $instructor = $this->getInstructorByUserId($userId);
+
+        if (!$instructor) {
+            $instructor = new Intructor(['user_id' => $userId]);
+        }
+
+        $instructor->fill($data);
+        $instructor->save();
+
+        return $instructor;
+    }
+
+    public function uploadAvatar(UploadedFile $file, $userId)
+    {
+        // Xóa avatar cũ nếu có
+        $instructor = $this->getInstructorByUserId($userId);
+        if ($instructor && $instructor->avatar) {
+            Storage::disk('public')->delete($instructor->avatar);
+        }
+
+        // Upload avatar mới
+        $path = $file->store('avatars', 'public');
+
+        return $path;
+    }
+
+    public function deleteAvatar($userId)
+    {
+        $instructor = $this->getInstructorByUserId($userId);
+
+        if ($instructor && $instructor->avatar) {
+            Storage::disk('public')->delete($instructor->avatar);
+            $instructor->update(['avatar' => null]);
+            return true;
+        }
+
+        return false;
     }
 }

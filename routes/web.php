@@ -19,3 +19,6 @@ Route::get('/cron/payments/expire', function () { //chay ngrok
         'time' => now()->toDateTimeString(),
     ]);
 });
+Route::get('/video/{filename}', [App\Http\Controllers\VideoStreamController::class, 'stream'])
+    ->where('filename', '.*')
+    ->name('video.stream');

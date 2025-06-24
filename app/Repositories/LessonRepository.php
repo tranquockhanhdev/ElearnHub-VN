@@ -16,6 +16,10 @@ class LessonRepository
     {
         $this->model = $model;
     }
+    public function model()
+    {
+        return $this->model;
+    }
 
     /**
      * Lấy tất cả bài học
@@ -135,14 +139,6 @@ class LessonRepository
     public function countLessonsByCourse(int $courseId): int
     {
         return $this->model->where('course_id', $courseId)->count();
-    }
-
-    /**
-     * Cập nhật thứ tự bài học
-     */
-    public function updateOrder(int $id, int $newOrder): bool
-    {
-        return $this->model->where('id', $id)->update(['order' => $newOrder]);
     }
 
     /**

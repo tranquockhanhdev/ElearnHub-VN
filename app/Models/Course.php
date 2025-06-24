@@ -20,6 +20,7 @@ class Course extends Model
         'img_url',
         'description',
         'status',
+        'note',
         'price',
     ];
 

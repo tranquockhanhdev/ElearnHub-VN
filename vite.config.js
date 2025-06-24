@@ -12,6 +12,9 @@ export default defineConfig({
         tailwindcss(),
         react(),
     ],
+    optimizeDeps: {
+        include: ['react-pdf', 'plyr-react', 'plyr'],
+    },
     resolve: {
         alias: {
             '@': path.resolve(__dirname, 'resources/js'),

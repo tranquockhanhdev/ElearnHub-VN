@@ -157,11 +157,6 @@ class CourseService
         return $this->CourseRepository->getCoursesByInstructor($instructorId);
     }
 
-    public function getApprovedCourses()
-    {
-        return $this->CourseRepository->getApprovedCourses();
-    }
-
     /**
      * Lấy URL đầy đủ của ảnh khóa học
      */
@@ -184,5 +179,74 @@ class CourseService
     public function getCoursesByInstructorWithFilters($instructorId, $filters = [], $perPage = 12)
     {
         return $this->CourseRepository->getCoursesByInstructorWithFilters($instructorId, $filters, $perPage);
+    }
+
+    /**
+     * Submit course for approval - chuyển status từ draft thành pending
+     */
+    public function submitForApproval($course)
+    {
+        try {
+            $updated = false;
+            $updatedItems = [];
+
+            // Kiểm tra và cập nhật course nếu status là draft
+            if ($course->status === 'draft') {
+                $course->update(['status' => 'pending']);
+                $updated = true;
+                $updatedItems[] = 'khóa học';
+            }
+
+            // Kiểm tra và cập nhật lessons
+            foreach ($course->lessons as $lesson) {
+                if ($lesson->status === 'draft') {
+                    $lesson->update(['status' => 'pending']);
+                    $updated = true;
+                    if (!in_array('bài giảng', $updatedItems)) {
+                        $updatedItems[] = 'bài giảng';
+                    }
+                }
+
+                // Kiểm tra và cập nhật resources
+                if ($lesson->resources) {
+                    foreach ($lesson->resources as $resource) {
+                        if ($resource->status === 'draft') {
+                            $resource->update(['status' => 'pending']);
+                            $updated = true;
+                            if (!in_array('tài liệu', $updatedItems)) {
+                                $updatedItems[] = 'tài liệu';
+                            }
+                        }
+                    }
+                }
+
+                // Kiểm tra và cập nhật quiz
+                if ($lesson->quiz && $lesson->quiz->status === 'draft') {
+                    $lesson->quiz->update(['status' => 'pending']);
+                    $updated = true;
+                    if (!in_array('quiz', $updatedItems)) {
+                        $updatedItems[] = 'quiz';
+                    }
+                }
+            }
+
+            if ($updated) {
+                $message = 'Đã gửi phê duyệt thành công cho: ' . implode(', ', $updatedItems) . '.';
+                return [
+                    'success' => true,
+                    'message' => $message
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Không có nội dung nào cần gửi phê duyệt (chỉ những nội dung có trạng thái "Nháp" mới được gửi phê duyệt).'
+                ];
+            }
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi gửi phê duyệt: ' . $e->getMessage()
+            ];
+        }
     }
 }

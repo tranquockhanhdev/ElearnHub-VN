@@ -3,64 +3,95 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Services\InstructorService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    protected $instructorService;
+
+    public function __construct(InstructorService $instructorService)
     {
-        //
+        $this->instructorService = $instructorService;
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Show the instructor profile form.
      */
-    public function create()
+    public function edit()
     {
-        //
+        $userId = Auth::id();
+        $profileData = $this->instructorService->getInstructorProfile($userId);
+
+        return Inertia::render('Intructors/Profile', [
+            'user' => $profileData['user'],
+            'instructor' => $profileData['instructor'],
+        ]);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Update the instructor profile.
      */
-    public function store(Request $request)
+    public function update(Request $request)
     {
-        //
+        try {
+            $userId = Auth::id();
+            $data = $request->all();
+
+            $result = $this->instructorService->updateProfile($userId, $data);
+
+            return redirect()->route('instructor.profile.edit')
+                ->with('success', 'Hồ sơ đã được cập nhật thành công!');
+        } catch (ValidationException $e) {
+            return redirect()->back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Có lỗi xảy ra khi cập nhật hồ sơ: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     /**
-     * Display the specified resource.
+     * Change password.
      */
-    public function show(User $user)
+    public function changePassword(Request $request)
     {
-        //
+        try {
+            $userId = Auth::id();
+            $data = $request->only(['current_password', 'new_password', 'new_password_confirmation']);
+
+            $this->instructorService->changePassword($userId, $data);
+
+            return redirect()->back()
+                ->with('success', 'Mật khẩu đã được thay đổi thành công!');
+        } catch (ValidationException $e) {
+            return redirect()->back()
+                ->withErrors($e->errors());
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Có lỗi xảy ra khi thay đổi mật khẩu: ' . $e->getMessage());
+        }
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Delete avatar.
      */
-    public function edit(User $user)
+    public function deleteAvatar()
     {
-        //
-    }
+        try {
+            $userId = Auth::id();
+            $this->instructorService->deleteAvatar($userId);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, User $user)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(User $user)
-    {
-        //
+            return redirect()->back()
+                ->with('success', 'Ảnh đại diện đã được xóa thành công!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Có lỗi xảy ra khi xóa ảnh đại diện: ' . $e->getMessage());
+        }
     }
 }

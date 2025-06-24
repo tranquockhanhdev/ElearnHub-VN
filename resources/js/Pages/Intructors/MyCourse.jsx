@@ -163,9 +163,7 @@ const MyCourse = () => {
                                                     {openMenu === 'courses' && (
                                                         <div className="ps-4">
                                                             <Link href="/instructor/courses" className="list-group-item" preserveScroll>Khóa học của tôi</Link>
-                                                            <Link href="/instructor/courses/create" className="list-group-item" preserveScroll>Đề xuất khóa học mới</Link>
-                                                            <Link href="#!" className="list-group-item" preserveScroll>Trạng thái khóa học</Link>
-                                                            <Link href="#!" className="list-group-item" preserveScroll>Thống kê lượt xem và lượt học</Link>
+
                                                         </div>
                                                     )}
 
@@ -187,8 +185,7 @@ const MyCourse = () => {
                                                     </button>
                                                     {openMenu === 'revenue' && (
                                                         <div className="ps-4">
-                                                            <Link href="/instructor/revenue" className="list-group-item" preserveScroll>Danh sách đơn hàng</Link>
-                                                            <Link href="/instructor/revenue/1/details" className="list-group-item" preserveScroll>Lịch sử thanh toán</Link>
+                                                            <Link href="/instructor/revenue" className="list-group-item" preserveScroll>Doanh Thu Khoá Học</Link>
                                                         </div>
                                                     )}
 
@@ -200,8 +197,6 @@ const MyCourse = () => {
                                                     {openMenu === 'profile' && (
                                                         <div className="ps-4">
                                                             <Link href="/instructor/profile" className="list-group-item" preserveScroll>Chỉnh sửa thông tin</Link>
-                                                            <Link href="/instructor/profile/edit" className="list-group-item" preserveScroll>Ảnh đại diện & kỹ năng</Link>
-                                                            <Link href="/instructor/password/change" className="list-group-item" preserveScroll>Đổi mật khẩu</Link>
                                                         </div>
                                                     )}
 
@@ -232,9 +227,7 @@ const MyCourse = () => {
                                                 {openMenu === 'courses' && (
                                                     <div className="ps-4">
                                                         <Link href="/instructor/courses" className="list-group-item" preserveScroll>Khóa học của tôi</Link>
-                                                        <Link href="/instructor/courses/create" className="list-group-item" preserveScroll>Đề xuất khóa học mới</Link>
-                                                        <Link href="#!" className="list-group-item" preserveScroll>Trạng thái khóa học</Link>
-                                                        <Link href="#!" className="list-group-item" preserveScroll>Thống kê lượt xem và lượt học</Link>
+
                                                     </div>
                                                 )}
 
@@ -256,8 +249,7 @@ const MyCourse = () => {
                                                 </button>
                                                 {openMenu === 'revenue' && (
                                                     <div className="ps-4">
-                                                        <Link href="/instructor/revenue" className="list-group-item" preserveScroll>Danh sách đơn hàng</Link>
-                                                        <Link href="/instructor/revenue/1/details" className="list-group-item" preserveScroll>Lịch sử thanh toán</Link>
+                                                        <Link href="/instructor/revenue" className="list-group-item" preserveScroll>Doanh Thu Khoá Học</Link>
                                                     </div>
                                                 )}
 
@@ -269,8 +261,7 @@ const MyCourse = () => {
                                                 {openMenu === 'profile' && (
                                                     <div className="ps-4">
                                                         <Link href="/instructor/profile" className="list-group-item" preserveScroll>Chỉnh sửa thông tin</Link>
-                                                        <Link href="/instructor/profile/edit" className="list-group-item" preserveScroll>Ảnh đại diện & kỹ năng</Link>
-                                                        <Link href="/instructor/password/change" className="list-group-item" preserveScroll>Đổi mật khẩu</Link>
+
                                                     </div>
                                                 )}
 
