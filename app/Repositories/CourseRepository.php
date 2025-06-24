@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Course;
 use App\Models\PaymentMethod;
 use App\Models\Payment;
+use App\Models\Intructor;
 use Exception;
 
 class CourseRepository
@@ -369,6 +370,26 @@ class CourseRepository
             ->where('status', 'approved');
 
         return $query->first();
+    }
+
+    /**
+     * Get instructor bio and avatar by course ID.
+     *
+     * @param int $courseId
+     * @return array|null
+     */
+    public function getInstructorDetailsByCourseId($courseId)
+    {
+        $course = $this->course->with(['instructor.instructor'])->find($courseId);
+
+        if ($course && $course->instructor && $course->instructor->instructor) {
+            return [
+                'bio' => $course->instructor->instructor->bio,
+                'avatar' => $course->instructor->instructor->avatar,
+            ];
+        }
+
+        return null; // Nếu không tìm thấy thông tin
     }
 
     // Private helper methods

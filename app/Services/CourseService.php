@@ -276,7 +276,10 @@ class CourseService
 
         return $course;
     }
-
+    public function getInstructorDetailsByCourseId($id)
+    {
+        return $this->CourseRepository->getInstructorDetailsByCourseId($id);
+    }
     /**
      * Get course curriculum for enrolled users
      */

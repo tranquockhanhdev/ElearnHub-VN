@@ -51,9 +51,13 @@ class CourseController extends Controller
             $isEnrolled = $this->courseService->isUserEnrolled(Auth::id(), $course->id);
         }
 
+        // Lấy thông tin bio và avatar của instructor
+        $instructorDetails = $this->courseService->getInstructorDetailsByCourseId($course->id);
+
         return Inertia::render('Public/CourseDetail', [
             'course' => $course,
             'isEnrolled' => $isEnrolled,
+            'instructorDetails' => $instructorDetails,
         ]);
     }
 
