@@ -90,7 +90,9 @@ Route::middleware(['auth', 'verified', 'role:2'])->prefix('instructor')->name('i
     // 🧑‍🏫 Hồ sơ giảng viên
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
-        Route::put('/update', [ProfileController::class, 'update'])->name('update');
+        Route::post('/update', [ProfileController::class, 'update'])->name('update');
+        Route::post('/change-password', [ProfileController::class, 'changePassword'])->name('change-password');
+        Route::delete('/delete-avatar', [ProfileController::class, 'deleteAvatar'])->name('delete-avatar');
     });
 
     // 💰 Doanh thu

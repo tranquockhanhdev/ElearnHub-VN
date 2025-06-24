@@ -1,8 +1,13 @@
 import React from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { route } from 'ziggy-js';
+
 const InstructorLayout = ({ children }) => {
     const { auth, flash_success, flash_error } = usePage().props;
+
+    // Get instructor data from auth
+    const instructor = auth?.instructor;
+    const user = auth?.user;
 
     return (
         <>
@@ -94,8 +99,17 @@ const InstructorLayout = ({ children }) => {
                                 >
                                     <img
                                         className="avatar-img rounded-circle"
-                                        src="/assets/images/avatar/01.jpg"
+                                        src={
+                                            instructor?.avatar
+                                                ? `/storage/${instructor.avatar}`
+                                                : '/assets/images/avatar/default.jpg'
+                                        }
                                         alt="User Avatar"
+                                        style={{
+                                            width: '40px',
+                                            height: '40px',
+                                            objectFit: 'cover'
+                                        }}
                                     />
                                 </a>
                                 <ul
@@ -109,9 +123,17 @@ const InstructorLayout = ({ children }) => {
                                             <div className="avatar me-3">
                                                 <img
                                                     className="avatar-img rounded-circle shadow-sm"
-                                                    src="/assets/images/avatar/01.jpg"
+                                                    src={
+                                                        instructor?.avatar
+                                                            ? `/storage/${instructor.avatar}`
+                                                            : '/assets/images/avatar/default.jpg'
+                                                    }
                                                     alt="User"
-                                                    style={{ width: '50px', height: '50px' }}
+                                                    style={{
+                                                        width: '50px',
+                                                        height: '50px',
+                                                        objectFit: 'cover'
+                                                    }}
                                                 />
                                             </div>
                                             <div className="flex-grow-1">
@@ -136,7 +158,7 @@ const InstructorLayout = ({ children }) => {
                                     <li className="mb-2">
                                         <Link
                                             className="dropdown-item rounded-lg py-2 px-3 d-flex align-items-center text-decoration-none"
-                                            href="/student/profile"
+                                            href={auth.user.role === 2 ? "/instructor/profile" : "/student/profile"}
                                         >
                                             <i className="bi bi-person-circle me-3 text-primary" style={{ fontSize: '18px' }}></i>
                                             <span className="fw-medium">Chỉnh sửa hồ sơ</span>
@@ -152,6 +174,45 @@ const InstructorLayout = ({ children }) => {
                                             >
                                                 <i className="bi bi-book me-3 text-success" style={{ fontSize: '18px' }}></i>
                                                 <span className="fw-medium">Khóa học của tôi</span>
+                                            </Link>
+                                        </li>
+                                    )}
+
+                                    {/* Hiển thị "Khóa học của tôi" cho giảng viên */}
+                                    {auth.user.role === 2 && (
+                                        <li className="mb-2">
+                                            <Link
+                                                className="dropdown-item rounded-lg py-2 px-3 d-flex align-items-center text-decoration-none"
+                                                href="/instructor/courses"
+                                            >
+                                                <i className="bi bi-journal-text me-3 text-success" style={{ fontSize: '18px' }}></i>
+                                                <span className="fw-medium">Khóa học của tôi</span>
+                                            </Link>
+                                        </li>
+                                    )}
+
+                                    {/* Hiển thị "Học viên" cho giảng viên */}
+                                    {auth.user.role === 2 && (
+                                        <li className="mb-2">
+                                            <Link
+                                                className="dropdown-item rounded-lg py-2 px-3 d-flex align-items-center text-decoration-none"
+                                                href="/instructor/students"
+                                            >
+                                                <i className="bi bi-people me-3 text-info" style={{ fontSize: '18px' }}></i>
+                                                <span className="fw-medium">Học viên của tôi</span>
+                                            </Link>
+                                        </li>
+                                    )}
+
+                                    {/* Hiển thị "Doanh thu" cho giảng viên */}
+                                    {auth.user.role === 2 && (
+                                        <li className="mb-2">
+                                            <Link
+                                                className="dropdown-item rounded-lg py-2 px-3 d-flex align-items-center text-decoration-none"
+                                                href="/instructor/revenue"
+                                            >
+                                                <i className="bi bi-cash-stack me-3 text-warning" style={{ fontSize: '18px' }}></i>
+                                                <span className="fw-medium">Doanh thu</span>
                                             </Link>
                                         </li>
                                     )}
