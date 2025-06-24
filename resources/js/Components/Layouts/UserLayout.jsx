@@ -94,7 +94,7 @@ const UserLayout = ({ children }) => {
 								>
 									<img
 										className="avatar-img rounded-circle"
-										src="/assets/images/avatar/01.jpg"
+										src="https://www.svgrepo.com/show/384670/account-avatar-profile-user.svg"
 										alt="User Avatar"
 									/>
 								</a>
@@ -109,7 +109,7 @@ const UserLayout = ({ children }) => {
 											<div className="avatar me-3">
 												<img
 													className="avatar-img rounded-circle shadow-sm"
-													src="/assets/images/avatar/01.jpg"
+													src="https://www.svgrepo.com/show/384670/account-avatar-profile-user.svg"
 													alt="User"
 													style={{ width: '50px', height: '50px' }}
 												/>

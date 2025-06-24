@@ -313,6 +313,64 @@ class CourseRepository
         return $this->course->count();
     }
 
+    /**
+     * Get course with approved content for public view
+     */
+    public function getCourseWithApprovedContent($slug)
+    {
+        return $this->course->with([
+            'categories',
+            'instructor',
+            // Chỉ lấy lessons có status approved
+            'lessons' => function ($query) {
+                $query->where('status', 'approved')
+                    ->orderBy('order', 'asc');
+            },
+            // Lấy resources của lessons approved, có thể preview hoặc approved
+            'lessons.resources' => function ($query) {
+                $query->where(function ($q) {
+                    // Resource có status approved HOẶC có thể preview
+                    $q->where('status', 'approved')
+                        ->orWhere('is_preview', true);
+                })
+                    ->orderBy('order', 'asc');
+            },
+            // Lấy quizzes có status approved
+            'lessons.quiz' => function ($query) {
+                $query->where('status', 'approved');
+            }
+        ])
+            ->where('slug', $slug)
+            ->where('status', 'active') // Chỉ lấy course đã approved
+            ->first();
+    }
+
+    /**
+     * Get course curriculum for enrolled users
+     */
+    public function getCourseWithFullContent($courseId, $userId = null)
+    {
+        $query = $this->course->with([
+            'categories',
+            'instructor',
+            'lessons' => function ($query) {
+                $query->where('status', 'approved')
+                    ->orderBy('order', 'asc');
+            },
+            'lessons.resources' => function ($query) {
+                $query->where('status', 'approved')
+                    ->orderBy('order', 'asc');
+            },
+            'lessons.quiz' => function ($query) {
+                $query->where('status', 'approved');
+            }
+        ])
+            ->where('id', $courseId)
+            ->where('status', 'approved');
+
+        return $query->first();
+    }
+
     // Private helper methods
     private function applySearchFilter($query, $searchTerm)
     {

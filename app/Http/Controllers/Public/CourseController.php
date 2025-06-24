@@ -3,23 +3,23 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use App\Services\CourseService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class CourseController extends Controller
 {
-    protected $CourseService;
+    protected $courseService;
 
-    public function __construct(CourseService $CourseService)
+    public function __construct(CourseService $courseService)
     {
-        $this->CourseService = $CourseService;
+        $this->courseService = $courseService;
     }
 
     public function index(Request $request)
     {
-        $categories = $this->CourseService->getAllCategories();
+        $categories = $this->courseService->getAllCategories();
 
         // Lấy filters từ request
         $filters = [
@@ -29,7 +29,7 @@ class CourseController extends Controller
         ];
 
         // Lấy courses với filters và pagination
-        $courses = $this->CourseService->getCoursesWithFilters($filters, 12);
+        $courses = $this->courseService->getCoursesWithFilters($filters, 12);
 
         return Inertia::render('Public/CourseList', [
             'courses' => $courses,
@@ -40,20 +40,20 @@ class CourseController extends Controller
 
     public function show($slug)
     {
-        $course = $this->CourseService->getCourseBySlug($slug);
+        $course = $this->courseService->getCourseForPublicDisplay($slug);
 
         if (!$course) {
-            abort(404, 'Khóa học không tồn tại');
+            abort(404, 'Khóa học không tồn tại hoặc chưa được phê duyệt');
         }
-        // Kiểm tra user đã enrollment chưa
+
         $isEnrolled = false;
         if (Auth::check()) {
-            $isEnrolled = $this->CourseService->isUserEnrolled(Auth::id(), $course->id);
+            $isEnrolled = $this->courseService->isUserEnrolled(Auth::id(), $course->id);
         }
 
         return Inertia::render('Public/CourseDetail', [
             'course' => $course,
-            'isEnrolled' => $isEnrolled
+            'isEnrolled' => $isEnrolled,
         ]);
     }
 

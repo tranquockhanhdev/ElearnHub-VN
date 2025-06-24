@@ -249,4 +249,73 @@ class CourseService
             ];
         }
     }
+
+    /**
+     * Get course for public display with approved content only
+     */
+    public function getCourseForPublicDisplay($slug)
+    {
+        $course = $this->CourseRepository->getCourseWithApprovedContent($slug);
+
+        if (!$course) {
+            return null;
+        }
+
+        // Process lessons and resources for display
+        $course->lessons = $course->lessons->map(function ($lesson) {
+            // Count total resources and preview resources
+            $lesson->total_resources = $lesson->resources->count();
+            $lesson->preview_resources = $lesson->resources->where('is_preview', 1)->count();
+
+            // Separate preview and locked resources
+            $lesson->preview_items = $lesson->resources->where('is_preview', 1);
+            $lesson->locked_items = $lesson->resources->where('is_preview', 0);
+
+            return $lesson;
+        });
+
+        return $course;
+    }
+
+    /**
+     * Get course curriculum for enrolled users
+     */
+    public function getCourseForEnrolledUser($courseId, $userId)
+    {
+        // Kiểm tra xem user đã enroll chưa
+        if (!$this->isUserEnrolled($userId, $courseId)) {
+            return null;
+        }
+
+        return $this->CourseRepository->getCourseWithFullContent($courseId, $userId);
+    }
+
+    /**
+     * Check if resource can be accessed by user
+     */
+    public function canAccessResource($resourceId, $userId = null)
+    {
+        $resource = \App\Models\Resource::with('lesson.course')->find($resourceId);
+
+        if (!$resource || $resource->status !== 'approved') {
+            return false;
+        }
+
+        // Nếu lesson không approved thì không thể access
+        if ($resource->lesson->status !== 'approved') {
+            return false;
+        }
+
+        // Nếu là preview resource thì ai cũng có thể xem
+        if ($resource->is_preview) {
+            return true;
+        }
+
+        // Nếu không phải preview thì phải đăng ký khóa học
+        if (!$userId) {
+            return false;
+        }
+
+        return $this->isUserEnrolled($userId, $resource->lesson->course_id);
+    }
 }

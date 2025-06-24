@@ -22,3 +22,5 @@ Route::get('/cron/payments/expire', function () { //chay ngrok
 Route::get('/video/{filename}', [App\Http\Controllers\VideoStreamController::class, 'stream'])
     ->where('filename', '.*')
     ->name('video.stream');
+Route::get('/resource/{resourceId}/preview', [App\Http\Controllers\Public\ResourceController::class, 'preview'])->name('resource.preview');
+Route::get('/resource/{resourceId}/stream', [App\Http\Controllers\Public\ResourceController::class, 'streamVideo'])->name('resource.stream');
