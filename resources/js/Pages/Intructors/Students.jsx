@@ -139,8 +139,7 @@ const Students = () => {
                                                     {openMenu === 'profile' && (
                                                         <div className="ps-4">
                                                             <Link href="/instructor/profile" className="list-group-item" preserveScroll preserveState>Chỉnh sửa thông tin</Link>
-                                                            <Link href="/instructor/profile/edit" className="list-group-item" preserveScroll preserveState>Ảnh đại diện & kỹ năng</Link>
-                                                            <Link href="/instructor/password/change" className="list-group-item" preserveScroll preserveState>Đổi mật khẩu</Link>
+
                                                         </div>
                                                     )}
 
@@ -202,8 +201,7 @@ const Students = () => {
                                                 {openMenu === 'profile' && (
                                                     <div className="ps-4">
                                                         <Link href="/instructor/profile" className="list-group-item" preserveScroll preserveState>Chỉnh sửa thông tin</Link>
-                                                        <Link href="/instructor/profile/edit" className="list-group-item" preserveScroll preserveState>Ảnh đại diện & kỹ năng</Link>
-                                                        <Link href="/instructor/password/change" className="list-group-item" preserveScroll preserveState>Đổi mật khẩu</Link>
+
                                                     </div>
                                                 )}
 

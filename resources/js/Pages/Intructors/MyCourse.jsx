@@ -197,8 +197,6 @@ const MyCourse = () => {
                                                     {openMenu === 'profile' && (
                                                         <div className="ps-4">
                                                             <Link href="/instructor/profile" className="list-group-item" preserveScroll>Chỉnh sửa thông tin</Link>
-                                                            <Link href="/instructor/profile/edit" className="list-group-item" preserveScroll>Ảnh đại diện & kỹ năng</Link>
-                                                            <Link href="/instructor/password/change" className="list-group-item" preserveScroll>Đổi mật khẩu</Link>
                                                         </div>
                                                     )}
 
@@ -263,8 +261,7 @@ const MyCourse = () => {
                                                 {openMenu === 'profile' && (
                                                     <div className="ps-4">
                                                         <Link href="/instructor/profile" className="list-group-item" preserveScroll>Chỉnh sửa thông tin</Link>
-                                                        <Link href="/instructor/profile/edit" className="list-group-item" preserveScroll>Ảnh đại diện & kỹ năng</Link>
-                                                        <Link href="/instructor/password/change" className="list-group-item" preserveScroll>Đổi mật khẩu</Link>
+
                                                     </div>
                                                 )}
 

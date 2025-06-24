@@ -196,7 +196,7 @@ class RevenueController extends Controller
                 ->sum('payments.amount'),
         ];
 
-        return Inertia::render('Intructors/RevenueDetails', [
+        return Inertia::render('Intructors/RevenueDetail', [
             'course' => $course,
             'payments' => $payments,
             'filters' => $request->only(['search', 'status', 'sort', 'direction']),

@@ -96,6 +96,6 @@ Route::middleware(['auth', 'verified', 'role:2'])->prefix('instructor')->name('i
     // 💰 Doanh thu
     Route::prefix('revenue')->name('revenue.')->group(function () {
         Route::get('/', [RevenueController::class, 'index'])->name('index');
-        Route::get('{id}/details', [RevenueController::class, 'details'])->name('details');
+        Route::get('{id}/details', [RevenueController::class, 'show'])->name('details');
     });
 });
