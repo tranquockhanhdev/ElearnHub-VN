@@ -1,59 +1,69 @@
 import React from "react";
 import { Link } from "@inertiajs/react";
 
-/**
- * Component hiển thị thông tin một học viên
- */
-const StudentCard = ({
-    student,
+const InstructorCard = ({
+    instructor,
     formatDate,
-    viewType = "grid", // 'grid' hoặc 'list'
+    viewType = "grid",
     onEdit,
     onDelete,
     onBlock,
     onUnblock,
 }) => {
-    // Button xử lý chặn hoặc mở chặn tùy theo trạng thái
+    // Nút chặn/mở chặn
     const renderBlockButton = () => {
-        const isSuspended = student.status === "suspended";
-
+        if (instructor.status === "suspended") {
+            return (
+                <button
+                    className="btn btn-sm btn-outline-success"
+                    onClick={() => onUnblock(instructor)}
+                >
+                    <i className="fas fa-unlock"></i> Mở chặn
+                </button>
+            );
+        }
         return (
             <button
-                className={`btn btn-sm ${
-                    isSuspended ? "btn-outline-success" : "btn-outline-danger"
-                }`}
-                onClick={() =>
-                    isSuspended ? onUnblock?.(student) : onBlock?.(student)
-                }
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => onBlock(instructor)}
             >
-                <i
-                    className={`fas ${
-                        isSuspended ? "fa-unlock" : "fa-ban"
-                    } me-1`}
-                ></i>
-                {isSuspended ? "Mở chặn" : "Chặn"}
+                <i className="fas fa-ban"></i> Chặn
             </button>
         );
     };
 
-    // Danh sách dạng list
+    // ✅ LIST VIEW
     if (viewType === "list") {
         return (
             <div className="card mb-3">
                 <div className="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 className="mb-1">{student.name}</h5>
-                        <p className="mb-1 text-muted">{student.email}</p>
+                        <h5 className="mb-1">{instructor.name}</h5>
+                        <p className="mb-1 text-muted">{instructor.email}</p>
                         <small>
-                            Join at: {formatDate(student.email_verified_at)}
+                            Tham gia: {formatDate(instructor.created_at)}
                         </small>
                     </div>
                     <div className="d-flex gap-2">
-                        <button
+                        <Link
+                            href={route("admin.instructors.show", {
+                                id: instructor.id,
+                            })}
                             className="btn btn-sm btn-outline-secondary"
-                            onClick={() => onEdit?.(student)}
                         >
-                            <i className="bi-pencil-square"></i>
+                            <i className="bi bi-eye-fill"></i>
+                        </Link>
+                        <button
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => onEdit?.(instructor)}
+                        >
+                            <i className="bi bi-pencil-square"></i>
+                        </button>
+                        <button
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => onDelete?.(instructor.id)}
+                        >
+                            <i className="bi bi-trash"></i>
                         </button>
                         {renderBlockButton()}
                     </div>
@@ -62,16 +72,16 @@ const StudentCard = ({
         );
     }
 
-    // Danh sách dạng grid (thẻ)
+    // ✅ GRID VIEW
     return (
         <div className="col-md-6 col-xxl-4">
             <div className="card bg-transparent border h-100">
                 <div className="card-header bg-transparent border-bottom d-flex justify-content-between">
                     <div>
-                        <h5 className="mb-0">{student.name}</h5>
+                        <h5 className="mb-0">{instructor.name}</h5>
                         <span className="text-body small">
                             <i className="fas fa-envelope fa-fw me-1"></i>{" "}
-                            {student.email}
+                            {instructor.email}
                         </span>
                     </div>
                     <div className="dropdown text-end">
@@ -85,17 +95,18 @@ const StudentCard = ({
                             <li>
                                 <button
                                     className="dropdown-item"
-                                    onClick={() => onEdit?.(student)}
+                                    onClick={() => onEdit?.(instructor)}
                                 >
-                                    <i className="bi bi-pencil me-2"></i> Edit
+                                    <i className="bi bi-pencil me-2"></i> Chỉnh
+                                    sửa
                                 </button>
                             </li>
                             <li>
                                 <button
                                     className="dropdown-item text-danger"
-                                    onClick={() => onDelete?.(student.id)}
+                                    onClick={() => onDelete?.(instructor.id)}
                                 >
-                                    <i className="bi bi-trash me-2"></i> Xóa
+                                    <i className="bi bi-trash me-2"></i> Xoá
                                 </button>
                             </li>
                         </ul>
@@ -111,7 +122,7 @@ const StudentCard = ({
                             <h6 className="mb-0 ms-2 fw-light">Phone</h6>
                         </div>
                         <span className="mb-0 fw-bold">
-                            {student.phone || "N/A"}
+                            {instructor.phone || "N/A"}
                         </span>
                     </div>
 
@@ -123,7 +134,7 @@ const StudentCard = ({
                             <h6 className="mb-0 ms-2 fw-light">Status</h6>
                         </div>
                         <span className="fw-bold text-capitalize">
-                            {student.status}
+                            {instructor.status}
                         </span>
                     </div>
                 </div>
@@ -132,13 +143,13 @@ const StudentCard = ({
                     <div className="d-sm-flex justify-content-between align-items-center">
                         <h6 className="mb-2 mb-sm-0">
                             <i className="bi bi-calendar fa-fw text-orange me-2"></i>
-                            <span className="text-body">Join at:</span>{" "}
-                            {formatDate(student.email_verified_at)}
+                            <span className="text-body">Tham gia:</span>{" "}
+                            {formatDate(instructor.created_at)}
                         </h6>
                         <div className="d-flex gap-2">
                             <Link
-                                href={route("admin.students.show", {
-                                    id: student.id,
+                                href={route("admin.instructors.show", {
+                                    id: instructor.id,
                                 })}
                                 className="btn btn-sm btn-outline-secondary"
                             >
@@ -153,4 +164,4 @@ const StudentCard = ({
     );
 };
 
-export default StudentCard;
+export default InstructorCard;

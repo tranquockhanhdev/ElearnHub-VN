@@ -1,31 +1,36 @@
 import React, { useState, useEffect } from "react";
-import { usePage } from "@inertiajs/react";
+import { usePage, Link, router } from "@inertiajs/react";
+import { route } from "ziggy-js";
 import AdminLayout from "@/Components/Layouts/AdminLayout";
-import { Link } from "@inertiajs/react";
 import EditUserModal from "@/Pages/Admin/User/EditUserModal";
 import CreateUserModal from "@/Pages/Admin/User/CreateUserModal";
-import { route } from "ziggy-js";
-import { router } from "@inertiajs/react";
+import InstructorCard from "@/Components/Admin/Common/User/InstructorCard";
+import ConfirmModal from "@/Components/Admin/Common/User/ConfirmModal";
+import FilterBar from "@/Components/Admin/Common/User/FilterBar";
+import { toast } from "react-toastify";
+import useUserFilters from "@/hooks/useUserFilters";
+
 const AdminInstructorList = ({ instructors }) => {
+    const { flash } = usePage().props;
     const [activeTab, setActiveTab] = useState("grid");
     const [showModal, setShowModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
-    const { flash } = usePage().props;
-    const [message, setMessage] = useState("");
     const [confirmDeleteId, setConfirmDeleteId] = useState(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showBlockModal, setShowBlockModal] = useState(false);
-    const [blockUserId, setBlockUserId] = useState(null);
-    const [filters, setFilters] = useState({
-        keyword: "",
-        email: "",
-        status: "",
-        sort: "",
-    });
-    const handleFilterChange = (e) => {
-        setFilters({ ...filters, [e.target.name]: e.target.value });
-    };
+    const [showUnblockModal, setShowUnblockModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isBlocking, setIsBlocking] = useState(false);
+    const [isUnblocking, setIsUnblocking] = useState(false);
+
+    const { filters, setFilters, handleChange, clearFilters } =
+        useUserFilters();
+
+    useEffect(() => {
+        if (flash.success) toast.success(flash.success);
+        if (flash.error) toast.error(flash.error);
+    }, [flash]);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -34,23 +39,58 @@ const AdminInstructorList = ({ instructors }) => {
         });
     };
 
-    useEffect(() => {
-        if (flash.success) {
-            setMessage(flash.success);
-            const timeout = setTimeout(() => setMessage(""), 3000);
-            return () => clearTimeout(timeout);
-        }
-    }, [flash]);
+    const handleDelete = () => {
+        if (!confirmDeleteId) return;
+        setIsDeleting(true);
+        router.delete(route("admin.users.destroy", { user: confirmDeleteId }), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowConfirmModal(false);
+                setConfirmDeleteId(null);
+            },
+            onFinish: () => setIsDeleting(false),
+        });
+    };
+
+    const handleBlockUser = () => {
+        if (!selectedUser) return;
+        setIsBlocking(true);
+        router.put(
+            route("admin.instructors.block", { user: selectedUser.id }),
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setShowBlockModal(false);
+                },
+                onFinish: () => setIsBlocking(false),
+            }
+        );
+    };
+
+    const handleUnblockUser = () => {
+        if (!selectedUser) return;
+        setIsUnblocking(true);
+        router.put(
+            route("admin.instructors.unblock", { user: selectedUser.id }),
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setShowUnblockModal(false);
+                },
+                onFinish: () => setIsUnblocking(false),
+            }
+        );
+    };
 
     const formatDate = (isoDate) => {
         if (!isoDate) return "---";
-        const date = new Date(isoDate);
-        return date.toLocaleDateString("vi-VN");
+        return new Date(isoDate).toLocaleDateString("vi-VN");
     };
 
     const renderPagination = () => {
         const pages = [];
-
         for (let i = 1; i <= instructors.last_page; i++) {
             pages.push(
                 <Link
@@ -78,32 +118,10 @@ const AdminInstructorList = ({ instructors }) => {
             </nav>
         );
     };
-    const handleDelete = () => {
-        if (confirmDeleteId) {
-            router.delete(route("admin.users.destroy", confirmDeleteId), {
-                onSuccess: () => {
-                    setShowConfirmModal(false);
-                    setConfirmDeleteId(null);
-                },
-            });
-        }
-    };
-    const handleBlockUser = (userId) => {
-        router.put(
-            route("admin.instructors.block", userId),
-            {},
-            {
-                onSuccess: () => {
-                    setShowBlockModal(false);
-                    setSelectedUser(null);
-                },
-            }
-        );
-    };
+
     return (
         <AdminLayout>
             <div className="page-content-wrapper border">
-                {/* Tiêu đề và nút thêm */}
                 <div className="row align-items-center mb-3">
                     <div className="col-md-6">
                         <h1 className="h3 mb-0">Giảng Viên</h1>
@@ -119,179 +137,23 @@ const AdminInstructorList = ({ instructors }) => {
                     </div>
                 </div>
 
-                {/* FLASH MESSAGE đẹp và rõ */}
-                {message && (
-                    <div className="row mb-3">
-                        <div className="col-12">
-                            <div
-                                className="alert alert-success alert-dismissible fade show"
-                                role="alert"
-                            >
-                                {message}
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    onClick={() => setMessage("")}
-                                ></button>
-                            </div>
-                        </div>
-                    </div>
-                )}
                 <div className="card bg-transparent">
                     <div className="card-header bg-transparent border-bottom px-0">
                         <div className="row g-3 align-items-center justify-content-between">
                             <div className="col-md-8">
-                                <div className="card shadow border-0 mb-4">
-                                    <div className="card-header bg-white pb-0">
-                                        <h5 className="mb-0 text-primary fw-bold">
-                                            <i className="fas fa-filter me-2"></i>
-                                            Bộ lọc giảng viên
-                                        </h5>
-                                    </div>
-                                    <div className="card-body pt-3">
-                                        <form onSubmit={handleSearch}>
-                                            <div className="row gy-4">
-                                                {/* Tên giảng viên */}
-                                                <div className="col-lg-3 col-md-6">
-                                                    <label className="form-label text-muted fw-semibold">
-                                                        Tên giảng viên
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        name="name"
-                                                        value={
-                                                            filters.name || ""
-                                                        }
-                                                        onChange={
-                                                            handleFilterChange
-                                                        }
-                                                        className="form-control"
-                                                        placeholder="Nhập tên"
-                                                    />
-                                                </div>
-
-                                                {/* Email */}
-                                                <div className="col-lg-3 col-md-6">
-                                                    <label className="form-label text-muted fw-semibold">
-                                                        Email
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        name="email"
-                                                        value={
-                                                            filters.email || ""
-                                                        }
-                                                        onChange={
-                                                            handleFilterChange
-                                                        }
-                                                        className="form-control"
-                                                        placeholder="example@email.com"
-                                                    />
-                                                </div>
-
-                                                {/* Trạng thái */}
-                                                <div className="col-lg-2 col-md-6">
-                                                    <label className="form-label text-muted fw-semibold">
-                                                        Trạng thái
-                                                    </label>
-                                                    <select
-                                                        name="status"
-                                                        value={filters.status}
-                                                        onChange={
-                                                            handleFilterChange
-                                                        }
-                                                        className="form-select"
-                                                    >
-                                                        <option value="">
-                                                            Tất cả
-                                                        </option>
-                                                        <option value="active">
-                                                            Hoạt động
-                                                        </option>
-                                                        <option value="inactive">
-                                                            Vô hiệu
-                                                        </option>
-                                                        <option value="suspended">
-                                                            Tạm khóa
-                                                        </option>
-                                                    </select>
-                                                </div>
-
-                                                {/* Sắp xếp */}
-                                                <div className="col-lg-2 col-md-6">
-                                                    <label className="form-label text-muted fw-semibold">
-                                                        Sắp xếp
-                                                    </label>
-                                                    <select
-                                                        name="sort"
-                                                        value={filters.sort}
-                                                        onChange={
-                                                            handleFilterChange
-                                                        }
-                                                        className="form-select"
-                                                    >
-                                                        <option value="newest">
-                                                            Mới nhất
-                                                        </option>
-                                                        <option value="oldest">
-                                                            Cũ nhất
-                                                        </option>
-                                                        <option value="az">
-                                                            Tên A-Z
-                                                        </option>
-                                                        <option value="za">
-                                                            Tên Z-A
-                                                        </option>
-                                                    </select>
-                                                </div>
-
-                                                {/* Nút hành động */}
-                                                <div className="col-lg-2 col-md-12">
-                                                    <label className="form-label text-muted fw-semibold invisible">
-                                                        Hành động
-                                                    </label>
-                                                    <div className="d-flex gap-2">
-                                                        <button
-                                                            type="submit"
-                                                            className="btn btn-primary w-100"
-                                                        >
-                                                            <i className="fas fa-search me-1"></i>{" "}
-                                                            Tìm kiếm
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const cleared =
-                                                                    {
-                                                                        name: "",
-                                                                        email: "",
-                                                                        status: "",
-                                                                        sort: "",
-                                                                    };
-                                                                setFilters(
-                                                                    cleared
-                                                                );
-                                                                router.get(
-                                                                    route(
-                                                                        "admin.instructors"
-                                                                    ),
-                                                                    cleared,
-                                                                    {
-                                                                        preserveState: true,
-                                                                    }
-                                                                );
-                                                            }}
-                                                            className="btn btn-outline-secondary w-100"
-                                                        >
-                                                            <i className="fas fa-sync-alt me-1"></i>{" "}
-                                                            Đặt lại
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
+                                <FilterBar
+                                    filters={filters}
+                                    onChange={handleChange}
+                                    onSearch={handleSearch}
+                                    onClear={() => {
+                                        clearFilters();
+                                        router.get(
+                                            route("admin.instructors"),
+                                            {},
+                                            { preserveState: true }
+                                        );
+                                    }}
+                                />
                             </div>
 
                             <div className="col-md-3">
@@ -330,209 +192,45 @@ const AdminInstructorList = ({ instructors }) => {
                             {instructors.data.length === 0 ? (
                                 <div className="col-12">
                                     <div className="alert alert-warning">
-                                        No instructors found.
+                                        Không có giảng viên nào.
                                     </div>
                                 </div>
                             ) : (
-                                instructors.data.map((instructor) =>
-                                    activeTab === "grid" ? (
-                                        <div
-                                            className="col-md-6 col-xxl-4"
-                                            key={instructor.id}
-                                        >
-                                            <div className="card border h-100">
-                                                <div className="card-header d-flex justify-content-between">
-                                                    <div>
-                                                        <h5 className="mb-0">
-                                                            {instructor.name}
-                                                        </h5>
-                                                        <span className="text-body small">
-                                                            <i className="fas fa-envelope fa-fw me-1"></i>{" "}
-                                                            {instructor.email}
-                                                        </span>
-                                                    </div>
-                                                    <div className="dropdown text-end">
-                                                        <button
-                                                            className="btn btn-sm btn-light"
-                                                            data-bs-toggle="dropdown"
-                                                        >
-                                                            <i className="bi bi-three-dots"></i>
-                                                        </button>
-                                                        <ul className="dropdown-menu dropdown-menu-end">
-                                                            <li>
-                                                                <button
-                                                                    className="dropdown-item"
-                                                                    onClick={() => {
-                                                                        setSelectedUser(
-                                                                            instructor
-                                                                        ); // Gán user được chọn
-                                                                        setShowEditModal(
-                                                                            true
-                                                                        ); // Mở modal
-                                                                    }}
-                                                                >
-                                                                    <i className="bi bi-pencil me-2"></i>{" "}
-                                                                    Edit
-                                                                </button>
-                                                            </li>
-                                                            <li>
-                                                                <button
-                                                                    className="dropdown-item text-red-600 hover:bg-red-100"
-                                                                    onClick={() => {
-                                                                        setConfirmDeleteId(
-                                                                            instructor.id
-                                                                        );
-                                                                        setShowConfirmModal(
-                                                                            true
-                                                                        );
-                                                                    }}
-                                                                >
-                                                                    <i className="bi bi-trash me-2"></i>{" "}
-                                                                    Xóa
-                                                                </button>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-
-                                                <div className="card-body">
-                                                    <div className="d-flex justify-content-between align-items-center mb-3">
-                                                        <div className="d-flex align-items-center">
-                                                            <div className="icon-md bg-info bg-opacity-10 text-info rounded-circle">
-                                                                <i className="bi bi-telephone-fill"></i>
-                                                            </div>
-                                                            <h6 className="mb-0 ms-2 fw-light">
-                                                                Phone
-                                                            </h6>
-                                                        </div>
-                                                        <span className="fw-bold">
-                                                            {instructor.phone ||
-                                                                "N/A"}
-                                                        </span>
-                                                    </div>
-                                                    <div className="d-flex justify-content-between align-items-center mb-3">
-                                                        <div className="d-flex align-items-center">
-                                                            <div className="icon-md bg-warning bg-opacity-10 text-warning rounded-circle">
-                                                                <i className="bi bi-person-check-fill"></i>
-                                                            </div>
-                                                            <h6 className="mb-0 ms-2 fw-light">
-                                                                Status
-                                                            </h6>
-                                                        </div>
-                                                        <span className="fw-bold">
-                                                            {instructor.status ===
-                                                            "active"
-                                                                ? "Active"
-                                                                : instructor.status ===
-                                                                  "suspended"
-                                                                ? "Suspended"
-                                                                : "Inactive"}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="card-footer">
-                                                    <div className="d-flex justify-content-between">
-                                                        <h6 className="mb-0">
-                                                            <i className="bi bi-calendar fa-fw text-orange me-2"></i>
-                                                            <span className="text-body">
-                                                                Join at:
-                                                            </span>{" "}
-                                                            {formatDate(
-                                                                instructor.email_verified_at
-                                                            )}
-                                                        </h6>
-                                                        <div>
-                                                            <Link
-                                                                href={route(
-                                                                    "admin.instructors.show",
-                                                                    {
-                                                                        id: instructor.id,
-                                                                    }
-                                                                )}
-                                                                className="btn btn-sm btn-outline-secondary me-2"
-                                                            >
-                                                                <i className="bi bi-eye-fill"></i>
-                                                            </Link>
-
-                                                            <button
-                                                                className="btn btn-sm btn-outline-danger"
-                                                                onClick={() => {
-                                                                    setSelectedUser(
-                                                                        instructor
-                                                                    ); // lưu user muốn chặn
-                                                                    setShowBlockModal(
-                                                                        true
-                                                                    ); // mở modal xác nhận
-                                                                }}
-                                                            >
-                                                                <i className="fas fa-ban"></i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div
-                                            className="card mb-3"
-                                            key={instructor.id}
-                                        >
-                                            <div className="card-body d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h5 className="mb-1">
-                                                        {instructor.name}
-                                                    </h5>
-                                                    <p className="mb-1 text-muted">
-                                                        {instructor.email}
-                                                    </p>
-                                                    <small>
-                                                        Join at:{" "}
-                                                        {formatDate(
-                                                            instructor.email_verified_at
-                                                        )}
-                                                    </small>
-                                                </div>
-                                                <div>
-                                                    <Link
-                                                        href={route(
-                                                            "admin.instructors.show",
-                                                            {
-                                                                id: instructor.id,
-                                                            }
-                                                        )}
-                                                        className="btn btn-sm btn-outline-secondary me-2"
-                                                    >
-                                                        <i className="bi bi-eye-fill"></i>
-                                                    </Link>
-                                                    <button
-                                                        className="btn btn-sm btn-outline-danger"
-                                                        onClick={() => {
-                                                            setSelectedUser(
-                                                                instructor
-                                                            ); // lưu user muốn chặn
-                                                            setShowBlockModal(
-                                                                true
-                                                            ); // mở modal xác nhận
-                                                        }}
-                                                    >
-                                                        <i className="fas fa-ban"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )
-                                )
+                                instructors.data.map((instructor) => (
+                                    <InstructorCard
+                                        key={instructor.id}
+                                        instructor={instructor}
+                                        formatDate={formatDate}
+                                        viewType={activeTab}
+                                        onEdit={(user) => {
+                                            setSelectedUser(user);
+                                            setShowEditModal(true);
+                                        }}
+                                        onDelete={(id) => {
+                                            setConfirmDeleteId(id);
+                                            setShowConfirmModal(true);
+                                        }}
+                                        onBlock={(user) => {
+                                            setSelectedUser(user);
+                                            setShowBlockModal(true);
+                                        }}
+                                        onUnblock={(user) => {
+                                            setSelectedUser(user);
+                                            setShowUnblockModal(true);
+                                        }}
+                                    />
+                                ))
                             )}
                         </div>
-
                         {instructors.last_page > 1 && renderPagination()}
                     </div>
                 </div>
+
                 <CreateUserModal
                     show={showModal}
                     onClose={() => setShowModal(false)}
                 />
+
                 {showEditModal && selectedUser && (
                     <EditUserModal
                         show={showEditModal}
@@ -543,74 +241,40 @@ const AdminInstructorList = ({ instructors }) => {
                         }}
                     />
                 )}
-                {showConfirmModal && (
-                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-fade-in">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="bg-red-100 text-red-600 rounded-full p-2">
-                                    <i className="bi bi-exclamation-triangle-fill text-xl"></i>
-                                </div>
-                                <h2 className="text-lg font-bold text-gray-800">
-                                    Xác nhận xóa
-                                </h2>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-                                Bạn có chắc chắn muốn{" "}
-                                <span className="font-medium text-red-600">
-                                    xóa người dùng này
-                                </span>{" "}
-                                không? Thao tác này không thể hoàn tác.
-                            </p>
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    onClick={() => setShowConfirmModal(false)}
-                                    className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition"
-                                >
-                                    Hủy
-                                </button>
-                                <button
-                                    onClick={handleDelete}
-                                    className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-                                >
-                                    Xóa
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {showBlockModal && selectedUser && (
-                    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-                            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                                Xác nhận chặn người dùng
-                            </h2>
-                            <p className="text-sm text-gray-600 mb-6">
-                                Bạn có chắc chắn muốn{" "}
-                                <span className="font-semibold text-red-600">
-                                    chặn
-                                </span>{" "}
-                                tài khoản <strong>{selectedUser.name}</strong>{" "}
-                                không?
-                            </p>
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    onClick={() => setShowBlockModal(false)}
-                                    className="px-4 py-2 text-sm border rounded-lg text-gray-700 hover:bg-gray-100"
-                                >
-                                    Hủy
-                                </button>
-                                <button
-                                    onClick={() =>
-                                        handleBlockUser(selectedUser.id)
-                                    }
-                                    className="px-4 py-2 text-sm bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
-                                >
-                                    Chặn
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+
+                <ConfirmModal
+                    show={showConfirmModal}
+                    title="Xóa người dùng"
+                    message="Bạn có chắc chắn muốn xóa người dùng này?"
+                    confirmText="Xóa"
+                    cancelText="Hủy"
+                    onCancel={() => setShowConfirmModal(false)}
+                    onConfirm={handleDelete}
+                    isProcessing={isDeleting}
+                />
+
+                <ConfirmModal
+                    show={showBlockModal}
+                    title="Chặn người dùng"
+                    message="Bạn có chắc chắn muốn chặn người dùng này?"
+                    confirmText="Chặn"
+                    cancelText="Hủy"
+                    onCancel={() => setShowBlockModal(false)}
+                    onConfirm={handleBlockUser}
+                    isProcessing={isBlocking}
+                />
+
+                <ConfirmModal
+                    show={showUnblockModal}
+                    title="Mở chặn người dùng"
+                    message="Bạn có chắc chắn muốn mở chặn người dùng này?"
+                    confirmText="Mở chặn"
+                    cancelText="Hủy"
+                    onCancel={() => setShowUnblockModal(false)}
+                    onConfirm={handleUnblockUser}
+                    isProcessing={isUnblocking}
+                    type="success"
+                />
             </div>
         </AdminLayout>
     );
