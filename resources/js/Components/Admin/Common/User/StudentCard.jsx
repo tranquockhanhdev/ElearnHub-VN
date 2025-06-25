@@ -132,8 +132,9 @@ const StudentCard = ({
                     <div className="d-sm-flex justify-content-between align-items-center">
                         <h6 className="mb-2 mb-sm-0">
                             <i className="bi bi-calendar fa-fw text-orange me-2"></i>
-                            <span className="text-body">Join at:</span>{" "}
-                            {formatDate(student.email_verified_at)}
+                            <span className="text-body">Tham gia:</span>
+                            {""}
+                            {formatDate(student.created_at)}
                         </h6>
                         <div className="d-flex gap-2">
                             <Link

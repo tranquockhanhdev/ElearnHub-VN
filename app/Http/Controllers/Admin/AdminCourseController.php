@@ -19,7 +19,7 @@ class AdminCourseController extends Controller
     {
         $this->CourseService = $CourseService;
     }
-   public function index(Request $request)
+    public function index(Request $request)
 {
     $perPage = $request->input('per_page', 10);
     $search = $request->input('search');
@@ -27,13 +27,15 @@ class AdminCourseController extends Controller
     $status = $request->input('status');
     $sortBy = $request->input('sort_by', 'created_at');
     $sortOrder = $request->input('sort_order', 'desc');
-$instructor = $request->input('instructor');
+    $instructor = $request->input('instructor');
+    $tab = $request->input('tab', 'grid'); // 👈 giữ trạng thái tab
+
     $query = Course::with(['categories', 'instructor']);
 
+    if ($instructor) {
+        $query->where('instructor_id', $instructor);
+    }
 
-if ($instructor) {
-    $query->where('instructor_id', $instructor);
-}
     if ($search) {
         $query->where('title', 'like', '%' . $search . '%');
     }
@@ -50,8 +52,9 @@ if ($instructor) {
 
     $query->orderBy($sortBy, $sortOrder);
 
-   $courses = $query->paginate($perPage);
+    $courses = $query->paginate($perPage)->withQueryString();
 
+    // Xử lý đường dẫn ảnh nếu có
     $courses->getCollection()->transform(function ($course) {
         if ($course->img_url) {
             $course->img_url = asset('storage/bannercourse/' . basename($course->img_url));
@@ -63,20 +66,28 @@ if ($instructor) {
         'courses' => $courses,
         'instructors' => \App\Models\User::where('role_id', 2)->select('id', 'name')->get(),
         'categories' => \App\Models\Category::select('id', 'name')->get(),
+
+        // Truyền toàn bộ filters để đồng bộ với frontend
         'filters' => [
             'search' => $search,
             'category' => $category,
             'status' => $status,
             'sort_by' => $sortBy,
             'sort_order' => $sortOrder,
+            'instructor' => $instructor,
+            'tab' => $tab,
         ],
+
+        // Truyền thống kê tổng quan
         'stats' => [
-            'activated' => Course::where('status', 'active')->count(),
-            'inactivated' => Course::where('status', 'inactive')->count(),
+            'total' => Course::count(),
+            'active' => Course::where('status', 'active')->count(),
             'pending' => Course::where('status', 'pending')->count(),
+            'inactive' => Course::where('status', 'inactive')->count(),
         ],
     ]);
 }
+
 
     public function create()
     {
