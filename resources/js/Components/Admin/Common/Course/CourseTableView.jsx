@@ -67,6 +67,15 @@ const CourseTableView = ({ courses, onDelete, formatDate }) => {
                             <td>{formatDate(course.created_at)}</td>
                             <td className="text-center">
                                 <Link
+                                    href={route("admin.courses.show", {
+                                        id: course.id,
+                                    })}
+                                    className="btn btn-sm btn-outline-info me-2"
+                                    title="Xem chi tiết"
+                                >
+                                    <i className="bi bi-eye"></i>
+                                </Link>
+                                <Link
                                     href={route("admin.courses.edit", {
                                         id: course.id,
                                     })}
@@ -74,6 +83,7 @@ const CourseTableView = ({ courses, onDelete, formatDate }) => {
                                 >
                                     <i className="bi bi-pencil-square"></i>
                                 </Link>
+
                                 <button
                                     onClick={() => onDelete(course.id)}
                                     className="btn btn-sm btn-outline-danger"

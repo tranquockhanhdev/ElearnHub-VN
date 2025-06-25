@@ -61,6 +61,15 @@ const CourseGridView = ({ courses, onDelete, formatDate }) => {
                         </div>
                         <div className="card-footer d-flex justify-content-between">
                             <Link
+                                href={route("admin.courses.show", {
+                                    id: course.id,
+                                })}
+                                className="btn btn-sm btn-outline-info me-2"
+                                title="Xem chi tiết"
+                            >
+                                <i className="bi bi-eye"></i>
+                            </Link>
+                            <Link
                                 href={route("admin.courses.edit", {
                                     id: course.id,
                                 })}
@@ -68,6 +77,7 @@ const CourseGridView = ({ courses, onDelete, formatDate }) => {
                             >
                                 <i className="bi bi-pencil-square"></i>
                             </Link>
+
                             <button
                                 onClick={() => onDelete(course.id)}
                                 className="btn btn-sm btn-outline-danger"

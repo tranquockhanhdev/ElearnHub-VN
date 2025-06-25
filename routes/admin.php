@@ -72,4 +72,5 @@ Route::put('/admin/instructors/{user}/unblock', [AdminUserController::class, 'un
         ->name('admin.courses.update');
     Route::delete('/admin/courses/{id}', [AdminCourseController::class, 'destroy'])
         ->name('admin.courses.destroy');
+        Route::get('/admin/courses/{id}', [AdminCourseController::class, 'show'])->name('admin.courses.show');
 });
