@@ -44,7 +44,7 @@ class HandleInertiaRequests extends Middleware
                     'role' => $request->user()->role_id,
                 ] : null,
                 'instructor' => $request->user() && $request->user()->role_id == 2 ?
-                    \App\Models\Intructor::where('user_id', $request->user()->id)->first() : null,
+                    \App\Models\Instructor::where('user_id', $request->user()->id)->first() : null,
             ],
             'flash' => [
                 'success' => fn() => $request->session()->get('success'),

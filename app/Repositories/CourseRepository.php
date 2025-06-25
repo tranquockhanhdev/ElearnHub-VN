@@ -6,7 +6,7 @@ use App\Models\Category;
 use App\Models\Course;
 use App\Models\PaymentMethod;
 use App\Models\Payment;
-use App\Models\Intructor;
+use App\Models\Instructor;
 use Exception;
 
 class CourseRepository
@@ -367,8 +367,7 @@ class CourseRepository
             }
         ])
             ->where('id', $courseId)
-            ->where('status', 'approved');
-
+            ->where('status', 'active');
         return $query->first();
     }
 

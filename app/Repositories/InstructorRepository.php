@@ -8,7 +8,7 @@ use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\Models\Intructor;
+use App\Models\Instructor;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -146,17 +146,17 @@ class InstructorRepository
 
     public function getInstructorByUserId($userId)
     {
-        return Intructor::where('user_id', $userId)->first();
+        return Instructor::where('user_id', $userId)->first();
     }
 
     public function getInstructorWithUser($userId)
     {
-        return Intructor::with('user')->where('user_id', $userId)->first();
+        return Instructor::with('user')->where('user_id', $userId)->first();
     }
 
     public function createOrUpdateInstructor($userId, array $data)
     {
-        return Intructor::updateOrCreate(
+        return Instructor::updateOrCreate(
             ['user_id' => $userId],
             $data
         );
@@ -167,7 +167,7 @@ class InstructorRepository
         $instructor = $this->getInstructorByUserId($userId);
 
         if (!$instructor) {
-            $instructor = new Intructor(['user_id' => $userId]);
+            $instructor = new Instructor(['user_id' => $userId]);
         }
 
         $instructor->fill($data);

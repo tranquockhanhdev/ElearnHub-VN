@@ -11,11 +11,10 @@ class LessonProgress extends Model
 
     protected $table = 'lesson_progress';
 
-    // protected $guarded = []; // Mở nếu muốn tắt bảo vệ mass assignment
-
     protected $fillable = [
         'student_id',
         'lesson_id',
+        'resource_id',
         'is_complete',
     ];
 
@@ -29,5 +28,10 @@ class LessonProgress extends Model
     public function lesson()
     {
         return $this->belongsTo(Lesson::class);
+    }
+
+    public function resource()
+    {
+        return $this->belongsTo(Resource::class);
     }
 }
