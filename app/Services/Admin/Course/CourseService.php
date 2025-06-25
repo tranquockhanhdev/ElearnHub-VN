@@ -1,9 +1,9 @@
 <?php
 
 // app/Services/CourseService.php
-namespace App\Services;
+namespace App\Services\Admin\Course;
 
-use App\Repositories\CourseRepository;
+use App\Repositories\Admin\Course\CourseRepository;
 use App\Models\Course;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;

@@ -6,6 +6,7 @@ import { router } from "@inertiajs/react";
 import AdminLayout from "../../../Components/Layouts/AdminLayout";
 import CreateUserModal from "@/Pages/Admin/User/CreateUserModal";
 import EditUserModal from "@/Pages/Admin/User/EditUserModal";
+import { toast } from "react-toastify";
 export default function Settings({ setting, admins }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         site_name: setting?.site_name || "",
@@ -27,11 +28,8 @@ export default function Settings({ setting, admins }) {
     const { auth } = usePage().props;
     const admin = auth.user;
     useEffect(() => {
-        if (flash.success) {
-            setMessage(flash.success);
-            const timeout = setTimeout(() => setMessage(""), 3000);
-            return () => clearTimeout(timeout);
-        }
+        if (flash.success) toast.success(flash.success);
+        if (flash.error) toast.error(flash.error);
     }, [flash]);
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -79,24 +77,6 @@ export default function Settings({ setting, admins }) {
                         <h1 className="h3 mb-2 mb-sm-0">Admin Cài Đặt</h1>
                     </div>
                 </div>
-                {/* FLASH MESSAGE đẹp và rõ */}
-                {message && (
-                    <div className="row mb-3">
-                        <div className="col-12">
-                            <div
-                                className="alert alert-success alert-dismissible fade show"
-                                role="alert"
-                            >
-                                {message}
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    onClick={() => setMessage("")}
-                                ></button>
-                            </div>
-                        </div>
-                    </div>
-                )}
                 <div className="row g-4">
                     {/* Left menu */}
                     <div className="col-xl-3">

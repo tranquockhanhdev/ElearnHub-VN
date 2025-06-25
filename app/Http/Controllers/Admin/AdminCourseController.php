@@ -8,8 +8,8 @@ use Inertia\Inertia;
 use App\Models\Category;
 use App\Models\Course;
 use App\Models\User;
-use App\Http\Requests\CourseRequest;
-use App\Services\CourseService;
+use App\Http\Requests\Admin\Course\CourseRequest;
+use App\Services\Admin\Course\CourseService;
 
 
 class AdminCourseController extends Controller
