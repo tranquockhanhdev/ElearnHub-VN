@@ -51,7 +51,6 @@ const AdminCourseList = ({
         setIsDeleting(true);
         router.delete(route("admin.courses.destroy", { id: confirmDeleteId }), {
             onSuccess: () => {
-                toast.success("Đã xóa khóa học");
                 setShowConfirmModal(false);
                 setConfirmDeleteId(null);
             },
