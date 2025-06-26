@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import InstructorLayout from '../../Components/Layouts/InstructorLayout';
 import {
@@ -80,7 +80,11 @@ const CourseDetail = ({ course }) => {
             }
         ]
     });
-
+    useEffect(() => {
+        if (showAddQuiz) {
+            quizForm.setData('lesson_id', showAddQuiz);
+        }
+    }, [showAddQuiz]);
     // Form cho cập nhật order
     const orderForm = useForm({
         order: 1
@@ -171,14 +175,36 @@ const CourseDetail = ({ course }) => {
         }
     };
 
-    const handleAddQuiz = (e) => {
+    const handleAddQuiz = (e, lessonId) => {
         e.preventDefault();
+        quizForm.setData('lesson_id', lessonId);
         quizForm.post(route('instructor.courses.quizzes.store', course.id), {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
                 setShowAddQuiz(null);
                 quizForm.reset();
+                // Reset form với dữ liệu mặc định
+                quizForm.setData({
+                    lesson_id: '',
+                    title: '',
+                    duration_minutes: 30,
+                    pass_score: 70,
+                    questions: [
+                        {
+                            question_text: '',
+                            option_a: '',
+                            option_b: '',
+                            option_c: '',
+                            option_d: '',
+                            correct_option: 'A'
+                        }
+                    ]
+                });
+            },
+            onError: (errors) => {
+                console.error('Lỗi tạo quiz:', errors);
+                // Lỗi sẽ được hiển thị tự động thông qua quizForm.errors
             }
         });
     };
@@ -1413,8 +1439,18 @@ const CourseDetail = ({ course }) => {
                                                 {showAddQuiz === lesson.id && (
                                                     <div className="border-t p-4 bg-gray-50">
                                                         <h4 className="font-medium mb-3">Thêm Quiz</h4>
-                                                        <form onSubmit={handleAddQuiz}>
-                                                            <input type="hidden" value={lesson.id} onChange={(e) => quizForm.setData('lesson_id', lesson.id)} />
+
+                                                        {/* Hiển thị lỗi chung */}
+                                                        {(quizForm.errors.general || quizForm.errors.lesson_id) && (
+                                                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                                                                <div className="text-red-600 text-sm">
+                                                                    {quizForm.errors.general || quizForm.errors.lesson_id}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        <form onSubmit={(e) => handleAddQuiz(e, lesson.id)}>
+
                                                             <div className="space-y-4">
                                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                                     <div>
@@ -1428,6 +1464,11 @@ const CourseDetail = ({ course }) => {
                                                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                                             required
                                                                         />
+                                                                        {quizForm.errors.title && (
+                                                                            <div className="text-red-600 text-sm mt-1">
+                                                                                {quizForm.errors.title}
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                     <div>
                                                                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1439,8 +1480,14 @@ const CourseDetail = ({ course }) => {
                                                                             onChange={(e) => quizForm.setData('duration_minutes', parseInt(e.target.value))}
                                                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                                             min="1"
+                                                                            max="300"
                                                                             required
                                                                         />
+                                                                        {quizForm.errors.duration_minutes && (
+                                                                            <div className="text-red-600 text-sm mt-1">
+                                                                                {quizForm.errors.duration_minutes}
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                     <div>
                                                                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1455,6 +1502,11 @@ const CourseDetail = ({ course }) => {
                                                                             max="100"
                                                                             required
                                                                         />
+                                                                        {quizForm.errors.pass_score && (
+                                                                            <div className="text-red-600 text-sm mt-1">
+                                                                                {quizForm.errors.pass_score}
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                 </div>
 
@@ -1470,6 +1522,15 @@ const CourseDetail = ({ course }) => {
                                                                             + Thêm câu hỏi
                                                                         </button>
                                                                     </div>
+
+                                                                    {/* Hiển thị lỗi chung cho questions */}
+                                                                    {quizForm.errors.questions && (
+                                                                        <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-md">
+                                                                            <div className="text-red-600 text-sm">
+                                                                                {quizForm.errors.questions}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
 
                                                                     {quizForm.data.questions.map((question, index) => (
                                                                         <div key={index} className="border rounded-lg p-4 mb-3 bg-white">
