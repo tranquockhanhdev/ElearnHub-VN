@@ -33,7 +33,7 @@ const CourseDetail = ({ course }) => {
     const [selectedVideo, setSelectedVideo] = useState(null);
     const [showVideoModal, setShowVideoModal] = useState(false);
     const [editingResourceOrder, setEditingResourceOrder] = useState(null);
-
+    const [showEditQuiz, setShowEditQuiz] = useState(null);
     // Form cho thêm bài giảng
     const lessonForm = useForm({
         course_id: course.id,
@@ -66,6 +66,22 @@ const CourseDetail = ({ course }) => {
     // Form cho thêm quiz
     const quizForm = useForm({
         lesson_id: '',
+        title: '',
+        duration_minutes: 30,
+        pass_score: 70,
+        questions: [
+            {
+                question_text: '',
+                option_a: '',
+                option_b: '',
+                option_c: '',
+                option_d: '',
+                correct_option: 'A'
+            }
+        ]
+    });
+    // Form cho chỉnh sửa quiz
+    const editQuizForm = useForm({
         title: '',
         duration_minutes: 30,
         pass_score: 70,
@@ -184,27 +200,6 @@ const CourseDetail = ({ course }) => {
             onSuccess: () => {
                 setShowAddQuiz(null);
                 quizForm.reset();
-                // Reset form với dữ liệu mặc định
-                quizForm.setData({
-                    lesson_id: '',
-                    title: '',
-                    duration_minutes: 30,
-                    pass_score: 70,
-                    questions: [
-                        {
-                            question_text: '',
-                            option_a: '',
-                            option_b: '',
-                            option_c: '',
-                            option_d: '',
-                            correct_option: 'A'
-                        }
-                    ]
-                });
-            },
-            onError: (errors) => {
-                console.error('Lỗi tạo quiz:', errors);
-                // Lỗi sẽ được hiển thị tự động thông qua quizForm.errors
             }
         });
     };
@@ -227,7 +222,102 @@ const CourseDetail = ({ course }) => {
         const newQuestions = quizForm.data.questions.filter((_, i) => i !== index);
         quizForm.setData('questions', newQuestions);
     };
+    // Function để bắt đầu chỉnh sửa quiz
+    // Function để bắt đầu chỉnh sửa quiz
+    const handleEditQuiz = (quiz) => {
+        console.log('Original quiz data:', quiz);
+        console.log('Quiz questions:', quiz.questions);
 
+        setShowEditQuiz(quiz.id);
+
+        // Đảm bảo questions có dữ liệu đúng và correct_option được preserve
+        const questionsData = quiz.questions && quiz.questions.length > 0
+            ? quiz.questions.map(q => {
+                console.log('Processing question:', q);
+                return {
+                    question_text: q.question_text || '',
+                    option_a: q.option_a || '',
+                    option_b: q.option_b || '',
+                    option_c: q.option_c || '',
+                    option_d: q.option_d || '',
+                    correct_option: (q.correct_option || 'A').toString().toUpperCase() // Đảm bảo uppercase và string
+                };
+            })
+            : [{
+                question_text: '',
+                option_a: '',
+                option_b: '',
+                option_c: '',
+                option_d: '',
+                correct_option: 'A'
+            }];
+
+        console.log('Processed questions data:', questionsData);
+
+        editQuizForm.setData({
+            title: quiz.title || '',
+            duration_minutes: quiz.duration_minutes || 30,
+            pass_score: quiz.pass_score || 70,
+            questions: questionsData
+        });
+
+        // Log để kiểm tra sau khi setData
+        setTimeout(() => {
+            console.log('Form data after setData:', editQuizForm.data);
+        }, 100);
+    };
+
+    // Function để cập nhật quiz
+    const handleUpdateQuiz = (e, quizId) => {
+        e.preventDefault();
+        editQuizForm.put(route('instructor.courses.quizzes.update', [course.id, quizId]), {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                setShowEditQuiz(null);
+                editQuizForm.reset();
+            },
+            onError: (errors) => {
+                console.error('Lỗi cập nhật quiz:', errors);
+            }
+        });
+    };
+
+    // Function để xóa quiz
+    const handleDeleteQuiz = (quizId, quizTitle) => {
+        if (confirm(`Bạn có chắc chắn muốn xóa quiz "${quizTitle}"?`)) {
+            router.delete(route('instructor.courses.quizzes.destroy', [course.id, quizId]), {
+                preserveScroll: true,
+                preserveState: true,
+                onError: (errors) => {
+                    console.error('Lỗi xóa quiz:', errors);
+                }
+            });
+        }
+    };
+
+    // Function để thêm câu hỏi trong form chỉnh sửa
+    const addEditQuizQuestion = () => {
+        editQuizForm.setData('questions', [
+            ...editQuizForm.data.questions,
+            {
+                question_text: '',
+                option_a: '',
+                option_b: '',
+                option_c: '',
+                option_d: '',
+                correct_option: 'A'
+            }
+        ]);
+    };
+
+    // Function để xóa câu hỏi trong form chỉnh sửa
+    const removeEditQuizQuestion = (index) => {
+        if (editQuizForm.data.questions.length > 1) {
+            const newQuestions = editQuizForm.data.questions.filter((_, i) => i !== index);
+            editQuizForm.setData('questions', newQuestions);
+        }
+    };
     const toggleLessonExpand = (lessonId) => {
         setExpandedLessons(prev => ({
             ...prev,
@@ -1129,7 +1219,6 @@ const CourseDetail = ({ course }) => {
                                                                                         ❓ Quiz
                                                                                     </span>
                                                                                     <p className="font-medium">{lesson.quiz.title}</p>
-                                                                                    {/* Quiz Status Badge if available */}
                                                                                     {lesson.quiz.status && (
                                                                                         <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium border ${getStatusColor(lesson.quiz.status)}`}>
                                                                                             <span className="mr-1">{getStatusIcon(lesson.quiz.status)}</span>
@@ -1142,7 +1231,6 @@ const CourseDetail = ({ course }) => {
                                                                                     Điểm đậu: {lesson.quiz.pass_score}% •
                                                                                     {lesson.quiz.questions?.length || 0} câu hỏi
                                                                                 </p>
-                                                                                {/* Quiz Note if available */}
                                                                                 {lesson.quiz.note && (
                                                                                     <div className="mt-2 text-xs text-gray-600 italic bg-white px-2 py-1 rounded border-l-2 border-yellow-300">
                                                                                         <span className="font-medium">Ghi chú:</span> {lesson.quiz.note}
@@ -1150,10 +1238,18 @@ const CourseDetail = ({ course }) => {
                                                                                 )}
                                                                             </div>
                                                                             <div className="flex items-center space-x-2">
-                                                                                <button className="text-blue-600 hover:text-blue-800 p-1" title="Chỉnh sửa quiz">
+                                                                                <button
+                                                                                    onClick={() => handleEditQuiz(lesson.quiz)}
+                                                                                    className="text-blue-600 hover:text-blue-800 p-1"
+                                                                                    title="Chỉnh sửa quiz"
+                                                                                >
                                                                                     <PencilIcon className="h-4 w-4" />
                                                                                 </button>
-                                                                                <button className="text-red-600 hover:text-red-800 p-1" title="Xóa quiz">
+                                                                                <button
+                                                                                    onClick={() => handleDeleteQuiz(lesson.quiz.id, lesson.quiz.title)}
+                                                                                    className="text-red-600 hover:text-red-800 p-1"
+                                                                                    title="Xóa quiz"
+                                                                                >
                                                                                     <TrashIcon className="h-4 w-4" />
                                                                                 </button>
                                                                             </div>
@@ -1439,16 +1535,6 @@ const CourseDetail = ({ course }) => {
                                                 {showAddQuiz === lesson.id && (
                                                     <div className="border-t p-4 bg-gray-50">
                                                         <h4 className="font-medium mb-3">Thêm Quiz</h4>
-
-                                                        {/* Hiển thị lỗi chung */}
-                                                        {(quizForm.errors.general || quizForm.errors.lesson_id) && (
-                                                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                                                                <div className="text-red-600 text-sm">
-                                                                    {quizForm.errors.general || quizForm.errors.lesson_id}
-                                                                </div>
-                                                            </div>
-                                                        )}
-
                                                         <form onSubmit={(e) => handleAddQuiz(e, lesson.id)}>
 
                                                             <div className="space-y-4">
@@ -1464,11 +1550,6 @@ const CourseDetail = ({ course }) => {
                                                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                                             required
                                                                         />
-                                                                        {quizForm.errors.title && (
-                                                                            <div className="text-red-600 text-sm mt-1">
-                                                                                {quizForm.errors.title}
-                                                                            </div>
-                                                                        )}
                                                                     </div>
                                                                     <div>
                                                                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1480,14 +1561,8 @@ const CourseDetail = ({ course }) => {
                                                                             onChange={(e) => quizForm.setData('duration_minutes', parseInt(e.target.value))}
                                                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                                             min="1"
-                                                                            max="300"
                                                                             required
                                                                         />
-                                                                        {quizForm.errors.duration_minutes && (
-                                                                            <div className="text-red-600 text-sm mt-1">
-                                                                                {quizForm.errors.duration_minutes}
-                                                                            </div>
-                                                                        )}
                                                                     </div>
                                                                     <div>
                                                                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1502,11 +1577,6 @@ const CourseDetail = ({ course }) => {
                                                                             max="100"
                                                                             required
                                                                         />
-                                                                        {quizForm.errors.pass_score && (
-                                                                            <div className="text-red-600 text-sm mt-1">
-                                                                                {quizForm.errors.pass_score}
-                                                                            </div>
-                                                                        )}
                                                                     </div>
                                                                 </div>
 
@@ -1522,15 +1592,6 @@ const CourseDetail = ({ course }) => {
                                                                             + Thêm câu hỏi
                                                                         </button>
                                                                     </div>
-
-                                                                    {/* Hiển thị lỗi chung cho questions */}
-                                                                    {quizForm.errors.questions && (
-                                                                        <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-md">
-                                                                            <div className="text-red-600 text-sm">
-                                                                                {quizForm.errors.questions}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
 
                                                                     {quizForm.data.questions.map((question, index) => (
                                                                         <div key={index} className="border rounded-lg p-4 mb-3 bg-white">
@@ -1641,6 +1702,212 @@ const CourseDetail = ({ course }) => {
                                                                     className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
                                                                 >
                                                                     {quizForm.processing ? 'Đang thêm...' : 'Thêm Quiz'}
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                )}
+                                                {/* Edit Quiz Form */}
+                                                {showEditQuiz === lesson.quiz?.id && (
+                                                    <div className="border-t p-4 bg-gray-50">
+                                                        <h4 className="font-medium mb-3">Chỉnh sửa Quiz</h4>
+
+                                                        {/* Hiển thị lỗi chung */}
+                                                        {(editQuizForm.errors.general || editQuizForm.errors.lesson_id) && (
+                                                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                                                                <div className="text-red-600 text-sm">
+                                                                    {editQuizForm.errors.general || editQuizForm.errors.lesson_id}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        <form onSubmit={(e) => handleUpdateQuiz(e, lesson.quiz.id)}>
+                                                            <div className="space-y-4">
+                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                                    <div>
+                                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                            Tiêu đề Quiz
+                                                                        </label>
+                                                                        <input
+                                                                            type="text"
+                                                                            value={editQuizForm.data.title}
+                                                                            onChange={(e) => editQuizForm.setData('title', e.target.value)}
+                                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                            required
+                                                                        />
+                                                                        {editQuizForm.errors.title && (
+                                                                            <div className="text-red-600 text-sm mt-1">
+                                                                                {editQuizForm.errors.title}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                            Thời gian (phút)
+                                                                        </label>
+                                                                        <input
+                                                                            type="number"
+                                                                            value={editQuizForm.data.duration_minutes}
+                                                                            onChange={(e) => editQuizForm.setData('duration_minutes', parseInt(e.target.value))}
+                                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                            required
+                                                                        />
+                                                                        {editQuizForm.errors.duration_minutes && (
+                                                                            <div className="text-red-600 text-sm mt-1">
+                                                                                {editQuizForm.errors.duration_minutes}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                            Điểm đậu (%)
+                                                                        </label>
+                                                                        <input
+                                                                            type="number"
+                                                                            value={editQuizForm.data.pass_score}
+                                                                            onChange={(e) => editQuizForm.setData('pass_score', parseInt(e.target.value))}
+                                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                            required
+                                                                        />
+                                                                        {editQuizForm.errors.pass_score && (
+                                                                            <div className="text-red-600 text-sm mt-1">
+                                                                                {editQuizForm.errors.pass_score}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Questions */}
+                                                                <div>
+                                                                    <div className="flex items-center justify-between mb-2">
+                                                                        <h5 className="font-medium">Câu hỏi</h5>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={addEditQuizQuestion}
+                                                                            className="text-blue-600 hover:text-blue-800 text-sm"
+                                                                        >
+                                                                            + Thêm câu hỏi
+                                                                        </button>
+                                                                    </div>
+
+                                                                    {/* Hiển thị lỗi chung cho questions */}
+                                                                    {editQuizForm.errors.questions && (
+                                                                        <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-md">
+                                                                            <div className="text-red-600 text-sm">
+                                                                                {editQuizForm.errors.questions}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {editQuizForm.data.questions.map((question, index) => (
+                                                                        <div key={index} className="border rounded-lg p-4 mb-3 bg-white">
+                                                                            <div className="flex items-center justify-between mb-2">
+                                                                                <h6 className="font-medium">Câu hỏi {index + 1}</h6>
+                                                                                {editQuizForm.data.questions.length > 1 && (
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => removeEditQuizQuestion(index)}
+                                                                                        className="text-red-600 hover:text-red-800"
+                                                                                    >
+                                                                                        <TrashIcon className="h-4 w-4" />
+                                                                                    </button>
+                                                                                )}
+                                                                            </div>
+
+                                                                            <div className="space-y-3">
+                                                                                <div>
+                                                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                                        Nội dung câu hỏi
+                                                                                    </label>
+                                                                                    <textarea
+                                                                                        value={question.question_text}
+                                                                                        onChange={(e) => {
+                                                                                            const newQuestions = [...editQuizForm.data.questions];
+                                                                                            newQuestions[index].question_text = e.target.value;
+                                                                                            editQuizForm.setData('questions', newQuestions);
+                                                                                        }}
+                                                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                        rows="2"
+                                                                                        required
+                                                                                    />
+                                                                                    {editQuizForm.errors[`questions.${index}.question_text`] && (
+                                                                                        <div className="text-red-600 text-sm mt-1">
+                                                                                            {editQuizForm.errors[`questions.${index}.question_text`]}
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+
+                                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                                    {['A', 'B', 'C', 'D'].map((option) => (
+                                                                                        <div key={option}>
+                                                                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                                                Đáp án {option}
+                                                                                            </label>
+                                                                                            <input
+                                                                                                type="text"
+                                                                                                value={question[`option_${option.toLowerCase()}`]}
+                                                                                                onChange={(e) => {
+                                                                                                    const newQuestions = [...editQuizForm.data.questions];
+                                                                                                    newQuestions[index][`option_${option.toLowerCase()}`] = e.target.value;
+                                                                                                    editQuizForm.setData('questions', newQuestions);
+                                                                                                }}
+                                                                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                                required
+                                                                                            />
+                                                                                            {editQuizForm.errors[`questions.${index}.option_${option.toLowerCase()}`] && (
+                                                                                                <div className="text-red-600 text-sm mt-1">
+                                                                                                    {editQuizForm.errors[`questions.${index}.option_${option.toLowerCase()}`]}
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+
+                                                                                <div>
+                                                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                                        Đáp án đúng
+                                                                                    </label>
+                                                                                    <select
+                                                                                        value={question.correct_option.toUpperCase()}
+                                                                                        onChange={(e) => {
+                                                                                            const newQuestions = [...editQuizForm.data.questions];
+                                                                                            newQuestions[index].correct_option = e.target.value;
+                                                                                            editQuizForm.setData('questions', newQuestions);
+                                                                                        }}
+                                                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                        required
+                                                                                    >
+                                                                                        <option value="A">A</option>
+                                                                                        <option value="B">B</option>
+                                                                                        <option value="C">C</option>
+                                                                                        <option value="D">D</option>
+                                                                                    </select>
+                                                                                    {editQuizForm.errors[`questions.${index}.correct_option`] && (
+                                                                                        <div className="text-red-600 text-sm mt-1">
+                                                                                            {editQuizForm.errors[`questions.${index}.correct_option`]}
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex justify-end space-x-3 mt-4">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowEditQuiz(null)}
+                                                                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                                                                >
+                                                                    Hủy
+                                                                </button>
+                                                                <button
+                                                                    type="submit"
+                                                                    disabled={editQuizForm.processing}
+                                                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                                                >
+                                                                    {editQuizForm.processing ? 'Đang cập nhật...' : 'Cập nhật Quiz'}
                                                                 </button>
                                                             </div>
                                                         </form>

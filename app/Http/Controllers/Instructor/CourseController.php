@@ -93,6 +93,8 @@ class CourseController extends Controller
             'categories',
             'enrollments.student',
             'lessons.resources',
+            'lessons.quiz',
+            'lessons.quiz.questions',
             'lessons' => function ($query) {
                 $query->orderBy('order', 'asc');
             },
