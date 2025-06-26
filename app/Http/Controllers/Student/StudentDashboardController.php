@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StudentRequest;
 use App\Services\StudentDashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,16 +52,8 @@ class StudentDashboardController extends Controller
     /**
      * Cập nhật profile
      */
-    public function updateProfile(Request $request)
+    public function updateProfile(StudentRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
-        ], [
-            'name.required' => 'Tên là bắt buộc',
-            'phone.max' => 'Số điện thoại không được quá 20 ký tự',
-        ]);
-
         try {
             $studentId = Auth::id();
             $updated = $this->studentDashboardService->updateProfile($studentId, $request->only([
@@ -89,18 +82,8 @@ class StudentDashboardController extends Controller
     /**
      * Cập nhật mật khẩu
      */
-    public function updatePassword(Request $request)
+    public function updatePassword(StudentRequest $request)
     {
-        $request->validate([
-            'current_password' => 'required',
-            'password' => ['required', 'confirmed', Password::min(8)],
-        ], [
-            'current_password.required' => 'Mật khẩu hiện tại là bắt buộc',
-            'password.required' => 'Mật khẩu mới là bắt buộc',
-            'password.min' => 'Mật khẩu mới phải có ít nhất 8 ký tự',
-            'password.confirmed' => 'Xác nhận mật khẩu không khớp'
-        ]);
-
         try {
             $studentId = Auth::id();
             $result = $this->studentDashboardService->changePassword(

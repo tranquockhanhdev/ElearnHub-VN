@@ -245,7 +245,12 @@ const Checkout = () => {
                                                                 onChange={handleInputChange}
                                                                 style={{ borderRadius: '12px' }}
                                                             />
-                                                            {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+                                                            {errors.name && (
+                                                                <div className="text-danger small mt-1">
+                                                                    <i className="bi bi-exclamation-triangle me-1"></i>
+                                                                    {errors.name}
+                                                                </div>
+                                                            )}
                                                         </div>
 
                                                         {/* Email */}
@@ -263,7 +268,12 @@ const Checkout = () => {
                                                                 onChange={handleInputChange}
                                                                 style={{ borderRadius: '12px' }}
                                                             />
-                                                            {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+                                                            {errors.email && (
+                                                                <div className="text-danger small mt-1">
+                                                                    <i className="bi bi-exclamation-triangle me-1"></i>
+                                                                    {errors.email}
+                                                                </div>
+                                                            )}
                                                         </div>
 
                                                         {/* Country */}
@@ -297,12 +307,6 @@ const Checkout = () => {
                                                         Phương thức thanh toán
                                                     </h5>
                                                     <p className="text-gray-400d mb-0 mt-1">Chọn phương thức thanh toán phù hợp với bạn</p>
-                                                    {errors.payment_method_id && (
-                                                        <div className="text-danger small mt-2">
-                                                            <i className="bi bi-exclamation-triangle me-1"></i>
-                                                            {errors.payment_method_id}
-                                                        </div>
-                                                    )}
                                                 </div>
                                                 <div className="card-body p-4">
                                                     {paymentMethods && paymentMethods.length > 0 ? (
@@ -394,6 +398,14 @@ const Checkout = () => {
                                                                 <i className="bi bi-info-circle me-2"></i>
                                                                 <small>Vui lòng chọn một phương thức thanh toán để tiếp tục</small>
                                                             </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Hiển thị lỗi phương thức thanh toán */}
+                                                    {errors.payment_method_id && (
+                                                        <div className="text-danger small mt-2">
+                                                            <i className="bi bi-exclamation-triangle me-1"></i>
+                                                            {errors.payment_method_id}
                                                         </div>
                                                     )}
                                                 </div>

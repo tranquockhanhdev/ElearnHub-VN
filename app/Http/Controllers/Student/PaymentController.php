@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StudentRequest;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -10,9 +11,13 @@ use Inertia\Inertia;
 
 class PaymentController extends Controller
 {
-    public function index(Request $request)
+    public function index(StudentRequest $request)
     {
-        $filters = $request->only(['status', 'search']);
+        $validated = $request->validated();
+        $filters = [
+            'status' => $validated['status'] ?? null,
+            'search' => $validated['search'] ?? null,
+        ];
 
         $query = Payment::with(['course', 'paymentMethod'])
             ->where('student_id', Auth::id())

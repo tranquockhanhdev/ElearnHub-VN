@@ -42,7 +42,7 @@ const CourseList = () => {
 						<i className="bi bi-check me-1"></i>Đã hoàn thành
 					</button>
 					<Link
-						href={route('student.course.show', course.id)}
+						href={route('student.course.learn', course.id)}
 						className="btn btn-sm btn-light me-1"
 					>
 						<i className="bi bi-arrow-repeat me-1"></i>Xem lại
@@ -52,7 +52,7 @@ const CourseList = () => {
 		} else {
 			return (
 				<Link
-					href={route('student.course.show', course.id)}
+					href={route('student.course.learn', course.id)}
 					className="btn btn-sm btn-primary-soft me-1 mb-1 mb-md-0"
 				>
 					<i className="bi bi-play-circle me-1"></i>Tiếp tục học
@@ -212,7 +212,7 @@ const CourseList = () => {
 																		</div>
 																		<div className="mb-0 ms-2">
 																			<h6>
-																				<Link href={route('student.courselist', course.id)}>
+																				<Link href={route('student.course.learn', course.id)}>
 																					{course.title}
 																				</Link>
 																			</h6>

@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StudentRequest;
+use App\Models\LessonProgress;
+use App\Models\Resource;
 use App\Services\StudentDashboardService;
 use App\Repositories\CourseRepository;
 use App\Repositories\ProgressRepository;
@@ -29,13 +32,18 @@ class CourseController extends Controller
     /**
      * Hiển thị danh sách khóa học đã đăng ký
      */
-    public function index(Request $request)
+    public function index(StudentRequest $request)
     {
         try {
             $studentId = Auth::id();
+            $validated = $request->validated();
+
             $filters = [
-                'search' => $request->get('search', ''),
-                'sort' => $request->get('sort', ''),
+                'search' => $validated['search'] ?? '',
+                'category' => $validated['category'] ?? null,
+                'status' => $validated['status'] ?? null,
+                'sort' => $validated['sort'] ?? 'enrolled_at',
+                'order' => $validated['order'] ?? 'desc',
             ];
 
             // Lấy khóa học đã đăng ký với phân trang
@@ -231,7 +239,7 @@ class CourseController extends Controller
     /**
      * Đánh dấu resource đã hoàn thành
      */
-    public function markResourceComplete(Request $request, $courseId, $resourceId)
+    public function markResourceComplete(StudentRequest $request, $courseId, $resourceId)
     {
         try {
             $studentId = Auth::id();
@@ -240,18 +248,16 @@ class CourseController extends Controller
             if (!$this->courseRepository->isUserEnrolled($studentId, $courseId)) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
-
             // Lấy resource và lesson
-            $resource = \App\Models\Resource::findOrFail($resourceId);
+            $resource = Resource::findOrFail($resourceId);
             $lesson = $resource->lesson;
 
             // Kiểm tra resource thuộc về khóa học
             if ($lesson->course_id != $courseId) {
                 return response()->json(['error' => 'Invalid resource'], 400);
             }
-
             // Tạo hoặc cập nhật progress
-            \App\Models\LessonProgress::updateOrCreate(
+            LessonProgress::updateOrCreate(
                 [
                     'student_id' => $studentId,
                     'lesson_id' => $lesson->id,
@@ -271,7 +277,7 @@ class CourseController extends Controller
     /**
      * Đánh dấu lesson đã hoàn thành
      */
-    public function markLessonComplete(Request $request, $courseId, $lessonId)
+    public function markLessonComplete(StudentRequest $request, $courseId, $lessonId)
     {
         try {
             $studentId = Auth::id();

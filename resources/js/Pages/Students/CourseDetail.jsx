@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
 import UserLayout from '../../Components/Layouts/UserLayout';
 import StudentVideoModal from '../../Components/StudentVideoModal';
+import ExternalVideoModal from '../../Components/ExternalVideoModal';
 import DocumentModal from '../../Components/DocumentModal';
+import axios from 'axios';
 import {
     PlayCircleIcon,
     DocumentTextIcon,
@@ -20,6 +22,7 @@ import {
 const CourseDetail = () => {
     const { course, progress, auth } = usePage().props;
     const [showVideoModal, setShowVideoModal] = useState(false);
+    const [showExternalVideoModal, setShowExternalVideoModal] = useState(false);
     const [selectedVideo, setSelectedVideo] = useState(null);
     const [showDocumentModal, setShowDocumentModal] = useState(false);
     const [selectedDocument, setSelectedDocument] = useState(null);
@@ -55,13 +58,11 @@ const CourseDetail = () => {
     // Đánh dấu document đã hoàn thành
     const markDocumentComplete = async (documentId) => {
         try {
-            await fetch(`/student/course/${course.id}/resource/${documentId}/complete`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            });
+            console.log('Marking document as complete:', '/student/course/' + course.id + '/resource/' + documentId + '/complete');
+            const response = await axios.post(`/student/course/${course.id}/resource/${documentId}/complete`);
+            if (response.data.success) {
+                console.log('Document marked as complete successfully');
+            }
         } catch (error) {
             console.error('Error marking document as complete:', error);
         }
@@ -198,6 +199,16 @@ const CourseDetail = () => {
         setExpandedLessons(newExpanded);
     };
 
+    // Kiểm tra xem video có phải external không
+    const isExternalVideo = (videoUrl) => {
+        if (!videoUrl) return false;
+
+        return videoUrl.includes('youtube.com') ||
+            videoUrl.includes('youtu.be') ||
+            videoUrl.includes('vimeo.com') ||
+            videoUrl.startsWith('http');
+    };
+
     // Xử lý click vào item
     const handleItemClick = (item, lesson, itemIndex) => {
         const itemCanAccess = canAccessItem(lesson, itemIndex, item);
@@ -218,7 +229,13 @@ const CourseDetail = () => {
         switch (item.type) {
             case 'video':
                 setSelectedVideo(item.data);
-                setShowVideoModal(true);
+
+                // Kiểm tra loại video và mở modal tương ứng
+                if (isExternalVideo(item.data.file_url)) {
+                    setShowExternalVideoModal(true);
+                } else {
+                    setShowVideoModal(true);
+                }
                 break;
             case 'document':
                 setSelectedDocument(item.data);
@@ -313,35 +330,32 @@ const CourseDetail = () => {
             <Head title={`Học: ${course.title}`} />
 
             <div className="min-h-screen bg-gray-50">
-                {/* Header */}
+                {/* Compact Header */}
                 <div className="bg-white shadow-sm border-b sticky top-0 z-40">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-between py-4">
-                            <div className="flex items-center space-x-4">
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6">
+                        <div className="flex items-center justify-between py-3">
+                            <div className="flex items-center space-x-3">
                                 <Link
                                     href={route('student.courselist')}
-                                    className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+                                    className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors"
                                 >
-                                    <ArrowLeftIcon className="w-5 h-5" />
-                                    <span>Quay lại</span>
+                                    <ArrowLeftIcon className="w-4 h-4" />
+                                    <span className="text-sm">Quay lại</span>
                                 </Link>
-                                <div className="border-l border-gray-300 pl-4">
-                                    <h1 className="text-xl font-bold text-gray-900 truncate max-w-md">
+                                <div className="border-l border-gray-300 pl-3">
+                                    <h1 className="text-lg font-semibold text-gray-900 truncate max-w-sm">
                                         {course.title}
                                     </h1>
-                                    <p className="text-sm text-gray-500">
-                                        {course.lessons?.length || 0} bài học
-                                    </p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center space-x-4">
+                            <div className="flex items-center space-x-3">
                                 <div className="text-sm text-gray-600">
-                                    Tiến trình: <span className="font-semibold text-blue-600">{progressPercentage}%</span>
+                                    <span className="font-medium text-blue-600">{progressPercentage}%</span>
                                 </div>
-                                <div className="w-32 bg-gray-200 rounded-full h-2">
+                                <div className="w-24 bg-gray-200 rounded-full h-1.5">
                                     <div
-                                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+                                        className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
                                         style={{ width: `${progressPercentage}%` }}
                                     ></div>
                                 </div>
@@ -350,27 +364,27 @@ const CourseDetail = () => {
                     </div>
                 </div>
 
-                {/* Main Content */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Main Content - Compact Design */}
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
 
                         {/* Course Content */}
-                        <div className="lg:col-span-2">
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                                <div className="p-6 border-b border-gray-200">
-                                    <div className="flex items-center space-x-3">
-                                        <BookOpenIcon className="w-6 h-6 text-blue-600" />
-                                        <h2 className="text-xl font-bold text-gray-900">Nội dung khóa học</h2>
+                        <div className="lg:col-span-3">
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                                {/* Simple Header */}
+                                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-2">
+                                            <BookOpenIcon className="w-4 h-4 text-blue-600" />
+                                            <h2 className="text-base font-semibold text-gray-900">Nội dung khóa học</h2>
+                                        </div>
+                                        <span className="text-xs text-gray-500">
+                                            {course.lessons?.length || 0} bài học
+                                        </span>
                                     </div>
-                                    <p className="text-gray-600 mt-2">
-                                        Thứ tự học: <span className="font-medium">Video → Quiz → Tài liệu</span>
-                                    </p>
-                                    <p className="text-sm text-gray-500 mt-1">
-                                        • Video: Học theo thứ tự • Quiz: Sau khi hoàn thành video • Tài liệu: Xem tự do
-                                    </p>
                                 </div>
 
-                                <div className="divide-y divide-gray-100">
+                                <div className="divide-y divide-gray-50">
                                     {course.lessons?.map((lesson, lessonIndex) => {
                                         const items = getLessonItems(lesson);
                                         const canAccess = canAccessLesson(lessonIndex);
@@ -381,44 +395,41 @@ const CourseDetail = () => {
                                             <div key={lesson.id} className="lesson-item">
                                                 <button
                                                     onClick={() => canAccess && toggleLesson(lesson.id)}
-                                                    className={`w-full p-6 text-left hover:bg-gray-50 transition-colors ${!canAccess ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                                                    className={`w-full px-4 py-3 text-left hover:bg-gray-25 transition-colors ${!canAccess ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
                                                         }`}
                                                     disabled={!canAccess}
                                                 >
                                                     <div className="flex items-center justify-between">
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center space-x-3 mb-2">
-                                                                <div className={`
-                                                                    w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
-                                                                    ${statusBadge.color.includes('green') ? 'bg-green-500 text-white' :
-                                                                        statusBadge.color.includes('blue') ? 'bg-blue-500 text-white' :
-                                                                            statusBadge.color.includes('yellow') ? 'bg-yellow-500 text-white' :
-                                                                                'bg-gray-300 text-gray-600'}
-                                                                `}>
-                                                                    {statusBadge.color.includes('green') ? '✓' : lessonIndex + 1}
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <h3 className="font-semibold text-gray-900 truncate">
-                                                                        {lesson.title}
-                                                                    </h3>
-                                                                    <div className="flex items-center space-x-2 mt-1">
-                                                                        <span className="text-xs text-gray-500">
-                                                                            {items.filter(i => i.type === 'video').length} video, {' '}
-                                                                            {lesson.quiz ? '1 quiz, ' : ''}
-                                                                            {items.filter(i => i.type === 'document').length} tài liệu
-                                                                        </span>
-                                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge.color}`}>
-                                                                            {statusBadge.text}
-                                                                        </span>
-                                                                    </div>
+                                                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                                            <div className={`
+                                                                w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
+                                                                ${statusBadge.color.includes('green') ? 'bg-green-500 text-white' :
+                                                                    statusBadge.color.includes('blue') ? 'bg-blue-500 text-white' :
+                                                                        statusBadge.color.includes('yellow') ? 'bg-yellow-500 text-white' :
+                                                                            'bg-gray-300 text-gray-600'}
+                                                            `}>
+                                                                {statusBadge.color.includes('green') ? '✓' : lessonIndex + 1}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <h3 className="font-medium text-gray-900 truncate text-sm">
+                                                                    {lesson.title}
+                                                                </h3>
+                                                                <div className="flex items-center space-x-2 mt-0.5">
+                                                                    <span className="text-xs text-gray-500">
+                                                                        {items.filter(i => i.type === 'video').length} video
+                                                                        {lesson.quiz ? ', 1q' : ''}
+                                                                        {items.filter(i => i.type === 'document').length > 0 ? `, ${items.filter(i => i.type === 'document').length} tài liệu` : ''}
+                                                                    </span>
+                                                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${statusBadge.color}`}>
+                                                                        {statusBadge.text}
+                                                                    </span>
                                                                 </div>
                                                             </div>
                                                         </div>
-
-                                                        <div className="ml-4 flex items-center space-x-2">
-                                                            {!canAccess && <LockClosedIcon className="w-5 h-5 text-gray-400" />}
+                                                        <div className="flex items-center space-x-1 ml-2">
+                                                            {!canAccess && <LockClosedIcon className="w-4 h-4 text-gray-400" />}
                                                             <ChevronDownIcon className={`
-                                                                w-5 h-5 text-gray-400 transform transition-transform duration-200
+                                                                w-4 h-4 text-gray-400 transform transition-transform duration-200
                                                                 ${isExpanded ? 'rotate-180' : ''}
                                                             `} />
                                                         </div>
@@ -426,7 +437,7 @@ const CourseDetail = () => {
                                                 </button>
 
                                                 {isExpanded && canAccess && (
-                                                    <div className="bg-gray-50 border-t border-gray-100">
+                                                    <div className="bg-gray-25 border-t border-gray-100">
                                                         {items.map((item, itemIndex) => {
                                                             const statusInfo = getItemStatusInfo(item, lesson, itemIndex);
 
@@ -435,11 +446,11 @@ const CourseDetail = () => {
                                                                     key={item.id}
                                                                     onClick={() => handleItemClick(item, lesson, itemIndex)}
                                                                     className={`
-                                                                        w-full px-8 py-4 text-left hover:bg-white transition-colors 
-                                                                        flex items-center space-x-4 border-b border-gray-100 last:border-b-0
+                                                                        w-full px-6 py-2.5 text-left hover:bg-white transition-colors 
+                                                                        flex items-center space-x-3 border-b border-gray-50 last:border-b-0
                                                                         ${!statusInfo.canAccess
                                                                             ? 'opacity-50 cursor-not-allowed'
-                                                                            : 'cursor-pointer hover:shadow-sm'
+                                                                            : 'cursor-pointer'
                                                                         }
                                                                     `}
                                                                     disabled={!statusInfo.canAccess}
@@ -450,32 +461,24 @@ const CourseDetail = () => {
 
                                                                     <div className="flex-1 min-w-0">
                                                                         <h4 className={`
-                                                                            font-medium truncate
+                                                                            text-sm font-medium truncate
                                                                             ${item.isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}
                                                                         `}>
                                                                             {item.title}
                                                                         </h4>
-                                                                        <div className="flex items-center space-x-2 mt-1">
+                                                                        <div className="flex items-center space-x-2 mt-0.5">
                                                                             <span className={`
-                                                                                text-xs px-2 py-0.5 rounded-full font-medium
-                                                                                ${item.type === 'video' ? 'bg-blue-100 text-blue-800' :
-                                                                                    item.type === 'document' ? 'bg-orange-100 text-orange-800' :
-                                                                                        'bg-purple-100 text-purple-800'}
+                                                                                text-xs px-1.5 py-0.5 rounded font-medium
+                                                                                ${item.type === 'video' ? 'bg-blue-50 text-blue-700' :
+                                                                                    item.type === 'document' ? 'bg-orange-50 text-orange-700' :
+                                                                                        'bg-purple-50 text-purple-700'}
                                                                             `}>
                                                                                 {item.type === 'video' ? 'Video' :
                                                                                     item.type === 'document' ? 'Tài liệu' : 'Quiz'}
-                                                                                {item.originalOrder > 0 && ` #${item.originalOrder}`}
                                                                             </span>
-                                                                            {statusInfo.message && (
-                                                                                <span className={`text-xs font-medium ${item.type === 'document' ? 'text-blue-600' :
-                                                                                    statusInfo.canAccess ? 'text-green-600' : 'text-orange-600'
-                                                                                    }`}>
-                                                                                    • {statusInfo.message}
-                                                                                </span>
-                                                                            )}
                                                                             {item.duration && (
                                                                                 <span className="text-xs text-gray-500">
-                                                                                    • {item.duration}
+                                                                                    {item.duration}
                                                                                 </span>
                                                                             )}
                                                                         </div>
@@ -483,9 +486,7 @@ const CourseDetail = () => {
 
                                                                     <div className="flex-shrink-0">
                                                                         {item.isCompleted && (
-                                                                            <div className="flex items-center space-x-1 text-green-600">
-                                                                                <CheckCircleIcon className="w-4 h-4" />
-                                                                            </div>
+                                                                            <CheckCircleIcon className="w-4 h-4 text-green-500" />
                                                                         )}
                                                                         {!statusInfo.canAccess && (
                                                                             <LockClosedIcon className="w-4 h-4 text-gray-400" />
@@ -503,58 +504,37 @@ const CourseDetail = () => {
                             </div>
                         </div>
 
-                        {/* Sidebar - Course Info */}
+                        {/* Compact Sidebar */}
                         <div className="lg:col-span-1">
-                            <div className="sticky top-24 space-y-6">
-                                {/* Course Info Card */}
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <div className="sticky top-20 space-y-4">
+                                {/* Course Progress Card */}
+                                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                                     <div className="text-center">
-                                        <img
-                                            src={course.img_url ? `/storage/${course.img_url}` : '/images/default-course.jpg'}
-                                            alt={course.title}
-                                            className="w-full h-32 object-cover rounded-lg mb-4"
-                                        />
-                                        <h3 className="font-bold text-gray-900 mb-2">{course.title}</h3>
-                                        <p className="text-sm text-gray-600 mb-4">
-                                            Giảng viên: {course.instructor?.name}
-                                        </p>
-
-                                        <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4">
-                                            <div className="text-2xl font-bold text-blue-600 mb-1">
-                                                {progressPercentage}%
-                                            </div>
-                                            <div className="text-sm text-blue-700">
-                                                Tiến độ hoàn thành
-                                            </div>
-                                            <div className="w-full bg-blue-200 rounded-full h-2 mt-2">
-                                                <div
-                                                    className="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                                                    style={{ width: `${progressPercentage}%` }}
-                                                ></div>
+                                        <div className="relative mb-3">
+                                            <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                                                <span className="text-white font-bold text-lg">{progressPercentage}%</span>
                                             </div>
                                         </div>
+                                        <h3 className="font-semibold text-gray-900 text-sm mb-1">Tiến độ học tập</h3>
+                                        <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                                            <div
+                                                className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
+                                                style={{ width: `${progressPercentage}%` }}
+                                            ></div>
+                                        </div>
+                                        <p className="text-xs text-gray-600">
+                                            Giảng viên: <span className="font-medium">{course.instructor?.name}</span>
+                                        </p>
                                     </div>
                                 </div>
 
-                                {/* Learning Tips */}
-                                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border border-yellow-200 p-6">
-                                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                                        <ClockIcon className="w-5 h-5 text-yellow-600 mr-2" />
-                                        Quy tắc học tập
-                                    </h4>
-                                    <ul className="text-sm text-gray-700 space-y-2">
-                                        <li className="flex items-start">
-                                            <span className="text-blue-600 mr-2">1.</span>
-                                            <span><strong>Video:</strong> Xem theo thứ tự, hoàn thành 85% để mở khóa tiếp theo</span>
-                                        </li>
-                                        <li className="flex items-start">
-                                            <span className="text-purple-600 mr-2">2.</span>
-                                            <span><strong>Quiz:</strong> Mở sau khi hoàn thành tất cả video trong bài</span>
-                                        </li>
-                                        <li className="flex items-start">
-                                            <span className="text-orange-600 mr-2">3.</span>
-                                            <span><strong>Tài liệu:</strong> Có thể xem và tải về bất cứ lúc nào</span>
-                                        </li>
+                                {/* Quick Info */}
+                                <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
+                                    <h4 className="font-medium text-blue-900 mb-2 text-sm">Quy tắc học</h4>
+                                    <ul className="text-xs text-blue-800 space-y-1">
+                                        <li>• Video: Xem theo thứ tự</li>
+                                        <li>• Quiz: Sau khi hoàn thành video</li>
+                                        <li>• Tài liệu: Xem tự do</li>
                                     </ul>
                                 </div>
                             </div>
@@ -563,10 +543,19 @@ const CourseDetail = () => {
                 </div>
             </div>
 
-            {/* Student Video Modal */}
+            {/* Student Video Modal - cho video local files */}
             <StudentVideoModal
                 isOpen={showVideoModal}
                 onClose={() => setShowVideoModal(false)}
+                video={selectedVideo}
+                courseId={course.id}
+                onVideoComplete={handleVideoComplete}
+            />
+
+            {/* External Video Modal - cho YouTube/Vimeo/HTTP videos */}
+            <ExternalVideoModal
+                isOpen={showExternalVideoModal}
+                onClose={() => setShowExternalVideoModal(false)}
                 video={selectedVideo}
                 courseId={course.id}
                 onVideoComplete={handleVideoComplete}

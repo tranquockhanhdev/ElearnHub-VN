@@ -186,9 +186,58 @@ class StudentDashboardService
     private function processCourseWithProgress($enrollment, int $studentId): array
     {
         $course = $enrollment->course;
+
+        // Đếm tổng số items cần hoàn thành (resources + quizzes)
+        $totalItems = 0;
+        $completedItems = 0;
+
+        foreach ($course->lessons as $lesson) {
+            // Đếm resources trong lesson
+            $totalItems += $lesson->resources->count();
+
+            // Đếm quiz nếu có
+            if ($lesson->quiz) {
+                $totalItems++;
+            }
+        }
+
+        // Đếm items đã hoàn thành
+        if ($totalItems > 0) {
+            // Đếm resources đã hoàn thành
+            $completedResources = \App\Models\LessonProgress::where('student_id', $studentId)
+                ->whereHas('lesson', function ($query) use ($course) {
+                    $query->where('course_id', $course->id);
+                })
+                ->where('is_complete', true)
+                ->whereNotNull('resource_id')
+                ->count();
+
+            // Đếm quizzes đã pass
+            $completedQuizzes = \App\Models\QuizAttempt::where('student_id', $studentId)
+                ->whereHas('quiz.lesson', function ($query) use ($course) {
+                    $query->where('course_id', $course->id);
+                })
+                ->selectRaw('quiz_id, MAX(score_percent) as best_score')
+                ->groupBy('quiz_id')
+                ->get()
+                ->filter(function ($attempt) {
+                    $quiz = \App\Models\Quiz::find($attempt->quiz_id);
+                    return $quiz && $attempt->best_score >= $quiz->pass_score;
+                })
+                ->count();
+
+            $completedItems = $completedResources + $completedQuizzes;
+        }
+
+        // Tính progress an toàn
+        $progress = $totalItems > 0 ? min(round(($completedItems / $totalItems) * 100), 100) : 0;
+
+        // Đếm lessons để hiển thị
         $totalLessons = $course->lessons->count();
-        $completedLessons = $this->progressRepository->getCompletedLessonsCount($studentId, $course->id);
-        $progress = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
+        $completedLessons = min($completedItems, $totalLessons); // Đảm bảo không vượt quá tổng số lessons
+
+        // Xác định khóa học đã hoàn thành: progress = 100% VÀ completed_lessons = total_lessons
+        $isCompleted = ($progress === 100) && ($completedLessons === $totalLessons);
 
         return [
             'id' => $course->id,
@@ -198,7 +247,7 @@ class StudentDashboardService
             'total_lessons' => $totalLessons,
             'completed_lessons' => $completedLessons,
             'progress' => $progress,
-            'is_completed' => $progress === 100,
+            'is_completed' => $isCompleted,
             'enrollment_date' => $enrollment->created_at->format('d/m/Y'),
             'last_accessed' => $enrollment->updated_at->format('d/m/Y H:i')
         ];
