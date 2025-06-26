@@ -3,7 +3,7 @@ import { Link } from "@inertiajs/react";
 import { usePage, Head, router } from "@inertiajs/react";
 import AdminLayout from "../../../Components/Layouts/AdminLayout";
 import { route } from "ziggy-js";
-
+import { toast } from "react-toastify";
 export default function InstructorDetail({ instructor, courses }) {
     const { courseStats } = usePage().props;
 
@@ -25,11 +25,8 @@ export default function InstructorDetail({ instructor, courses }) {
     });
 
     useEffect(() => {
-        if (flash.success) {
-            setMessage(flash.success);
-            const timeout = setTimeout(() => setMessage(""), 3000);
-            return () => clearTimeout(timeout);
-        }
+        if (flash.success) toast.success(flash.success);
+        if (flash.error) toast.error(flash.error);
     }, [flash]);
 
     const [avatarFile, setAvatarFile] = useState(null);
@@ -120,7 +117,9 @@ export default function InstructorDetail({ instructor, courses }) {
                 {/* Title */}
                 <div className="row mb-4">
                     <div className="col-12">
-                        <h1 className="h3 mb-0 text-dark">Instructor Detail</h1>
+                        <h1 className="h3 mb-0 text-dark">
+                            Chi Tiết Giảng Viên
+                        </h1>
                     </div>
                 </div>
                 {/* FLASH MESSAGE đẹp và rõ */}
@@ -147,7 +146,7 @@ export default function InstructorDetail({ instructor, courses }) {
                         <div className="card border rounded-3 shadow-sm h-100">
                             <div className="card-header bg-light border-bottom">
                                 <h5 className="card-header-title mb-0 text-dark">
-                                    Personal Information
+                                    Thông Tin Cá Nhân
                                 </h5>
                             </div>
                             <div className="card-body">
@@ -183,13 +182,13 @@ export default function InstructorDetail({ instructor, courses }) {
                                 {/* Info List */}
                                 <ul className="list-group list-group-borderless">
                                     <li className="list-group-item">
-                                        <strong>Name:</strong>{" "}
+                                        <strong>Tên:</strong>{" "}
                                         <span className="text-dark">
                                             {instructor.name}
                                         </span>
                                     </li>
                                     <li className="list-group-item">
-                                        <strong>Mobile:</strong>{" "}
+                                        <strong>SĐT:</strong>{" "}
                                         <span className="text-dark">
                                             {instructor.phone}
                                         </span>
@@ -201,7 +200,7 @@ export default function InstructorDetail({ instructor, courses }) {
                                         </span>
                                     </li>
                                     <li className="list-group-item">
-                                        <strong>Joining Date:</strong>{" "}
+                                        <strong>Tham Gia Ngày:</strong>{" "}
                                         <span className="text-dark">
                                             {instructor.created_at}
                                         </span>
@@ -214,7 +213,7 @@ export default function InstructorDetail({ instructor, courses }) {
                                         </span>
                                     </li>
                                     <li className="list-group-item">
-                                        <strong>Social:</strong>{" "}
+                                        <strong>MXH:</strong>{" "}
                                         <div className="mt-1 d-flex gap-2">
                                             {instructor.instructor
                                                 ?.facebook_url && (
@@ -276,7 +275,7 @@ export default function InstructorDetail({ instructor, courses }) {
                         <div className="card border rounded-3 shadow-sm h-100">
                             <div className="card-header bg-light border-bottom">
                                 <h5 className="card-header-title mb-0 text-dark">
-                                    Course Statistics
+                                    Thống Kê Khóa Học
                                 </h5>
                             </div>
                             <div className="card-body">
@@ -285,7 +284,7 @@ export default function InstructorDetail({ instructor, courses }) {
                                     <div className="d-flex justify-content-between align-items-center p-3 bg-primary bg-opacity-10 rounded border">
                                         <div>
                                             <h6 className="mb-1 text-primary">
-                                                Total Courses
+                                                Số Lượng Khóa Học
                                             </h6>
                                             <span className="fw-bold fs-5 text-dark">
                                                 {totalCourses}
@@ -298,7 +297,7 @@ export default function InstructorDetail({ instructor, courses }) {
                                     <div className="d-flex justify-content-between align-items-center p-3 bg-success bg-opacity-10 rounded border">
                                         <div>
                                             <h6 className="mb-1 text-success">
-                                                Active
+                                                Hoạt Động
                                             </h6>
                                             <span className="fw-bold fs-5 text-dark">
                                                 {activeCourses}
@@ -311,7 +310,7 @@ export default function InstructorDetail({ instructor, courses }) {
                                     <div className="d-flex justify-content-between align-items-center p-3 bg-warning bg-opacity-10 rounded border">
                                         <div>
                                             <h6 className="mb-1 text-warning">
-                                                Pending
+                                                Chờ Duyệt
                                             </h6>
                                             <span className="fw-bold fs-5 text-dark">
                                                 {pendingCourses}
@@ -324,7 +323,7 @@ export default function InstructorDetail({ instructor, courses }) {
                                     <div className="d-flex justify-content-between align-items-center p-3 bg-danger bg-opacity-10 rounded border">
                                         <div>
                                             <h6 className="mb-1 text-danger">
-                                                Inactive
+                                                Không Hoạt Động
                                             </h6>
                                             <span className="fw-bold fs-5 text-dark">
                                                 {inactiveCourses}
@@ -341,7 +340,9 @@ export default function InstructorDetail({ instructor, courses }) {
                     <div className="col-12">
                         <div className="card border rounded-3 shadow-sm">
                             <div className="card-header bg-light border-bottom d-flex justify-content-between align-items-center">
-                                <h5 className="mb-0 text-dark">Courses List</h5>
+                                <h5 className="mb-0 text-dark">
+                                    Danh Sách Khóa Học
+                                </h5>
                             </div>
                             <div className="card-body">
                                 <div className="table-responsive">
@@ -349,16 +350,16 @@ export default function InstructorDetail({ instructor, courses }) {
                                         <thead className="table-light">
                                             <tr>
                                                 <th className="text-dark">
-                                                    Course Name
+                                                    Tên Khóa Học
                                                 </th>
                                                 <th className="text-dark">
-                                                    Categories
+                                                    Danh Mục
                                                 </th>
                                                 <th className="text-dark">
-                                                    Status
+                                                    Trạng Thái
                                                 </th>
                                                 <th className="text-dark">
-                                                    Action
+                                                    Hành Động
                                                 </th>
                                             </tr>
                                         </thead>

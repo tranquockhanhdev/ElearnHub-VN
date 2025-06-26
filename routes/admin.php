@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminCourseCategoryController;
 use App\Http\Controllers\Admin\AdminCourseController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminSettingController;
+use App\Http\Controllers\Admin\AdminPaymentController;
 
 // Nhóm route chỉ dành cho admin (role_id = 1)
 Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
@@ -103,4 +104,11 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
 
     Route::post('/admin/settings/remove-logo', [AdminSettingController::class, 'removeLogo'])
         ->name('admin.settings.removeLogo'); // Xóa logo
+    
+    Route::get('/admin/payments', [AdminPaymentController::class, 'index'])
+        ->name('admin.payments.index');
+    Route::get('/admin/payments/{id}', [AdminPaymentController::class, 'show'])
+        ->name('admin.payments.show');
+    Route::get('/admin/payments/export/excel', [AdminPaymentController::class, 'exportExcel'])
+        ->name('admin.payments.export.excel');
 });

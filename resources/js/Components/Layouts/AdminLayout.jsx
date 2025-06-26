@@ -210,10 +210,10 @@ const AdminLayout = ({ children }) => {
                                                 ? "active"
                                                 : ""
                                         }`}
-                                        href="/admin-earning"
+                                        href={route("admin.payments.index")}
                                     >
                                         <i className="far fa-chart-bar fa-fw me-2"></i>
-                                        Báo Cáo
+                                        Thu Nhập
                                     </Link>
                                 </li>
 

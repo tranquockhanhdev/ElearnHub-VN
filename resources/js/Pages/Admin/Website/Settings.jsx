@@ -124,7 +124,7 @@ export default function Settings({ setting, admins }) {
                                             {/* Site Name */}
                                             <div className="col-lg-6">
                                                 <label className="form-label">
-                                                    Site Name
+                                                    Tên Website
                                                 </label>
                                                 <input
                                                     type="text"
@@ -147,7 +147,7 @@ export default function Settings({ setting, admins }) {
                                             {/* Contact Email */}
                                             <div className="col-lg-6">
                                                 <label className="form-label">
-                                                    Contact Email
+                                                    Email
                                                 </label>
                                                 <input
                                                     type="email"
@@ -170,7 +170,7 @@ export default function Settings({ setting, admins }) {
                                             {/* Support Phone */}
                                             <div className="col-lg-6">
                                                 <label className="form-label">
-                                                    Support Phone
+                                                    Số Điện Thoại
                                                 </label>
                                                 <input
                                                     type="text"
@@ -224,7 +224,7 @@ export default function Settings({ setting, admins }) {
                                             {/* Maintenance Mode */}
                                             <div className="col-12">
                                                 <label className="form-label">
-                                                    Maintenance Mode
+                                                    Chế Độ Bảo Trì
                                                 </label>
                                                 <select
                                                     className="form-select"
@@ -242,10 +242,10 @@ export default function Settings({ setting, admins }) {
                                                     }
                                                 >
                                                     <option value="0">
-                                                        Disabled
+                                                        Tắt
                                                     </option>
                                                     <option value="1">
-                                                        Enabled
+                                                        Bật
                                                     </option>
                                                 </select>
                                             </div>
@@ -258,8 +258,8 @@ export default function Settings({ setting, admins }) {
                                                     disabled={processing}
                                                 >
                                                     {processing
-                                                        ? "Saving..."
-                                                        : "Save Settings"}
+                                                        ? "Đang Lưu..."
+                                                        : "Lưu Cài Đặt"}
                                                 </button>
                                             </div>
                                         </form>
@@ -270,14 +270,14 @@ export default function Settings({ setting, admins }) {
                                 <div className="card mt-4">
                                     <div className="card-header border-bottom">
                                         <h5 className="card-header-title">
-                                            Upload Site Logo
+                                            Tải Lên Logo Website
                                         </h5>
                                     </div>
                                     <div className="card-body">
                                         {/* Current Logo */}
                                         <div className="mb-3">
                                             <label className="form-label">
-                                                Current Logo
+                                                Logo Hiện Tại
                                             </label>
                                             <br />
                                             {setting?.site_logo_url ? (
@@ -301,12 +301,15 @@ export default function Settings({ setting, admins }) {
                                                             type="submit"
                                                             className="btn btn-danger btn-sm"
                                                         >
-                                                            Remove Logo
+                                                            Xóa Logo
                                                         </button>
                                                     </form>
                                                 </div>
                                             ) : (
-                                                <span>No logo uploaded</span>
+                                                <span>
+                                                    Không có logo nào được tải
+                                                    lên
+                                                </span>
                                             )}
                                         </div>
 
@@ -314,7 +317,7 @@ export default function Settings({ setting, admins }) {
                                         <form onSubmit={handleLogoUpload}>
                                             <div className="mb-3">
                                                 <label className="form-label">
-                                                    Upload New Logo
+                                                    Tải Lên Logo Mới
                                                 </label>
                                                 <input
                                                     type="file"
@@ -333,7 +336,7 @@ export default function Settings({ setting, admins }) {
                                                 className="btn btn-primary"
                                                 disabled={processing}
                                             >
-                                                Upload Logo
+                                                Tải Lên
                                             </button>
                                         </form>
                                     </div>
@@ -346,14 +349,14 @@ export default function Settings({ setting, admins }) {
                                 <div className="card shadow">
                                     <div className="card-header border-bottom">
                                         <h5 className="card-header-title">
-                                            Thông tin Quản trị viên
+                                            Thông tin Admin
                                         </h5>
                                     </div>
                                     <div className="card-body">
                                         <div className="row g-4">
                                             <div className="col-lg-6">
                                                 <label className="form-label">
-                                                    Admin Name
+                                                    Tên
                                                 </label>
                                                 <input
                                                     type="text"
@@ -375,7 +378,7 @@ export default function Settings({ setting, admins }) {
                                             </div>
                                             <div className="col-lg-6">
                                                 <label className="form-label">
-                                                    Phone
+                                                    Số Điện Thoại
                                                 </label>
                                                 <input
                                                     type="text"
@@ -386,7 +389,7 @@ export default function Settings({ setting, admins }) {
                                             </div>
                                             <div className="col-lg-6">
                                                 <label className="form-label">
-                                                    Role
+                                                    Vai Trò
                                                 </label>
                                                 <input
                                                     type="text"
@@ -400,7 +403,7 @@ export default function Settings({ setting, admins }) {
                                 </div>
                                 <div className="mt-5">
                                     <div className="d-flex justify-content-between align-items-center mb-3">
-                                        <h5>Tài khoản Quản trị viên</h5>
+                                        <h5>Danh Sách Tài Khoản Admin</h5>
                                         <button
                                             className="btn btn-primary"
                                             onClick={() => setShowModal(true)}
@@ -415,11 +418,11 @@ export default function Settings({ setting, admins }) {
                                             <thead className="table-light">
                                                 <tr>
                                                     <th>#</th>
-                                                    <th>Name</th>
+                                                    <th>Tên</th>
                                                     <th>Email</th>
-                                                    <th>Phone</th>
-                                                    <th>Status</th>
-                                                    <th>Actions</th>
+                                                    <th>SĐT</th>
+                                                    <th>Trạng Thái</th>
+                                                    <th>Hành Động</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -513,8 +516,8 @@ export default function Settings({ setting, admins }) {
                                                             colSpan="6"
                                                             className="text-center"
                                                         >
-                                                            No admin accounts
-                                                            found.
+                                                            Không tìm thấy tài
+                                                            khoản admin.
                                                         </td>
                                                     </tr>
                                                 )}
