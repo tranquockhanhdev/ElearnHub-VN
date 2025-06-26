@@ -204,13 +204,12 @@ const AdminLayout = ({ children }) => {
                                 {/* Báo cáo */}
                                 <li className="nav-item">
                                     <Link
+                                        href={route("admin.payments.index")}
                                         className={`nav-link ${
-                                            window.location.pathname ===
-                                            "/admin-earning"
+                                            isRoute("admin.payments.index")
                                                 ? "active"
                                                 : ""
                                         }`}
-                                        href={route("admin.payments.index")}
                                     >
                                         <i className="far fa-chart-bar fa-fw me-2"></i>
                                         Thu Nhập
