@@ -5,8 +5,13 @@ namespace App\Services;
 
 use App\Repositories\CourseRepository;
 use App\Models\Course;
+use App\Models\CourseEdit;
+use App\Models\CourseEditCategory;
+use App\Enums\CourseEditStatus;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Exception;
 
@@ -65,6 +70,7 @@ class CourseService
 
             $data['slug'] = $slug;
             $data['img_url'] = $data['course_image'] ?? null;
+            unset($data['course_image']); // Remove course_image from data array
             $course = $this->CourseRepository->createCourse($data);
 
             if (isset($categoryIds) && !empty($categoryIds)) {
@@ -109,28 +115,42 @@ class CourseService
 
     public function updateCourse($id, array $data)
     {
-        $course = $this->getCourseById($id);
+        try {
+            $course = $this->getCourseById($id);
 
-        // Xử lý upload ảnh mới nếu có
-        if (isset($data['course_image']) && $data['course_image'] instanceof UploadedFile) {
-            // Xóa ảnh cũ
-            if ($course->course_image) {
-                $this->deleteCourseImage($course->course_image);
+            // Xử lý upload ảnh mới nếu có
+            if (isset($data['course_image']) && $data['course_image'] instanceof UploadedFile) {
+                // Xóa ảnh cũ
+                if ($course->img_url) {
+                    $this->deleteCourseImage($course->img_url);
+                }
+
+                $data['img_url'] = $this->uploadCourseImage($data['course_image']);
+                unset($data['course_image']);
             }
 
-            $data['course_image'] = $this->uploadCourseImage($data['course_image']);
+            // Xử lý category_ids - sync vào bảng course_category
+            if (isset($data['category_ids']) && is_array($data['category_ids'])) {
+                $categoryIds = $data['category_ids'];
+                unset($data['category_ids']);
+
+                // Sync categories (xóa cũ và thêm mới vào course_category)
+                $course->categories()->sync($categoryIds);
+            }
+
+            $result = $this->CourseRepository->updateCourse($id, $data);
+
+            return [
+                'success' => true,
+                'message' => 'Cập nhật khóa học thành công!',
+                'data' => $result
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+            ];
         }
-
-        // Xử lý category_ids - sync vào bảng course_category
-        if (isset($data['category_ids']) && is_array($data['category_ids'])) {
-            $categoryIds = $data['category_ids'];
-            unset($data['category_ids']);
-
-            // Sync categories (xóa cũ và thêm mới vào course_category)
-            $course->categories()->sync($categoryIds);
-        }
-
-        return $this->CourseRepository->updateCourse($id, $data);
     }
     public function getCourseBySlug($slug)
     {
@@ -145,8 +165,8 @@ class CourseService
         $course = $this->getCourseById($id);
 
         // Xóa ảnh nếu có
-        if ($course->course_image) {
-            $this->deleteCourseImage($course->course_image);
+        if ($course->img_url) {
+            $this->deleteCourseImage($course->img_url);
         }
 
         return $this->CourseRepository->deleteCourse($id);
@@ -320,5 +340,83 @@ class CourseService
         }
 
         return $this->isUserEnrolled($userId, $resource->lesson->course_id);
+    }
+
+    /**
+     * Tạo yêu cầu chỉnh sửa khóa học (cần admin duyệt)
+     */
+    public function createEditRequest($courseId, array $data)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Kiểm tra xem có yêu cầu chỉnh sửa đang pending không
+            $existingPendingEdit = CourseEdit::where('course_id', $courseId)
+                ->where('status', CourseEditStatus::Pending)
+                ->first();
+
+            if ($existingPendingEdit) {
+                // Cập nhật yêu cầu chỉnh sửa hiện có
+                $courseEdit = $existingPendingEdit;
+                $courseEdit->edited_title = $data['title'];
+                $courseEdit->edited_description = $data['description'];
+                $courseEdit->edited_price = $data['price'];
+
+                // Xử lý upload ảnh mới nếu có
+                if (isset($data['course_image']) && $data['course_image'] instanceof UploadedFile) {
+                    // Xóa ảnh cũ của edit request
+                    if ($courseEdit->edited_img_url) {
+                        $this->deleteCourseImage($courseEdit->edited_img_url);
+                    }
+                    $courseEdit->edited_img_url = $this->uploadCourseImage($data['course_image']);
+                }
+
+                $courseEdit->save();
+            } else {
+                // Tạo yêu cầu chỉnh sửa mới
+                $courseEdit = CourseEdit::create([
+                    'course_id' => $courseId,
+                    'submitted_by' => Auth::id(),
+                    'edited_title' => $data['title'],
+                    'edited_description' => $data['description'],
+                    'edited_price' => $data['price'],
+                    'status' => CourseEditStatus::Pending,
+                ]);
+
+                // Xử lý upload ảnh mới nếu có
+                if (isset($data['course_image']) && $data['course_image'] instanceof UploadedFile) {
+                    $courseEdit->edited_img_url = $this->uploadCourseImage($data['course_image']);
+                    $courseEdit->save();
+                }
+            }
+
+            // Xử lý categories
+            if (isset($data['category_ids']) && is_array($data['category_ids'])) {
+                // Xóa categories cũ của course edit
+                CourseEditCategory::where('course_edit_id', $courseEdit->id)->delete();
+
+                // Thêm categories mới
+                foreach ($data['category_ids'] as $categoryId) {
+                    CourseEditCategory::create([
+                        'course_edit_id' => $courseEdit->id,
+                        'category_id' => $categoryId,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => 'Yêu cầu chỉnh sửa đã được gửi thành công!',
+                'course_edit' => $courseEdit
+            ];
+        } catch (Exception $e) {
+            DB::rollback();
+            return [
+                'success' => false,
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+            ];
+        }
     }
 }

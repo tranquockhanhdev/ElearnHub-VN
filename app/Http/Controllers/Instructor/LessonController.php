@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\InstructorRequest;
 use App\Services\LessonService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -37,14 +38,8 @@ class LessonController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(InstructorRequest $request)
     {
-        $request->validate([
-            'course_id' => 'required|exists:courses,id',
-            'title' => 'required|string|max:255',
-            'order' => 'required|integer|min:1'
-        ]);
-
         // Kiểm tra quyền sở hữu khóa học
         $course = Course::findOrFail($request->course_id);
         if ($course->instructor_id !== Auth::id()) {
@@ -83,13 +78,8 @@ class LessonController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(InstructorRequest $request, $id)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'order' => 'required|integer|min:1'
-        ]);
-
         try {
             $result = $this->lessonService->updateLesson($id, $request->all());
 
@@ -129,13 +119,8 @@ class LessonController extends Controller
     /**
      * Update the order of lessons.
      */
-    public function updateOrder(Request $request, $courseId, $lessonId)
+    public function updateOrder(InstructorRequest $request, $courseId, $lessonId)
     {
-        $request->validate([
-            'order' => 'required|integer|min:1',
-            'order.*' => 'integer|min:1'
-        ]);
-
         // Kiểm tra quyền sở hữu khóa học
         $course = Course::findOrFail($courseId);
         if ($course->instructor_id !== Auth::id()) {

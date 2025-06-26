@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\InstructorRequest;
 use App\Services\InstructorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -59,7 +60,7 @@ class ProfileController extends Controller
     /**
      * Change password.
      */
-    public function changePassword(Request $request)
+    public function changePassword(InstructorRequest $request)
     {
         try {
             $userId = Auth::id();

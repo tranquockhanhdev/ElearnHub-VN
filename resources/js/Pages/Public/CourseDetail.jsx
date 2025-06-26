@@ -568,7 +568,7 @@ const CourseDetail = () => {
         if (isEnrolled) {
             return (
                 <Link
-                    href={`/student/courses/${course.id}/learn`}
+                    href={`/student/course/${course.id}/learn`}
                     className="btn btn-primary"
                 >
                     <i className="fas fa-play me-2"></i>

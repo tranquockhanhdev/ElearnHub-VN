@@ -49,4 +49,8 @@ class Course extends Model
     {
         return $this->hasMany(Payment::class);
     }
+    public function courseEdits()
+    {
+        return $this->hasMany(CourseEdit::class);
+    }
 }

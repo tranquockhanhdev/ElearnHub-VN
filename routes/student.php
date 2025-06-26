@@ -38,8 +38,8 @@ Route::middleware(['auth', 'verified', 'role:3'])->prefix('student')->name('stud
     Route::prefix('checkout')->name('checkout.')->group(function () {
         Route::get('/{courseId}', [CheckoutController::class, 'show'])->name('show');
         Route::post('/{courseId}', [CheckoutController::class, 'process'])->name('process');
-        Route::get('/success', [CheckoutController::class, 'success'])->name('success');
-        Route::get('/cancel', [CheckoutController::class, 'cancel'])->name('cancel');
+        Route::get('/payments/success', [CheckoutController::class, 'success'])->name('success');
+        Route::get('/payments/cancel', [CheckoutController::class, 'cancel'])->name('cancel');
     });
 
     Route::get('/invoice/{paymentId}/download', [CheckoutController::class, 'downloadInvoice'])->name('invoice.download');

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\InstructorRequest;
 use App\Models\Quiz;
 use App\Models\QuizQuestion;
 use App\Models\Lesson;
@@ -31,22 +32,8 @@ class QuizController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(InstructorRequest $request)
     {
-        $request->validate([
-            'lesson_id' => 'required|exists:lessons,id',
-            'title' => 'required|string|max:255',
-            'duration_minutes' => 'required|integer|min:1',
-            'pass_score' => 'required|integer|min:0|max:100',
-            'questions' => 'required|array|min:1',
-            'questions.*.question_text' => 'required|string',
-            'questions.*.option_a' => 'required|string',
-            'questions.*.option_b' => 'required|string',
-            'questions.*.option_c' => 'required|string',
-            'questions.*.option_d' => 'required|string',
-            'questions.*.correct_option' => 'required|in:A,B,C,D'
-        ]);
-
         // Kiểm tra quyền sở hữu bài giảng
         $lesson = Lesson::with('course')->findOrFail($request->lesson_id);
         if ($lesson->course->instructor_id !== Auth::id()) {
@@ -110,7 +97,7 @@ class QuizController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Quiz $quiz)
+    public function update(InstructorRequest $request, Quiz $quiz)
     {
         //
     }

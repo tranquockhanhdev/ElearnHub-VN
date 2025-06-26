@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\InstructorRequest;
 use App\Services\InstructorService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;

@@ -55,4 +55,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(Instructor::class, 'user_id');
     }
+
+    public function courseEdits()
+    {
+        return $this->hasMany(CourseEdit::class, 'submitted_by');
+    }
 }

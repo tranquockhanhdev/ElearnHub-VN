@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\InstructorRequest;
 use App\Models\Resource;
 use App\Models\Course;
 use App\Services\VideoService;
@@ -36,7 +37,7 @@ class VideoController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, $courseId, $lessonId)
+    public function store(InstructorRequest $request, $courseId, $lessonId)
     {
         // Kiểm tra quyền truy cập course
         $course = Course::where('instructor_id', Auth::id())->findOrFail($courseId);
@@ -46,14 +47,6 @@ class VideoController extends Controller
         if ($request->has('chunkIndex') && $request->has('totalChunks')) {
             return $this->handleChunkUpload($request, $courseId, $lessonId);
         }
-
-        // Validate request
-        $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
-            'file' => 'required', // Có thể là file hoặc URL
-            'is_preview' => 'nullable|boolean',
-            'file_type' => 'nullable|string'
-        ]);
 
         // Validate thêm cho file
         if ($request->hasFile('file')) {
@@ -71,6 +64,8 @@ class VideoController extends Controller
         } else {
             return back()->withErrors(['file' => 'File hoặc URL là bắt buộc']);
         }
+
+        $validatedData = $request->all();
 
         try {
             // Thêm lesson_id vào data
@@ -307,12 +302,8 @@ class VideoController extends Controller
     /**
      * Update the order of videos.
      */
-    public function updateOrder(Request $request, $courseId, $lessonId, $videoId)
+    public function updateOrder(InstructorRequest $request, $courseId, $lessonId, $videoId)
     {
-        $request->validate([
-            'order' => 'required|integer|min:1'
-        ]);
-
         try {
             // Kiểm tra quyền truy cập
             $course = Course::where('instructor_id', Auth::id())->findOrFail($courseId);
