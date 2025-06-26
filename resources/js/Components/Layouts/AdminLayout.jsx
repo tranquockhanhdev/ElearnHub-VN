@@ -18,15 +18,23 @@ const AdminLayout = ({ children }) => {
             <main>
                 {/* Sidebar START */}
                 <nav className="navbar sidebar navbar-expand-xl navbar-dark bg-dark">
-                    <div className="d-flex align-items-center">
-                        <Link className="navbar-brand" href="/">
+                    <div
+                        className="d-flex justify-content-center align-items-center"
+                        style={{ height: "80px" }}
+                    >
+                        <Link href="/" className="d-inline-block">
                             <img
                                 src={
                                     setting?.site_logo_url ??
                                     "/assets/images/logo-light.svg"
                                 }
                                 alt="Logo"
-                                className="navbar-brand-item"
+                                className="img-fluid"
+                                style={{
+                                    maxHeight: "60px",
+                                    width: "auto",
+                                    display: "block",
+                                }}
                             />
                         </Link>
                     </div>

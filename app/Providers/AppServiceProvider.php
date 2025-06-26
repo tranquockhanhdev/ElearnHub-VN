@@ -5,7 +5,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Services\AuthService;
 use App\Repositories\AuthRepository;
-
+use Inertia\Inertia;
+use App\Models\WebsiteSetting;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -27,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Inertia::share('setting', function () {
+        return WebsiteSetting::first();
+    });
     }
 }
