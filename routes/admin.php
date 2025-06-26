@@ -105,6 +105,7 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
     Route::post('/admin/settings/remove-logo', [AdminSettingController::class, 'removeLogo'])
         ->name('admin.settings.removeLogo'); // Xóa logo
     
+    // ==================== Thanh toán ====================
     Route::get('/admin/payments', [AdminPaymentController::class, 'index'])
         ->name('admin.payments.index');
     Route::get('/admin/payments/{id}', [AdminPaymentController::class, 'show'])

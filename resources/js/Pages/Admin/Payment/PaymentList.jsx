@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import AdminLayout from "@/Components/Layouts/AdminLayout";
 import { Link, router } from "@inertiajs/react";
 import { route } from "ziggy-js";
-
-const PaymentList = ({ payments, students, courses, filters }) => {
+import PaymentStats from "./PaymentStats";
+const PaymentList = ({ payments, students, courses, filters, stats }) => {
     const [search, setSearch] = useState({
         student_id: filters.student_id || "",
         course_id: filters.course_id || "",
@@ -30,7 +30,35 @@ const PaymentList = ({ payments, students, courses, filters }) => {
         setSearch(reset);
         router.get(route("admin.payments.index"), reset);
     };
+    const renderPagination = (payments) => {
+        const pages = [];
 
+        for (let i = 1; i <= payments.last_page; i++) {
+            pages.push(
+                <Link
+                    preserveScroll
+                    key={i}
+                    href={`?page=${i}`}
+                    className={`page-link ${
+                        payments.current_page === i ? "active" : ""
+                    }`}
+                >
+                    {i}
+                </Link>
+            );
+        }
+        return (
+            <nav className="mt-4">
+                <ul className="pagination justify-content-center">
+                    {pages.map((page, index) => (
+                        <li key={index} className="page-item">
+                            {page}
+                        </li>
+                    ))}
+                </ul>
+            </nav>
+        );
+    };
     return (
         <AdminLayout>
             <div className="page-content-wrapper border">
@@ -48,7 +76,7 @@ const PaymentList = ({ payments, students, courses, filters }) => {
                         Excel
                     </a>
                 </div>
-
+                <PaymentStats stats={stats} />
                 {/* Bộ lọc nâng cao */}
                 <div className="card shadow-sm border-0 mb-4">
                     <div className="card-header bg-light border-bottom">
@@ -271,6 +299,7 @@ const PaymentList = ({ payments, students, courses, filters }) => {
                             )}
                         </tbody>
                     </table>
+                    {payments.last_page > 1 && renderPagination(payments)}
                 </div>
             </div>
         </AdminLayout>
