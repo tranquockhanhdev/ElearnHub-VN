@@ -240,7 +240,7 @@ const CourseDetail = ({ course }) => {
                     option_b: q.option_b || '',
                     option_c: q.option_c || '',
                     option_d: q.option_d || '',
-                    correct_option: (q.correct_option || 'A').toString().toUpperCase() // Đảm bảo uppercase và string
+                    correct_option: (q.correct_option || 'A').toString().toUpperCase()
                 };
             })
             : [{
