@@ -22,6 +22,7 @@ class Course extends Model
         'status',
         'note',
         'price',
+        'img_url',
     ];
 
     public $timestamps = true;

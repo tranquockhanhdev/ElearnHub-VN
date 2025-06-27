@@ -47,8 +47,9 @@ class HandleInertiaRequests extends Middleware
                     \App\Models\Instructor::where('user_id', $request->user()->id)->first() : null,
             ],
             'flash' => [
-                'success' => fn() => $request->session()->get('success'),
-                'error' => fn() => $request->session()->get('error'),
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+                'warning' => $request->session()->get('warning'),
             ],
         ]);
     }

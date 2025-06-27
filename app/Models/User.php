@@ -37,7 +37,10 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class);
     }
-
+    public function instructor()
+    {
+        return $this->hasOne(Instructor::class, 'user_id');
+    }
     public function courses() // nếu là instructor
     {
         return $this->hasMany(Course::class, 'instructor_id');
@@ -50,10 +53,6 @@ class User extends Authenticatable
     public function lessonProgress()
     {
         return $this->hasMany(LessonProgress::class, 'student_id');
-    }
-    public function instructor()
-    {
-        return $this->hasOne(Instructor::class, 'user_id');
     }
 
     public function courseEdits()

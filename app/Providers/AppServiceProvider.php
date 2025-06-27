@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
 
 use App\Repositories\AuthRepository;
+use Inertia\Inertia;
+use App\Models\WebsiteSetting;
 use App\Repositories\CourseRepository;
 use App\Repositories\PaymentRepository;
 use App\Repositories\EnrollmentRepository;
@@ -72,6 +74,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Inertia::share('setting', function () {
+            return WebsiteSetting::first();
+        });
     }
 }

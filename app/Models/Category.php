@@ -17,6 +17,7 @@ class Category extends Model
         'name',
         'status',
         'slug',
+        'status',
     ];
     public $timestamps = true;
 
