@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StudentRequest;
 use App\Models\Course;
 use App\Models\Payment;
 use App\Models\Enrollment;
@@ -35,17 +36,9 @@ class CheckoutController extends Controller
         ]);
     }
 
-    public function process(Request $request, $course)
+    public function process(StudentRequest $request, $course)
     {
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email',
-            'student_id' => 'required|integer',
-            'course_id' => 'required|integer',
-            'payment_method_id' => 'required|integer|exists:payment_methods,id',
-            'country' => 'required|string|max:2'
-        ]);
+        $validated = $request->validated();
 
         $course = Course::find($validated['course_id']);
 

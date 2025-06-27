@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\InstructorRequest;
 use App\Models\Resource;
 use App\Models\Lesson;
 use Illuminate\Http\Request;
@@ -11,16 +12,8 @@ use Illuminate\Support\Facades\Storage;
 
 class ResourceController extends Controller
 {
-    public function store(Request $request)
+    public function store(InstructorRequest $request)
     {
-        $request->validate([
-            'lesson_id' => 'required|exists:lessons,id',
-            'type' => 'required|in:document,video',
-            'title' => 'required|string|max:255',
-            'file' => 'required|file|max:102400', // 100MB
-            'is_preview' => 'boolean'
-        ]);
-
         // Kiểm tra quyền sở hữu bài giảng
         $lesson = Lesson::with('course')->findOrFail($request->lesson_id);
         if ($lesson->course->instructor_id !== Auth::id()) {

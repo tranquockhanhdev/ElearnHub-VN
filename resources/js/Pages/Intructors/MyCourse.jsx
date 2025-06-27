@@ -35,7 +35,6 @@ const MyCourse = () => {
         applyFilters();
     };
     const getCourseImage = (course) => {
-        console.log('Course Image:', course);
 
         if (!course.img_url) {
             return '/assets/images/courses/4by3/default.jpg';
@@ -328,9 +327,9 @@ const MyCourse = () => {
                                                 >
                                                     <option value="all">Tất cả</option>
                                                     <option value="active">Đã duyệt</option>
-                                                    <option value="pending">Chờ duyệt</option>
                                                     <option value="inactive">Không hoạt động</option>
                                                     <option value="suspended">Bị từ chối</option>
+                                                    <option value="pending">Chờ duyệt</option>
                                                 </select>
                                             </div>
 

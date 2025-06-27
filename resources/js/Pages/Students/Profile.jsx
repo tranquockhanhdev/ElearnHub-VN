@@ -174,7 +174,10 @@ const Profile = () => {
                                                                     required
                                                                 />
                                                                 {errors.name && (
-                                                                    <div className="invalid-feedback">{errors.name}</div>
+                                                                    <div className="text-danger small mt-1">
+                                                                        <i className="bi bi-exclamation-triangle me-1"></i>
+                                                                        {errors.name}
+                                                                    </div>
                                                                 )}
                                                             </div>
                                                             <div className="col-12">
@@ -190,7 +193,10 @@ const Profile = () => {
                                                                     readOnly
                                                                 />
                                                                 {errors.email && (
-                                                                    <div className="invalid-feedback">{errors.email}</div>
+                                                                    <div className="text-danger small mt-1">
+                                                                        <i className="bi bi-exclamation-triangle me-1"></i>
+                                                                        {errors.email}
+                                                                    </div>
                                                                 )}
                                                             </div>
                                                             <div className="col-12">
@@ -205,7 +211,10 @@ const Profile = () => {
                                                                     placeholder="Nhập số điện thoại"
                                                                 />
                                                                 {errors.phone && (
-                                                                    <div className="invalid-feedback">{errors.phone}</div>
+                                                                    <div className="text-danger small mt-1">
+                                                                        <i className="bi bi-exclamation-triangle me-1"></i>
+                                                                        {errors.phone}
+                                                                    </div>
                                                                 )}
                                                             </div>
                                                         </div>
@@ -281,7 +290,10 @@ const Profile = () => {
                                                                 required
                                                             />
                                                             {passwordErrors.current_password && (
-                                                                <div className="invalid-feedback">{passwordErrors.current_password}</div>
+                                                                <div className="text-danger small mt-1">
+                                                                    <i className="bi bi-exclamation-triangle me-1"></i>
+                                                                    {passwordErrors.current_password}
+                                                                </div>
                                                             )}
                                                         </div>
                                                         <div className="mb-3">
@@ -298,7 +310,10 @@ const Profile = () => {
                                                                 required
                                                             />
                                                             {passwordErrors.password && (
-                                                                <div className="invalid-feedback">{passwordErrors.password}</div>
+                                                                <div className="text-danger small mt-1">
+                                                                    <i className="bi bi-exclamation-triangle me-1"></i>
+                                                                    {passwordErrors.password}
+                                                                </div>
                                                             )}
                                                         </div>
                                                         <div className="mb-4">
@@ -315,7 +330,10 @@ const Profile = () => {
                                                                 required
                                                             />
                                                             {passwordErrors.password_confirmation && (
-                                                                <div className="invalid-feedback">{passwordErrors.password_confirmation}</div>
+                                                                <div className="text-danger small mt-1">
+                                                                    <i className="bi bi-exclamation-triangle me-1"></i>
+                                                                    {passwordErrors.password_confirmation}
+                                                                </div>
                                                             )}
                                                         </div>
                                                         <div className="d-grid gap-2">

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\InstructorRequest;
 use App\Models\Payment;
 use App\Models\Course;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ class RevenueController extends Controller
     /**
      * Display a listing of revenue data for instructor's courses
      */
-    public function index(Request $request)
+    public function index(InstructorRequest $request)
     {
         Log::info(request()->all());
         $instructorId = Auth::id();
@@ -121,7 +122,7 @@ class RevenueController extends Controller
     /**
      * Display revenue details for a specific course
      */
-    public function show(Request $request, $courseId)
+    public function show(InstructorRequest $request, $courseId)
     {
         $instructorId = Auth::id();
 

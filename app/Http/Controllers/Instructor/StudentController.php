@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\InstructorRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Course;
@@ -15,7 +16,7 @@ class StudentController extends Controller
     /**
      * Display students list for instructor
      */
-    public function index(Request $request)
+    public function index(InstructorRequest $request)
     {
         $instructorId = Auth::id();
 

@@ -89,13 +89,6 @@ const StudentDashboard = () => {
 			gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)'
 		},
 		{
-			icon: 'fas fa-trophy',
-			count: stats?.completed_courses || 0,
-			label: 'Khóa học đã hoàn thành',
-			color: 'warning',
-			gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-		},
-		{
 			icon: 'fas fa-clock',
 			count: stats?.in_progress_courses || 0,
 			label: 'Đang tiến hành',
@@ -126,19 +119,19 @@ const StudentDashboard = () => {
 										<div className="offcanvas-body p-3 p-xl-0">
 											<div className="bg-dark border rounded-3 pb-0 p-3 w-100">
 												<div className="list-group list-group-dark list-group-borderless">
-													<Link className="list-group-item active" href="/student/dashboard" preserveScroll>
+													<Link className="list-group-item active" href="/student/dashboard" preserveScroll preserveState>
 														<i className="bi bi-ui-checks-grid fa-fw me-2"></i>Bảng điều khiển
 													</Link>
-													<Link className="list-group-item" href="/student/courselist" preserveScroll>
+													<Link className="list-group-item" href="/student/courselist" preserveScroll preserveState>
 														<i className="bi bi-basket fa-fw me-2"></i>Khóa học của tôi
 													</Link>
-													<Link className="list-group-item" href="/student/payments" preserveScroll>
+													<Link className="list-group-item" href="/student/payments" preserveScroll preserveState>
 														<i className="bi bi-credit-card-2-front fa-fw me-2"></i>Lịch Sử thanh toán
 													</Link>
-													<Link className="list-group-item" href="/student/profile" preserveScroll>
+													<Link className="list-group-item" href="/student/profile" preserveScroll preserveState>
 														<i className="bi bi-pencil-square fa-fw me-2"></i>Chỉnh sửa hồ sơ
 													</Link>
-													<Link className="list-group-item text-danger bg-danger-soft-hover" href="/logout" method="post" as="button">
+													<Link className="list-group-item text-danger bg-danger-soft-hover" href="/logout" method="post" as="button" preserveScroll preserveState>
 														<i className="fas fa-sign-out-alt fa-fw me-2"></i>Đăng xuất
 													</Link>
 												</div>
@@ -203,7 +196,7 @@ const StudentDashboard = () => {
 								{/* Quick Actions */}
 								<div className="row g-3 mb-4">
 									<div className="col-md-4">
-										<Link href="/student/courselist" className="text-decoration-none">
+										<Link href="/student/courselist" className="text-decoration-none" preserveScroll preserveState>
 											<div className="card border-0 bg-light h-100 card-hover">
 												<div className="card-body text-center py-3">
 													<i className="fas fa-play-circle text-primary mb-2 fs-5"></i>
@@ -213,7 +206,7 @@ const StudentDashboard = () => {
 										</Link>
 									</div>
 									<div className="col-md-4">
-										<Link href="/courses" className="text-decoration-none">
+										<Link href="/courses" className="text-decoration-none" preserveScroll preserveState>
 											<div className="card border-0 bg-light h-100 card-hover">
 												<div className="card-body text-center py-3">
 													<i className="fas fa-search text-success mb-2 fs-5"></i>
@@ -223,7 +216,7 @@ const StudentDashboard = () => {
 										</Link>
 									</div>
 									<div className="col-md-4">
-										<Link href="/student/payments" className="text-decoration-none">
+										<Link href="/student/payments" className="text-decoration-none" preserveScroll preserveState>
 											<div className="card border-0 bg-light h-100 card-hover">
 												<div className="card-body text-center py-3">
 													<i className="fas fa-history text-info mb-2 fs-5"></i>
@@ -246,7 +239,7 @@ const StudentDashboard = () => {
 												<span className="badge bg-primary-soft text-primary">
 													{enrolledCourses?.data?.length || 0} khóa học
 												</span>
-												<Link href="/student/courselist" className="btn btn-sm btn-outline-primary">
+												<Link href="/student/courselist" className="btn btn-sm btn-outline-primary" preserveScroll preserveState>
 													<i className="fas fa-eye me-1"></i>Xem tất cả
 												</Link>
 											</div>
@@ -280,12 +273,11 @@ const StudentDashboard = () => {
 																					style={{ width: '70px', height: '50px', objectFit: 'cover' }}
 																				/>
 																			</div>
-																			<div className="flex-grow-1 ms-3">
-																				<h6 className="mb-1 fw-semibold">
-																					<Link href={`/student/course/${course.id}`} className="text-decoration-none text-dark">
-																						{course.title}
-																					</Link>
-																				</h6>
+																			<div className="flex-grow-1 ms-3">																<h6 className="mb-1 fw-semibold">
+																				<Link href={`/student/course/${course.id}`} className="text-decoration-none text-dark" preserveScroll preserveState>
+																					{course.title}
+																				</Link>
+																			</h6>
 																				<div className="small text-black">
 																					<i className="fas fa-user-tie me-1"></i>
 																					Giảng viên: {course.instructor_name}
@@ -318,25 +310,27 @@ const StudentDashboard = () => {
 																		</small>
 																	</td>
 																	<td>
-																		{course.progress === 100 ? (
+																		{(course.progress === 100 && course.completed_lessons === course.total_lessons) ? (
 																			<div className="d-flex gap-1">
 																				<span className="badge bg-success">
 																					<i className="fas fa-check me-1"></i>Hoàn thành
-																				</span>
-																				<Link
-																					href={`/student/course/${course.id}`}
+																				</span>																<Link
+																					href={`/student/course/${course.id}/learn`}
 																					className="btn btn-sm btn-outline-primary"
+																					preserveScroll
+																					preserveState
 																				>
 																					<i className="fas fa-eye me-1"></i>Xem lại
 																				</Link>
 																			</div>
-																		) : (
-																			<Link
-																				href={`/student/course/${course.id}`}
-																				className="btn btn-sm btn-primary"
-																			>
-																				<i className="fas fa-play me-1"></i>Tiếp tục
-																			</Link>
+																		) : (<Link
+																			href={`/student/course/${course.id}/learn`}
+																			className="btn btn-sm btn-primary"
+																			preserveScroll
+																			preserveState
+																		>
+																			<i className="fas fa-play me-1"></i>Tiếp tục
+																		</Link>
 																		)}
 																	</td>
 																</tr>
@@ -348,7 +342,7 @@ const StudentDashboard = () => {
 												{/* Show more courses link */}
 												{enrolledCourses.data.length > 5 && (
 													<div className="text-center mt-3">
-														<Link href="/student/courselist" className="btn btn-outline-primary">
+														<Link href="/student/courselist" className="btn btn-outline-primary" preserveScroll preserveState>
 															<i className="fas fa-plus me-2"></i>
 															Xem thêm {enrolledCourses.data.length - 5} khóa học khác
 														</Link>
@@ -366,7 +360,7 @@ const StudentDashboard = () => {
 												<p className="text-black mb-4">
 													Bạn chưa đăng ký khóa học nào. Khám phá danh mục khóa học để bắt đầu!
 												</p>
-												<Link href="/courses" className="btn btn-primary">
+												<Link href="/courses" className="btn btn-primary" preserveScroll preserveState>
 													<i className="fas fa-plus me-2"></i>Khám phá khóa học
 												</Link>
 											</div>

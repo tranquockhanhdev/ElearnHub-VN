@@ -5,7 +5,7 @@ import UserLayout from '../../Components/Layouts/UserLayout';
 import InfoIntructor from '../../Components/InfoIntructor';
 
 const SuccessCourse = () => {
-    const { auth } = usePage().props;
+    const { auth, errors } = usePage().props;
 
     return (
         <UserLayout>
@@ -16,6 +16,60 @@ const SuccessCourse = () => {
                         <div className="container">
                             <div className="row justify-content-center">
                                 <div className="col-lg-8 col-md-10 text-center">
+                                    {/* Error Messages */}
+                                    {errors && Object.keys(errors).length > 0 && (
+                                        <div className="alert alert-danger mb-4" role="alert">
+                                            <h6 className="alert-heading">
+                                                <i className="bi bi-exclamation-triangle me-2"></i>
+                                                Có lỗi xảy ra
+                                            </h6>
+                                            <ul className="list-unstyled mb-0">
+                                                {errors.first_name && (
+                                                    <li className="mb-1">
+                                                        <i className="bi bi-arrow-right me-2"></i>
+                                                        {errors.first_name}
+                                                    </li>
+                                                )}
+                                                {errors.last_name && (
+                                                    <li className="mb-1">
+                                                        <i className="bi bi-arrow-right me-2"></i>
+                                                        {errors.last_name}
+                                                    </li>
+                                                )}
+                                                {errors.email && (
+                                                    <li className="mb-1">
+                                                        <i className="bi bi-arrow-right me-2"></i>
+                                                        {errors.email}
+                                                    </li>
+                                                )}
+                                                {errors.phone && (
+                                                    <li className="mb-1">
+                                                        <i className="bi bi-arrow-right me-2"></i>
+                                                        {errors.phone}
+                                                    </li>
+                                                )}
+                                                {errors.general && (
+                                                    <li className="mb-1">
+                                                        <i className="bi bi-arrow-right me-2"></i>
+                                                        {errors.general}
+                                                    </li>
+                                                )}
+                                                {/* Display any other errors */}
+                                                {Object.keys(errors).map((key) => {
+                                                    if (!['first_name', 'last_name', 'email', 'phone', 'general'].includes(key)) {
+                                                        return (
+                                                            <li key={key} className="mb-1">
+                                                                <i className="bi bi-arrow-right me-2"></i>
+                                                                {errors[key]}
+                                                            </li>
+                                                        );
+                                                    }
+                                                    return null;
+                                                })}
+                                            </ul>
+                                        </div>
+                                    )}
+
                                     {/* Success Icon - Centered */}
                                     <div className="d-flex justify-content-center mb-4">
                                         <div className="position-relative">

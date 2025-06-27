@@ -31,6 +31,15 @@ class CourseRequest extends FormRequest
                 'course_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 'instructor_id' => 'required|exists:users,id',
             ],
+            'instructor.courses.update' => [
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'category_ids' => 'required|array|min:1',
+                'category_ids.*' => 'exists:categories,id',
+                'price' => 'required|numeric|min:0',
+                'course_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'status' => 'nullable|in:draft,pending,active,inactive',
+            ],
         ];
         return $rules[$this->route()->getName()] ?? [];
     }
@@ -59,6 +68,8 @@ class CourseRequest extends FormRequest
 
             'instructor_id.required' => 'Thiếu thông tin giảng viên.',
             'instructor_id.exists' => 'Giảng viên không tồn tại trong hệ thống.',
+
+            'status.in' => 'Trạng thái không hợp lệ.',
         ];
     }
 }

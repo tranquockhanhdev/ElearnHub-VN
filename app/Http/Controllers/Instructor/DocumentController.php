@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\InstructorRequest;
 use App\Models\Resource;
 use App\Models\Course;
 use App\Models\Lesson;
@@ -63,16 +64,8 @@ class DocumentController extends Controller
         }
     }
 
-    public function chunkUpload(Request $request, $courseId, $lessonId)
+    public function chunkUpload(InstructorRequest $request, $courseId, $lessonId)
     {
-        $request->validate([
-            'file' => 'required|file',
-            'chunkIndex' => 'required|integer',
-            'totalChunks' => 'required|integer',
-            'fileName' => 'required|string',
-            'uploadId' => 'required|string',
-        ]);
-
         $course = Course::where('instructor_id', Auth::id())->findOrFail($courseId);
         $lesson = $course->lessons()->findOrFail($lessonId);
 
@@ -193,12 +186,8 @@ class DocumentController extends Controller
     /**
      * Update the order of documents.
      */
-    public function updateOrder(Request $request, $courseId, $lessonId, $documentId)
+    public function updateOrder(InstructorRequest $request, $courseId, $lessonId, $documentId)
     {
-        $request->validate([
-            'order' => 'required|integer|min:1'
-        ]);
-
         try {
             // Kiểm tra quyền truy cập
             $course = Course::where('instructor_id', Auth::id())->findOrFail($courseId);

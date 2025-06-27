@@ -25,7 +25,7 @@ const InfoStudent = () => {
                                     <div className="avatar avatar-xxl position-relative mt-n3">
                                         <img
                                             className="avatar-img rounded-circle border-white border-3 shadow"
-                                            src="/assets/images/avatar/01.jpg"
+                                            src="https://www.svgrepo.com/show/384670/account-avatar-profile-user.svg"
                                             alt=""
                                         />
                                     </div>
@@ -38,8 +38,8 @@ const InfoStudent = () => {
                                     </div>
                                     {/* Button */}
                                     <div className="mt-2 mt-sm-0">
-                                        <a href="student-course-list.html" className="btn btn-outline-primary mb-0">
-                                            View my courses
+                                        <a href="/student/courselist" className="btn btn-outline-primary mb-0">
+                                            Xem danh sách khóa học
                                         </a>
                                     </div>
                                 </div>

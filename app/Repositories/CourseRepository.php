@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Course;
 use App\Models\PaymentMethod;
 use App\Models\Payment;
+use App\Models\Instructor;
 use Exception;
 
 class CourseRepository
@@ -311,6 +312,83 @@ class CourseRepository
     public function countCourses()
     {
         return $this->course->count();
+    }
+
+    /**
+     * Get course with approved content for public view
+     */
+    public function getCourseWithApprovedContent($slug)
+    {
+        return $this->course->with([
+            'categories',
+            'instructor',
+            // Chỉ lấy lessons có status approved
+            'lessons' => function ($query) {
+                $query->where('status', 'approved')
+                    ->orderBy('order', 'asc');
+            },
+            // Lấy resources của lessons approved, có thể preview hoặc approved
+            'lessons.resources' => function ($query) {
+                $query->where(function ($q) {
+                    // Resource có status approved HOẶC có thể preview
+                    $q->where('status', 'approved')
+                        ->orWhere('is_preview', true);
+                })
+                    ->orderBy('order', 'asc');
+            },
+            // Lấy quizzes có status approved
+            'lessons.quiz' => function ($query) {
+                $query->where('status', 'approved');
+            }
+        ])
+            ->where('slug', $slug)
+            ->where('status', 'active') // Chỉ lấy course đã approved
+            ->first();
+    }
+
+    /**
+     * Get course curriculum for enrolled users
+     */
+    public function getCourseWithFullContent($courseId, $userId = null)
+    {
+        $query = $this->course->with([
+            'categories',
+            'instructor',
+            'lessons' => function ($query) {
+                $query->where('status', 'approved')
+                    ->orderBy('order', 'asc');
+            },
+            'lessons.resources' => function ($query) {
+                $query->where('status', 'approved')
+                    ->orderBy('order', 'asc');
+            },
+            'lessons.quiz' => function ($query) {
+                $query->where('status', 'approved');
+            }
+        ])
+            ->where('id', $courseId)
+            ->where('status', 'active');
+        return $query->first();
+    }
+
+    /**
+     * Get instructor bio and avatar by course ID.
+     *
+     * @param int $courseId
+     * @return array|null
+     */
+    public function getInstructorDetailsByCourseId($courseId)
+    {
+        $course = $this->course->with(['instructor.instructor'])->find($courseId);
+
+        if ($course && $course->instructor && $course->instructor->instructor) {
+            return [
+                'bio' => $course->instructor->instructor->bio,
+                'avatar' => $course->instructor->instructor->avatar,
+            ];
+        }
+
+        return null; // Nếu không tìm thấy thông tin
     }
 
     // Private helper methods
