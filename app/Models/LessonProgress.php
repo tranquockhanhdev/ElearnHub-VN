@@ -5,17 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class LessonProgre extends Model
+class LessonProgress extends Model
 {
     use HasFactory;
 
     protected $table = 'lesson_progress';
 
-    // protected $guarded = []; // Mở nếu muốn tắt bảo vệ mass assignment
-
     protected $fillable = [
         'student_id',
         'lesson_id',
+        'resource_id',
         'is_complete',
     ];
 
@@ -29,5 +28,10 @@ class LessonProgre extends Model
     public function lesson()
     {
         return $this->belongsTo(Lesson::class);
+    }
+
+    public function resource()
+    {
+        return $this->belongsTo(Resource::class);
     }
 }

@@ -16,7 +16,7 @@ class PaymentsExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        $query = Payment::with(['student', 'course', 'method']);
+        $query = Payment::with(['student', 'course', 'paymentMethod']);
 
         if (!empty($this->filters['status'])) {
             $query->where('status', $this->filters['status']);

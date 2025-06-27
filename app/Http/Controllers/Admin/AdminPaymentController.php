@@ -16,7 +16,7 @@ class AdminPaymentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Payment::with(['student', 'course', 'method']);
+        $query = Payment::with(['student', 'course', 'paymentMethod']);
 
         // Bộ lọc
         if ($request->filled('student_id')) {
@@ -64,7 +64,7 @@ class AdminPaymentController extends Controller
 
     public function show($id)
     {
-        $payment = \App\Models\Payment::with(['student', 'course', 'method'])->findOrFail($id);
+        $payment = \App\Models\Payment::with(['student', 'course', 'paymentMethod'])->findOrFail($id);
 
         return Inertia::render('Admin/Payment/PaymentDetail', [
             'payment' => $payment,

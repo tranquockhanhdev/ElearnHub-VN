@@ -1,79 +1,57 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Student\StudentDashboardController;
-use App\Http\Controllers\Student\CourseController;
-use App\Http\Controllers\Student\LessonController;
-use App\Http\Controllers\Student\PaymentController;
-use App\Http\Controllers\Student\CheckoutController;
+use App\Http\Controllers\Student\{
+    StudentDashboardController,
+    CourseController,
+    LessonController,
+    PaymentController,
+    CheckoutController
+};
 
-// Nhóm route dành cho học viên (role:3), yêu cầu đăng nhập và xác thực email
-Route::middleware(['auth', 'verified', 'role:3'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:3'])->prefix('student')->name('student.')->group(function () {
 
-    // Trang dashboard của học viên
-    Route::get('/student/dashboard', [StudentDashboardController::class, 'index'])
-        ->name('student.dashboard');
+    // Dashboard & Hồ sơ
+    Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [StudentDashboardController::class, 'profile'])->name('profile');
+    Route::put('/profile/update', [StudentDashboardController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/profile/change-password', [StudentDashboardController::class, 'changePassword'])->name('profile.change-password');
+    Route::put('/profile/update-password', [StudentDashboardController::class, 'updatePassword'])->name('password.update');
 
-    // Hiển thị danh sách các khóa học mà học viên đã đăng ký
-    Route::get('/student/courselist', [CourseController::class, 'index'])
-        ->name('student.courselist');
+    // 🔹 Danh sách khóa học
+    Route::get('/courselist', [CourseController::class, 'index'])->name('courselist');
+    Route::get('/course/{id}', [CourseController::class, 'show'])->name('course.show');
 
-    // Hiển thị chi tiết một khóa học
-    Route::get('/student/course/{id}', [CourseController::class, 'show'])
-        ->name('student.course.show');
+    Route::get('/course/{id}/learn', [CourseController::class, 'learn'])->name('course.learn'); //student.course.learn
 
-    // Đăng ký tham gia một khóa học
-    Route::post('/student/course/{id}/enroll', [CourseController::class, 'enroll'])
-        ->name('student.course.enroll');
+    Route::get('/course/{courseId}/download/{documentId}', [
+        CourseController::class,
+        'downloadDocument'
+    ])->name('course.downloadDocument');
 
-    // Hiển thị nội dung bài học
-    Route::get('/student/lesson/{id}', [LessonController::class, 'show'])
-        ->name('student.lesson.show');
+    // 🔹 Bài học
+    Route::get('/lesson/{id}', [LessonController::class, 'show'])->name('lesson.show');
 
-    // Hiển thị danh sách các giao dịch thanh toán của học viên
-    Route::get('/student/payments', [PaymentController::class, 'index'])
-        ->name('student.payments');
+    // 🔹 Thanh toán & giao dịch
+    Route::get('/payments', [PaymentController::class, 'index'])->name('payments');
 
-    // Hiển thị trang thanh toán cho một khóa học
-    Route::get('/student/checkout/{courseId}', [CheckoutController::class, 'show'])
-        ->name('student.checkout.show');
+    Route::prefix('checkout')->name('checkout.')->group(function () {
+        Route::get('/{courseId}', [CheckoutController::class, 'show'])->name('show');
+        Route::post('/{courseId}', [CheckoutController::class, 'process'])->name('process');
+        Route::get('/payments/success', [CheckoutController::class, 'success'])->name('success');
+        Route::get('/payments/cancel', [CheckoutController::class, 'cancel'])->name('cancel');
+    });
 
-    // Xử lý thanh toán cho một khóa học
-    Route::post('/student/checkout/{courseId}', [CheckoutController::class, 'process'])
-        ->name('student.checkout.process');
+    Route::get('/invoice/{paymentId}/download', [CheckoutController::class, 'downloadInvoice'])->name('invoice.download');
 
-    // Hiển thị trang thông báo thanh toán thành công
-    Route::get('/student/checkout/success', [CheckoutController::class, 'success'])
-        ->name('student.checkout.success');
+    // 🔹 Khóa học theo trạng thái
+    Route::get('/completed-courses', [StudentDashboardController::class, 'completedCourses'])->name('completed-courses');
+    Route::get('/enrolled-courses', [StudentDashboardController::class, 'enrolledCourses'])->name('enrolled-courses');
 
-    // Hiển thị trang thông báo hủy thanh toán
-    Route::get('/student/checkout/cancel', [CheckoutController::class, 'cancel'])
-        ->name('student.checkout.cancel');
-
-    // Hiển thị trang hồ sơ cá nhân của học viên
-    Route::get('/student/profile', [StudentDashboardController::class, 'profile'])
-        ->name('student.profile');
-
-    // Cập nhật thông tin hồ sơ cá nhân của học viên
-    Route::post('/student/profile/update', [StudentDashboardController::class, 'updateProfile'])
-        ->name('student.profile.update');
-
-    // Hiển thị trang thay đổi mật khẩu
-    Route::get('/student/profile/change-password', [StudentDashboardController::class, 'changePassword'])
-        ->name('student.profile.change-password');
-
-    // Xử lý cập nhật mật khẩu mới
-    Route::post('/student/profile/update-password', [StudentDashboardController::class, 'updatePassword'])
-        ->name('student.profile.update-password');
-
-    // Tải xuống tài liệu khóa học
-    Route::get('/student/course/{courseId}/download/{documentId}', [CourseController::class, 'downloadDocument'])
-        ->name('student.course.downloadDocument');
-
-    // Xem danh sách các khóa học đã hoàn thành
-    Route::get('/student/completed-courses', [StudentDashboardController::class, 'completedCourses'])
-        ->name('student.completed-courses');
-    // Xem danh sách các khóa học đang theo học
-    Route::get('/student/enrolled-courses', [StudentDashboardController::class, 'enrolledCourses'])
-        ->name('student.enrolled-courses');
+    // Progress tracking
+    Route::post('/course/{courseId}/resource/{resourceId}/complete', [CourseController::class, 'markResourceComplete'])->name('resource.complete');
+    Route::post('/course/{courseId}/lesson/{lessonId}/complete', [CourseController::class, 'markLessonComplete'])->name('lesson.complete');
 });
+
+// 🔁 VNPay return (ngoài middleware)
+Route::get('/vnpay_return', [CheckoutController::class, 'vnpay_return'])->name('vnpay.return');

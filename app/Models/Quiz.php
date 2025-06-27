@@ -18,6 +18,7 @@ class Quiz extends Model
         'title',
         'duration_minutes',
         'pass_score',
+        'status',
     ];
 
     public $timestamps = true;

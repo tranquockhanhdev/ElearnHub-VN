@@ -4,6 +4,10 @@ import { Link, usePage } from '@inertiajs/react';
 const InfoIntructor = () => {
     const { auth, flash_success, flash_error } = usePage().props;
 
+    // Get instructor data from auth
+    const instructor = auth?.instructor;
+    const user = auth?.user;
+
     return (
         <section className="pt-0">
             <div className="container-fluid px-0">
@@ -25,24 +29,55 @@ const InfoIntructor = () => {
                                     <div className="avatar avatar-xxl position-relative mt-n3">
                                         <img
                                             className="avatar-img rounded-circle border-white border-3 shadow"
-                                            src="/assets/images/avatar/01.jpg"
-                                            alt=""
+                                            src={
+                                                instructor?.avatar
+                                                    ? `/storage/${instructor.avatar}`
+                                                    : '/assets/images/avatar/default.jpg'
+                                            }
+                                            alt={user?.name || 'Instructor'}
+                                            style={{
+                                                width: '100px',
+                                                height: '100px',
+                                                objectFit: 'cover'
+                                            }}
                                         />
                                     </div>
                                 </div>
                                 {/* Profile info */}
                                 <div className="col d-sm-flex justify-content-between align-items-center">
                                     <div>
-                                        <h1 className="my-1 fs-4">{auth.user.name}</h1>
+                                        <h1 className="my-1 fs-4">{user?.name}</h1>
                                         <p className="mb-0">
                                             <span className="badge bg-success">Giảng viên</span>
+                                            {instructor?.profession && (
+                                                <span className="text-black ms-2">• {instructor.profession}</span>
+                                            )}
                                         </p>
+                                        {instructor?.bio && (
+                                            <p className="text-black small mt-1 mb-0">
+                                                {instructor.bio.length > 100
+                                                    ? instructor.bio.substring(0, 100) + '...'
+                                                    : instructor.bio
+                                                }
+                                            </p>
+                                        )}
                                     </div>
                                     {/* Button */}
-                                    <div className="mt-2 mt-sm-0">
-                                        <a href="student-course-list.html" className="btn btn-outline-primary mb-0">
-                                            Create a course
-                                        </a>
+                                    <div className="mt-2 mt-sm-0 d-flex gap-2">
+                                        <Link
+                                            href={route('instructor.profile.edit')}
+                                            className="btn btn-outline-secondary btn-sm mb-0"
+                                        >
+                                            <i className="bi bi-pencil me-1"></i>
+                                            Chỉnh sửa
+                                        </Link>
+                                        <Link
+                                            href={route('instructor.courses.create')}
+                                            className="btn btn-primary btn-sm mb-0"
+                                        >
+                                            <i className="bi bi-plus me-1"></i>
+                                            Tạo khóa học
+                                        </Link>
                                     </div>
                                 </div>
                             </div>

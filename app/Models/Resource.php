@@ -21,6 +21,8 @@ class Resource extends Model
         'file_type',
         'is_preview',
         'order',
+        'status',
+        'note'
     ];
 
     public $timestamps = true;

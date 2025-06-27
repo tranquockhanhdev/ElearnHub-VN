@@ -49,16 +49,16 @@ class AdminUserController extends Controller
         ]);
     }
 
-  public function updateInstructor(UpdateInstructorRequest $request, $id)
-{
-    $this->userService->updateInstructorProfile(
-        $id,
-        $request->except('avatar'), // ✅ loại bỏ avatar
-        $request->file('avatar')    // ✅ truyền file rõ ràng
-    );
+    public function updateInstructor(UpdateInstructorRequest $request, $id)
+    {
+        $this->userService->updateInstructorProfile(
+            $id,
+            $request->except('avatar'), // ✅ loại bỏ avatar
+            $request->file('avatar')    // ✅ truyền file rõ ràng
+        );
 
-    return back()->with('success', 'Thông tin giảng viên đã được cập nhật');
-}
+        return back()->with('success', 'Thông tin giảng viên đã được cập nhật');
+    }
 
     public function removeInstructorAvatar($id)
     {
@@ -104,9 +104,9 @@ class AdminUserController extends Controller
 
         return back()->with('success', 'Người dùng đã bị chặn.');
     }
-   public function unblock(User $user)
-{
-    $this->userService->activateUser($user);
-    return back()->with('success', 'Người dùng đã được mở chặn.');
-}
+    public function unblock(User $user)
+    {
+        $this->userService->activateUser($user);
+        return back()->with('success', 'Người dùng đã được mở chặn.');
+    }
 }

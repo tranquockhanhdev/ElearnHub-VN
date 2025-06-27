@@ -138,29 +138,6 @@ const UserLayout = ({ children }) => {
                         </ul>
                         {/* Nav Main menu END */}
 
-                        {/* Nav Search START */}
-                        {auth.user?.role !== 2 && (
-                            <div className="nav my-3 my-xl-0 px-4 flex-nowrap align-items-center">
-                                <div className="nav-item w-100">
-                                    <form className="position-relative">
-                                        <input
-                                            className="form-control pe-5 bg-transparent"
-                                            type="search"
-                                            placeholder="Search"
-                                            aria-label="Search"
-                                        />
-                                        <button
-                                            className="btn bg-transparent px-2 py-0 position-absolute top-50 end-0 translate-middle-y"
-                                            type="submit"
-                                        >
-                                            <i className="fas fa-search fs-6"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        )}
-                        {/* Nav Search END */}
-
                         {/* Profile START */}
                         {auth?.user && (
                             <div className="dropdown ms-1 ms-lg-0">
@@ -174,84 +151,107 @@ const UserLayout = ({ children }) => {
                                 >
                                     <img
                                         className="avatar-img rounded-circle"
-                                        src="/assets/images/avatar/01.jpg"
+                                        src="https://www.svgrepo.com/show/384670/account-avatar-profile-user.svg"
                                         alt="User Avatar"
                                     />
                                 </a>
                                 <ul
-                                    className="dropdown-menu dropdown-menu-end shadow dropdown-animation pt-3"
+                                    className="dropdown-menu dropdown-menu-end shadow-lg rounded-xl border-0 p-4 dropdown-animation"
                                     aria-labelledby="profileDropdown"
+                                    style={{ minWidth: '280px' }}
                                 >
                                     {/* Header */}
-                                    <li className="px-3 pb-2 border-bottom">
+                                    <li className="pb-3 mb-3 border-bottom">
                                         <div className="d-flex align-items-center">
                                             <div className="avatar me-3">
                                                 <img
-                                                    className="avatar-img rounded-circle shadow"
-                                                    src="/assets/images/avatar/01.jpg"
+                                                    className="avatar-img rounded-circle shadow-sm"
+                                                    src="https://www.svgrepo.com/show/384670/account-avatar-profile-user.svg"
                                                     alt="User"
+                                                    style={{ width: '50px', height: '50px' }}
                                                 />
                                             </div>
                                             <div className="flex-grow-1">
-                                                <h6 className="mb-0">
+                                                <h6 className="mb-1 fw-semibold text-dark">
                                                     {auth.user.name}
                                                 </h6>
-                                                <p className="mb-0 small text-muted">
+                                                <p className="mb-0 small text-muted text-truncate" style={{ maxWidth: '180px' }}>
                                                     {auth.user.email}
                                                 </p>
+                                                <span className="badge bg-primary-soft text-primary mt-1 small">
+                                                    {{
+                                                        1: 'Admin',
+                                                        2: 'Giảng viên',
+                                                        3: 'Học viên'
+                                                    }[auth.user.role] || 'Không rõ'}
+                                                </span>
                                             </div>
                                         </div>
                                     </li>
 
-                                    {/* User info (ID, Role) */}
-                                    <li className="px-3 py-2 border-bottom">
-                                        <div className="small text-muted">
-                                            ID:{" "}
-                                            <span className="text-dark">
-                                                {auth.user.id}
-                                            </span>
-                                        </div>
-                                        <div className="small text-muted">
-                                            Vai trò:{" "}
-                                            <span className="text-dark">
-                                                {{
-                                                    1: "Admin",
-                                                    2: "Giảng viên",
-                                                    3: "Học viên",
-                                                }[auth.user.role] || "Không rõ"}
-                                            </span>
-                                        </div>
+                                    {/* Menu Items */}
+                                    <li className="mb-2">
+                                        <Link
+                                            className="dropdown-item rounded-lg py-2 px-3 d-flex align-items-center text-decoration-none"
+                                            href="/student/profile"
+                                        >
+                                            <i className="bi bi-person-circle me-3 text-primary" style={{ fontSize: '18px' }}></i>
+                                            <span className="fw-medium">Chỉnh sửa hồ sơ</span>
+                                        </Link>
                                     </li>
 
-                                    {/* Links */}
+                                    {/* Hiển thị "Khóa học của tôi" cho học viên */}
+                                    {auth.user.role === 3 && (
+                                        <li className="mb-2">
+                                            <Link
+                                                className="dropdown-item rounded-lg py-2 px-3 d-flex align-items-center text-decoration-none"
+                                                href="/student/courselist"
+                                            >
+                                                <i className="bi bi-book me-3 text-success" style={{ fontSize: '18px' }}></i>
+                                                <span className="fw-medium">Khóa học của tôi</span>
+                                            </Link>
+                                        </li>
+                                    )}
+
+                                    {/* Hiển thị dashboard cho từng role */}
+                                    {auth.user.role === 3 && (
+                                        <li className="mb-2">
+                                            <Link
+                                                className="dropdown-item rounded-lg py-2 px-3 d-flex align-items-center text-decoration-none"
+                                                href="/student/dashboard"
+                                            >
+                                                <i className="bi bi-speedometer2 me-3 text-info" style={{ fontSize: '18px' }}></i>
+                                                <span className="fw-medium">Bảng điều khiển</span>
+                                            </Link>
+                                        </li>
+                                    )}
+
+                                    {auth.user.role === 2 && (
+                                        <li className="mb-2">
+                                            <Link
+                                                className="dropdown-item rounded-lg py-2 px-3 d-flex align-items-center text-decoration-none"
+                                                href="/instructor/dashboard"
+                                            >
+                                                <i className="bi bi-speedometer2 me-3 text-info" style={{ fontSize: '18px' }}></i>
+                                                <span className="fw-medium">Bảng điều khiển</span>
+                                            </Link>
+                                        </li>
+                                    )}
+
+                                    {/* Divider */}
+                                    <li><hr className="dropdown-divider my-3" /></li>
+
+                                    {/* Logout */}
                                     <li>
                                         <Link
-                                            className="dropdown-item"
-                                            href="/profile/edit"
-                                        >
-                                            <i className="bi bi-person fa-fw me-2"></i>{" "}
-                                            Chỉnh sửa hồ sơ
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link
-                                            className="dropdown-item"
-                                            href="/settings"
-                                        >
-                                            <i className="bi bi-gear fa-fw me-2"></i>{" "}
-                                            Cài đặt
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link
-                                            className="dropdown-item text-danger"
+                                            className="dropdown-item rounded-lg py-2 px-3 d-flex align-items-center text-decoration-none text-danger"
+                                            href="#"
                                             onClick={(e) => {
                                                 e.preventDefault();
-                                                router.post(route("logout"));
+                                                router.post(route('logout'));
                                             }}
                                         >
-                                            <i className="bi bi-box-arrow-right fa-fw me-2"></i>{" "}
-                                            Đăng xuất
+                                            <i className="bi bi-box-arrow-right fa-fw me-2"></i> Đăng xuất
                                         </Link>
                                     </li>
                                 </ul>

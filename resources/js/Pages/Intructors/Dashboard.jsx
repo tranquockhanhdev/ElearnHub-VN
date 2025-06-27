@@ -1,564 +1,574 @@
-import React, { useState } from 'react';
-import { Link, router, usePage } from '@inertiajs/react';
-import { route } from 'ziggy-js';
-import UserLayout from '../../Components/Layouts/UserLayout';
+import React, { useState, useEffect } from 'react';
+import InstructorLayout from '../../Components/Layouts/InstructorLayout';
 import InfoIntructor from '../../Components/InfoIntructor';
+import { Link, usePage } from '@inertiajs/react';
+import { Line, Doughnut } from 'react-chartjs-2';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+    ArcElement,
+} from 'chart.js';
 
-const dashboard = () => {
-    const { auth } = usePage().props;
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+    ArcElement
+);
+
+const Dashboard = () => {
+    const { auth, stats, revenue_chart, latest_enrollments, popular_courses, revenue_by_course } = usePage().props;
+    const [chartPeriod, setChartPeriod] = useState('month');
+    const [revenueData, setRevenueData] = useState(revenue_chart);
+    const [openMenu, setOpenMenu] = useState(null);
+    // Format currency
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+        }).format(amount || 0);
+    };
+    const toggleMenu = (menu) => {
+        setOpenMenu(openMenu === menu ? null : menu)
+    }
+    // Format date
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('vi-VN');
+    };
+
+    // Fetch revenue chart data when period changes
+    const fetchRevenueData = async (period) => {
+        try {
+            const response = await fetch(`/instructor/dashboard/revenue-chart?period=${period}`);
+            const data = await response.json();
+            setRevenueData(data);
+            setChartPeriod(period);
+        } catch (error) {
+            console.error('Error fetching revenue data:', error);
+        }
+    };
+
+    // Prepare chart data
+    const chartData = {
+        labels: revenueData?.map(item => {
+            if (chartPeriod === 'day') return item.date;
+            if (chartPeriod === 'week') return `Tuần ${item.week}`;
+            if (chartPeriod === 'quarter') return `Q${item.quarter}/${item.year}`;
+            return `${item.month}/${item.year}`;
+        }) || [],
+        datasets: [
+            {
+                label: 'Doanh thu',
+                data: revenueData?.map(item => item.revenue) || [],
+                borderColor: 'rgb(99, 102, 241)',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                tension: 0.4,
+                fill: true,
+            },
+        ],
+    };
+
+    const chartOptions = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            title: {
+                display: true,
+                text: 'Biểu đồ doanh thu theo thời gian',
+            },
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function (value) {
+                        return formatCurrency(value);
+                    }
+                }
+            }
+        }
+    };
+
+    // Doughnut chart for revenue by course
+    const doughnutData = {
+        labels: revenue_by_course?.slice(0, 5).map(course => course.title) || [],
+        datasets: [
+            {
+                data: revenue_by_course?.slice(0, 5).map(course => course.total_revenue || 0) || [],
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF',
+                ],
+                hoverBackgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF',
+                ],
+            },
+        ],
+    };
 
     return (
-        <UserLayout>
-            {/* **************** MAIN CONTENT START **************** */}
+        <InstructorLayout>
             <main>
-                {/* =======================
-Page Banner START */}
                 <InfoIntructor />
-                {/* =======================
-Page Banner END */}
-                {/* =======================
-Page content START */}
+                {/* Page content START */}
                 <section className="pt-0">
                     <div className="container">
                         <div className="row">
-                            {/* Right sidebar START */}
+                            {/* Sidebar */}
                             <div className="col-xl-3">
-                                {/* Responsive offcanvas body START */}
                                 <nav className="navbar navbar-light navbar-expand-xl mx-0">
-                                    <div
-                                        className="offcanvas offcanvas-end"
-                                        tabIndex={-1}
-                                        id="offcanvasNavbar"
-                                        aria-labelledby="offcanvasNavbarLabel"
-                                    >
-                                        {/* Offcanvas header */}
+
+                                    {/* Mobile: Offcanvas */}
+                                    <div className="offcanvas offcanvas-end d-xl-none" tabIndex="-1" id="offcanvasNavbar">
                                         <div className="offcanvas-header bg-light">
-                                            <h5 className="offcanvas-title" id="offcanvasNavbarLabel">
-                                                My profile
-                                            </h5>
-                                            <button
-                                                type="button"
-                                                className="btn-close text-reset"
-                                                data-bs-dismiss="offcanvas"
-                                                aria-label="Close"
-                                            />
+                                            <h5 className="offcanvas-title">Hồ sơ của tôi</h5>
+                                            <button type="button" className="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
                                         </div>
-                                        {/* Offcanvas body */}
-                                        <div className="offcanvas-body p-3 p-xl-0">
-                                            <div className="bg-dark border rounded-3 pb-0 p-3 w-100">
-                                                {/* Dashboard menu */}
+                                        <div className="offcanvas-body p-3">
+                                            <div className="bg-dark border rounded-3 p-3 w-100">
                                                 <div className="list-group list-group-dark list-group-borderless">
-                                                    <a
-                                                        className="list-group-item active"
-                                                        href="instructor-dashboard.html"
-                                                    >
-                                                        <i className="bi bi-ui-checks-grid fa-fw me-2" />
-                                                        Dashboard
-                                                    </a>
-                                                    <a
-                                                        className="list-group-item"
-                                                        href="instructor-manage-course.html"
-                                                    >
-                                                        <i className="bi bi-basket fa-fw me-2" />
-                                                        My Courses
-                                                    </a>
-                                                    <a
-                                                        className="list-group-item"
-                                                        href="instructor-earning.html"
-                                                    >
-                                                        <i className="bi bi-graph-up fa-fw me-2" />
-                                                        Earnings
-                                                    </a>
-                                                    <a
-                                                        className="list-group-item"
-                                                        href="instructor-studentlist.html"
-                                                    >
-                                                        <i className="bi bi-people fa-fw me-2" />
-                                                        Students
-                                                    </a>
-                                                    <a
-                                                        className="list-group-item"
-                                                        href="instructor-order.html"
-                                                    >
-                                                        <i className="bi bi-folder-check fa-fw me-2" />
-                                                        Orders
-                                                    </a>
-                                                    <a
-                                                        className="list-group-item"
-                                                        href="instructor-review.html"
-                                                    >
-                                                        <i className="bi bi-star fa-fw me-2" />
-                                                        Reviews
-                                                    </a>
-                                                    <a
-                                                        className="list-group-item"
-                                                        href="instructor-edit-profile.html"
-                                                    >
-                                                        <i className="bi bi-pencil-square fa-fw me-2" />
-                                                        Edit Profile
-                                                    </a>
-                                                    <a
-                                                        className="list-group-item"
-                                                        href="instructor-payout.html"
-                                                    >
-                                                        <i className="bi bi-wallet2 fa-fw me-2" />
-                                                        Payouts
-                                                    </a>
-                                                    <a
-                                                        className="list-group-item"
-                                                        href="instructor-setting.html"
-                                                    >
-                                                        <i className="bi bi-gear fa-fw me-2" />
-                                                        Settings
-                                                    </a>
-                                                    <a
-                                                        className="list-group-item"
-                                                        href="instructor-delete-account.html"
-                                                    >
-                                                        <i className="bi bi-trash fa-fw me-2" />
-                                                        Delete Profile
-                                                    </a>
-                                                    <a
-                                                        className="list-group-item text-danger bg-danger-soft-hover"
-                                                        href="sign-in.html"
-                                                    >
-                                                        <i className="fas fa-sign-out-alt fa-fw me-2" />
-                                                        Sign Out
-                                                    </a>
+
+                                                    <Link className="list-group-item" href="/instructor/dashboard" preserveScroll>
+                                                        <i className="bi bi-grid fa-fw me-2"></i>Tổng quan
+                                                    </Link>
+
+                                                    {/* Quản lý khóa học */}
+                                                    <button onClick={() => toggleMenu('courses')} className="list-group-item d-flex justify-between align-items-center w-full text-start">
+                                                        <span><i className="bi bi-journal-text fa-fw me-2"></i>Quản lý khóa học</span>
+                                                        <i className={`bi ms-auto ${openMenu === 'courses' ? 'bi-chevron-up' : 'bi-chevron-down'}`} />
+                                                    </button>
+                                                    {openMenu === 'courses' && (
+                                                        <div className="ps-4">
+                                                            <Link href="/instructor/courses" className="list-group-item" preserveScroll>Khóa học của tôi</Link>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Học viên */}
+                                                    <button onClick={() => toggleMenu('students')} className="list-group-item d-flex justify-between align-items-center w-full text-start">
+                                                        <span><i className="bi bi-people fa-fw me-2"></i>Học viên</span>
+                                                        <i className={`bi ms-auto ${openMenu === 'students' ? 'bi-chevron-up' : 'bi-chevron-down'}`} />
+                                                    </button>
+                                                    {openMenu === 'students' && (
+                                                        <div className="ps-4">
+                                                            <Link href="/instructor/students" className="list-group-item" preserveScroll>Danh sách học viên</Link>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Doanh thu & Thanh toán */}
+                                                    <button onClick={() => toggleMenu('revenue')} className="list-group-item d-flex justify-between align-items-center w-full text-start">
+                                                        <span><i className="bi bi-cash-stack fa-fw me-2"></i>Doanh thu & Thanh toán</span>
+                                                        <i className={`bi ms-auto ${openMenu === 'revenue' ? 'bi-chevron-up' : 'bi-chevron-down'}`} />
+                                                    </button>
+                                                    {openMenu === 'revenue' && (
+                                                        <div className="ps-4">
+                                                            <Link href="/instructor/revenue" className="list-group-item" preserveScroll>Doanh Thu Khoá Học</Link>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Tài khoản giảng viên */}
+                                                    <button onClick={() => toggleMenu('profile')} className="list-group-item d-flex justify-between align-items-center w-full text-start">
+                                                        <span><i className="bi bi-person-circle fa-fw me-2"></i>Tài khoản giảng viên</span>
+                                                        <i className={`bi ms-auto ${openMenu === 'profile' ? 'bi-chevron-up' : 'bi-chevron-down'}`} />
+                                                    </button>
+                                                    {openMenu === 'profile' && (
+                                                        <div className="ps-4">
+                                                            <Link href="/instructor/profile" className="list-group-item" preserveScroll>Chỉnh sửa thông tin</Link>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Đăng xuất */}
+                                                    <Link href="/logout" as="button" method="post" className="list-group-item text-danger bg-danger-soft-hover" preserveScroll>
+                                                        <i className="bi bi-box-arrow-right fa-fw me-2"></i>Đăng xuất
+                                                    </Link>
+
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Desktop: static sidebar */}
+                                    <div className="d-none d-xl-block w-100">
+                                        <div className="bg-dark border rounded-3 p-3 w-100">
+                                            <div className="list-group list-group-dark list-group-borderless">
+
+                                                <Link className="list-group-item" href="/instructor/dashboard" preserveScroll>
+                                                    <i className="bi bi-grid fa-fw me-2"></i>Tổng quan
+                                                </Link>
+
+                                                {/* Quản lý khóa học */}
+                                                <button onClick={() => toggleMenu('courses')} className="list-group-item d-flex justify-between align-items-center w-full text-start">
+                                                    <span><i className="bi bi-journal-text fa-fw me-2"></i>Quản lý khóa học</span>
+                                                    <i className={`bi ms-auto ${openMenu === 'courses' ? 'bi-chevron-up' : 'bi-chevron-down'}`} />
+                                                </button>
+                                                {openMenu === 'courses' && (
+                                                    <div className="ps-4">
+                                                        <Link href="/instructor/courses" className="list-group-item" preserveScroll>Khóa học của tôi</Link>
+                                                    </div>
+                                                )}
+
+                                                {/* Học viên */}
+                                                <button onClick={() => toggleMenu('students')} className="list-group-item d-flex justify-between align-items-center w-full text-start">
+                                                    <span><i className="bi bi-people fa-fw me-2"></i>Học viên</span>
+                                                    <i className={`bi ms-auto ${openMenu === 'students' ? 'bi-chevron-up' : 'bi-chevron-down'}`} />
+                                                </button>
+                                                {openMenu === 'students' && (
+                                                    <div className="ps-4">
+                                                        <Link href="/instructor/students" className="list-group-item" preserveScroll>Danh sách học viên</Link>
+                                                    </div>
+                                                )}
+
+                                                {/* Doanh thu & Thanh toán */}
+                                                <button onClick={() => toggleMenu('revenue')} className="list-group-item d-flex justify-between align-items-center w-full text-start">
+                                                    <span><i className="bi bi-cash-stack fa-fw me-2"></i>Doanh thu & Thanh toán</span>
+                                                    <i className={`bi ms-auto ${openMenu === 'revenue' ? 'bi-chevron-up' : 'bi-chevron-down'}`} />
+                                                </button>
+                                                {openMenu === 'revenue' && (
+                                                    <div className="ps-4">
+                                                        <Link href="/instructor/revenue" className="list-group-item" preserveScroll>Doanh Thu Khoá Học</Link>
+                                                    </div>
+                                                )}
+
+                                                {/* Tài khoản giảng viên */}
+                                                <button onClick={() => toggleMenu('profile')} className="list-group-item d-flex justify-between align-items-center w-full text-start">
+                                                    <span><i className="bi bi-person-circle fa-fw me-2"></i>Tài khoản giảng viên</span>
+                                                    <i className={`bi ms-auto ${openMenu === 'profile' ? 'bi-chevron-up' : 'bi-chevron-down'}`} />
+                                                </button>
+                                                {openMenu === 'profile' && (
+                                                    <div className="ps-4">
+                                                        <Link href="/instructor/profile" className="list-group-item" preserveScroll>Chỉnh sửa thông tin</Link>
+
+                                                    </div>
+                                                )}
+
+                                                {/* Đăng xuất */}
+                                                <Link href="/logout" as="button" method="post" className="list-group-item text-danger bg-danger-soft-hover" preserveScroll>
+                                                    <i className="bi bi-box-arrow-right fa-fw me-2"></i>Đăng xuất
+                                                </Link>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </nav>
-                                {/* Responsive offcanvas body END */}
                             </div>
-                            {/* Right sidebar END */}
-                            {/* Main content START */}
+
+
+                            {/* **************** MAIN CONTENT START **************** */}
                             <div className="col-xl-9">
-                                {/* Counter boxes START */}
-                                <div className="row g-4">
-                                    {/* Counter item */}
-                                    <div className="col-sm-6 col-lg-4">
-                                        <div className="d-flex justify-content-center align-items-center p-4 bg-warning bg-opacity-15 rounded-3">
-                                            <span className="display-6 text-warning mb-0">
-                                                <i className="fas fa-tv fa-fw" />
-                                            </span>
-                                            <div className="ms-4">
-                                                <div className="d-flex">
-                                                    <h5
-                                                        className="purecounter mb-0 fw-bold"
-                                                        data-purecounter-start={0}
-                                                        data-purecounter-end={25}
-                                                        data-purecounter-delay={200}
-                                                    >
-                                                        0
-                                                    </h5>
-                                                </div>
-                                                <span className="mb-0 h6 fw-light">Total Courses</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {/* Counter item */}
-                                    <div className="col-sm-6 col-lg-4">
-                                        <div className="d-flex justify-content-center align-items-center p-4 bg-purple bg-opacity-10 rounded-3">
-                                            <span className="display-6 text-purple mb-0">
-                                                <i className="fas fa-user-graduate fa-fw" />
-                                            </span>
-                                            <div className="ms-4">
-                                                <div className="d-flex">
-                                                    <h5
-                                                        className="purecounter mb-0 fw-bold"
-                                                        data-purecounter-start={0}
-                                                        data-purecounter-end={25}
-                                                        data-purecounter-delay={200}
-                                                    >
-                                                        0
-                                                    </h5>
-                                                    <span className="mb-0 h5">K+</span>
-                                                </div>
-                                                <span className="mb-0 h6 fw-light">Total Students</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {/* Counter item */}
-                                    <div className="col-sm-6 col-lg-4">
-                                        <div className="d-flex justify-content-center align-items-center p-4 bg-info bg-opacity-10 rounded-3">
-                                            <span className="display-6 text-info mb-0">
-                                                <i className="fas fa-gem fa-fw" />
-                                            </span>
-                                            <div className="ms-4">
-                                                <div className="d-flex">
-                                                    <h5
-                                                        className="purecounter mb-0 fw-bold"
-                                                        data-purecounter-start={0}
-                                                        data-purecounter-end={12}
-                                                        data-purecounter-delay={300}
-                                                    >
-                                                        0
-                                                    </h5>
-                                                    <span className="mb-0 h5">K</span>
-                                                </div>
-                                                <span className="mb-0 h6 fw-light">Enrolled Students</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {/* Counter boxes END */}
-                                {/* Chart START */}
-                                <div className="row mt-5">
-                                    <div className="col-12">
-                                        <div className="card card-body border p-4 h-100">
-                                            <div className="row g-4">
-                                                {/* Content */}
-                                                <div className="col-sm-6 col-md-4">
-                                                    <span className="badge bg-dark text-white">
-                                                        Current Month
-                                                    </span>
-                                                    <h4 className="text-primary my-2">$35000</h4>
-                                                    <p className="mb-0">
-                                                        <span className="text-success me-1">
-                                                            0.20%
-                                                            <i className="bi bi-arrow-up" />
-                                                        </span>
-                                                        vs last month
-                                                    </p>
-                                                </div>
-                                                {/* Content */}
-                                                <div className="col-sm-6 col-md-4">
-                                                    <span className="badge bg-dark text-white">
-                                                        Last Month
-                                                    </span>
-                                                    <h4 className="my-2">$28000</h4>
-                                                    <p className="mb-0">
-                                                        <span className="text-danger me-1">
-                                                            0.10%
-                                                            <i className="bi bi-arrow-down" />
-                                                        </span>
-                                                        Then last month
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            {/* Apex chart */}
-                                            <div id="ChartPayout" />
-                                        </div>
-                                    </div>
-                                </div>
-                                {/* Chart END */}
-                                {/* Course List table START */}
+                                {/* Title */}
                                 <div className="row">
                                     <div className="col-12">
-                                        <div className="card border rounded-3 mt-5">
-                                            {/* Card header START */}
-                                            <div className="card-header border-bottom">
-                                                <div className="d-sm-flex justify-content-sm-between align-items-center">
-                                                    <h3 className="mb-2 mb-sm-0">Most Selling Courses</h3>
-                                                    <a href="#" className="btn btn-sm btn-primary-soft mb-0">
-                                                        View all
-                                                    </a>
+                                        <h1 className="h3 mb-2 mb-sm-0">Dashboard</h1>
+                                        <p className="text-black">Chào mừng trở lại, {auth.user?.name}!</p>
+                                    </div>
+                                </div>
+
+                                {/* Stats Cards */}
+                                <div className="row g-4 mb-5">
+                                    {/* Total Courses */}
+                                    <div className="col-sm-6 col-lg-3">
+                                        <div className="card card-body bg-warning bg-opacity-15 border border-warning border-opacity-25 p-4 h-100">
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h4 className="mb-2 text-warning">{stats?.total_courses || 0}</h4>
+                                                    <h6 className="mb-0">Tổng khóa học</h6>
+                                                </div>
+                                                <div className="icon-lg bg-warning text-white rounded-circle">
+                                                    <i className="bi bi-book"></i>
                                                 </div>
                                             </div>
-                                            {/* Card header END */}
-                                            {/* Card body START */}
-                                            <div className="card-body">
-                                                <div className="table-responsive-lg border-0 rounded-3">
-                                                    {/* Table START */}
-                                                    <table className="table table-dark-gray align-middle p-4 mb-0">
-                                                        {/* Table head */}
-                                                        <thead>
-                                                            <tr>
-                                                                <th scope="col" className="border-0 rounded-start">
-                                                                    Course Name
-                                                                </th>
-                                                                <th scope="col" className="border-0">
-                                                                    Selling
-                                                                </th>
-                                                                <th scope="col" className="border-0">
-                                                                    Amount
-                                                                </th>
-                                                                <th scope="col" className="border-0">
-                                                                    Period
-                                                                </th>
-                                                                <th scope="col" className="border-0 rounded-end">
-                                                                    Action
-                                                                </th>
-                                                            </tr>
-                                                        </thead>
-                                                        {/* Table body START */}
-                                                        <tbody>
-                                                            {/* Table item */}
-                                                            <tr>
-                                                                {/* Course item */}
-                                                                <td>
-                                                                    <div className="d-flex align-items-center">
-                                                                        {/* Image */}
-                                                                        <div className="w-100px w-md-60px">
-                                                                            <img
-                                                                                src="/assets/images/courses/4by3/08.jpg"
-                                                                                className="rounded"
-                                                                                alt=""
-                                                                            />
-                                                                        </div>
-                                                                        {/* Title */}
-                                                                        <h6 className="mb-0 ms-2">
-                                                                            <a href="#">
-                                                                                Building Scalable APIs with GraphQL
-                                                                            </a>
-                                                                        </h6>
-                                                                    </div>
-                                                                </td>
-                                                                {/* Selling item */}
-                                                                <td>34</td>
-                                                                {/* Amount item */}
-                                                                <td>$1,25,478</td>
-                                                                {/* Period item */}
-                                                                <td>
-                                                                    <span className="badge bg-primary bg-opacity-10 text-primary">
-                                                                        9 months
-                                                                    </span>
-                                                                </td>
-                                                                {/* Action item */}
-                                                                <td>
-                                                                    <a
-                                                                        href="#"
-                                                                        className="btn btn-sm btn-success-soft btn-round me-1 mb-0"
-                                                                    >
-                                                                        <i className="far fa-fw fa-edit" />
-                                                                    </a>
-                                                                    <button className="btn btn-sm btn-danger-soft btn-round mb-0">
-                                                                        <i className="fas fa-fw fa-times" />
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
-                                                            {/* Table item */}
-                                                            <tr>
-                                                                {/* Course item */}
-                                                                <td>
-                                                                    <div className="d-flex align-items-center">
-                                                                        {/* Image */}
-                                                                        <div className="w-100px w-md-60px">
-                                                                            <img
-                                                                                src="/assets/images/courses/4by3/10.jpg"
-                                                                                className="rounded"
-                                                                                alt=""
-                                                                            />
-                                                                        </div>
-                                                                        {/* Title */}
-                                                                        <h6 className="mb-0 ms-2">
-                                                                            <a href="#">Bootstrap 5 From Scratch</a>
-                                                                        </h6>
-                                                                    </div>
-                                                                </td>
-                                                                {/* Selling item */}
-                                                                <td>45</td>
-                                                                {/* Amount item */}
-                                                                <td>$2,85,478</td>
-                                                                {/* Period item */}
-                                                                <td>
-                                                                    <span className="badge bg-primary bg-opacity-10 text-primary">
-                                                                        6 months
-                                                                    </span>
-                                                                </td>
-                                                                {/* Action item */}
-                                                                <td>
-                                                                    <a
-                                                                        href="#"
-                                                                        className="btn btn-sm btn-success-soft btn-round me-1 mb-0"
-                                                                    >
-                                                                        <i className="far fa-fw fa-edit" />
-                                                                    </a>
-                                                                    <button className="btn btn-sm btn-danger-soft btn-round mb-0">
-                                                                        <i className="fas fa-fw fa-times" />
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
-                                                            {/* Table item */}
-                                                            <tr>
-                                                                {/* Course item */}
-                                                                <td>
-                                                                    <div className="d-flex align-items-center">
-                                                                        {/* Image */}
-                                                                        <div className="w-100px w-md-60px">
-                                                                            <img
-                                                                                src="/assets/images/courses/4by3/02.jpg"
-                                                                                className="rounded"
-                                                                                alt=""
-                                                                            />
-                                                                        </div>
-                                                                        {/* Title */}
-                                                                        <h6 className="mb-0 ms-2">
-                                                                            <a href="#">Graphic Design Masterclass</a>
-                                                                        </h6>
-                                                                    </div>
-                                                                </td>
-                                                                {/* Selling item */}
-                                                                <td>21</td>
-                                                                {/* Amount item */}
-                                                                <td>$85,478</td>
-                                                                {/* Period item */}
-                                                                <td>
-                                                                    <span className="badge bg-primary bg-opacity-10 text-primary">
-                                                                        4 months
-                                                                    </span>
-                                                                </td>
-                                                                {/* Action item */}
-                                                                <td>
-                                                                    <a
-                                                                        href="#"
-                                                                        className="btn btn-sm btn-success-soft btn-round me-1 mb-0"
-                                                                    >
-                                                                        <i className="far fa-fw fa-edit" />
-                                                                    </a>
-                                                                    <button className="btn btn-sm btn-danger-soft btn-round mb-0">
-                                                                        <i className="fas fa-fw fa-times" />
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
-                                                            {/* Table item */}
-                                                            <tr>
-                                                                {/* Course item */}
-                                                                <td>
-                                                                    <div className="d-flex align-items-center">
-                                                                        {/* Image */}
-                                                                        <div className="w-100px w-md-60px">
-                                                                            <img
-                                                                                src="/assets/images/courses/4by3/04.jpg"
-                                                                                className="rounded"
-                                                                                alt=""
-                                                                            />
-                                                                        </div>
-                                                                        {/* Title */}
-                                                                        <h6 className="mb-0 ms-2">
-                                                                            <a href="#">Learn Invision</a>
-                                                                        </h6>
-                                                                    </div>
-                                                                </td>
-                                                                {/* Selling item */}
-                                                                <td>28</td>
-                                                                {/* Amount item */}
-                                                                <td>$98,478</td>
-                                                                {/* Period item */}
-                                                                <td>
-                                                                    <span className="badge bg-primary bg-opacity-10 text-primary">
-                                                                        8 months
-                                                                    </span>
-                                                                </td>
-                                                                {/* Action item */}
-                                                                <td>
-                                                                    <a
-                                                                        href="#"
-                                                                        className="btn btn-sm btn-success-soft btn-round me-1 mb-0"
-                                                                    >
-                                                                        <i className="far fa-fw fa-edit" />
-                                                                    </a>
-                                                                    <button className="btn btn-sm btn-danger-soft btn-round mb-0">
-                                                                        <i className="fas fa-fw fa-times" />
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
-                                                            {/* Table item */}
-                                                            <tr>
-                                                                {/* Course item */}
-                                                                <td>
-                                                                    <div className="d-flex align-items-center">
-                                                                        {/* Image */}
-                                                                        <div className="w-100px w-md-60px">
-                                                                            <img
-                                                                                src="/assets/images/courses/4by3/06.jpg"
-                                                                                className="rounded"
-                                                                                alt=""
-                                                                            />
-                                                                        </div>
-                                                                        {/* Title */}
-                                                                        <h6 className="mb-0 ms-2">
-                                                                            <a href="#">Angular – The Complete Guider</a>
-                                                                        </h6>
-                                                                    </div>
-                                                                </td>
-                                                                {/* Selling item */}
-                                                                <td>38</td>
-                                                                {/* Amount item */}
-                                                                <td>$1,02,478</td>
-                                                                {/* Period item */}
-                                                                <td>
-                                                                    <span className="badge bg-primary bg-opacity-10 text-primary">
-                                                                        1 year
-                                                                    </span>
-                                                                </td>
-                                                                {/* Action item */}
-                                                                <td>
-                                                                    <a
-                                                                        href="#"
-                                                                        className="btn btn-sm btn-success-soft btn-round me-1 mb-0"
-                                                                    >
-                                                                        <i className="far fa-fw fa-edit" />
-                                                                    </a>
-                                                                    <button className="btn btn-sm btn-danger-soft btn-round mb-0">
-                                                                        <i className="fas fa-fw fa-times" />
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                        {/* Table body END */}
-                                                    </table>
-                                                    {/* Table END */}
+                                        </div>
+                                    </div>
+
+                                    {/* Total Students */}
+                                    <div className="col-sm-6 col-lg-3">
+                                        <div className="card card-body bg-purple bg-opacity-10 border border-purple border-opacity-25 p-4 h-100">
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h4 className="mb-2 text-white">{stats?.total_students || 0}</h4>
+                                                    <h6 className="mb-0 text-white">Tổng học viên</h6>
                                                 </div>
-                                                {/* Pagination */}
-                                                <div className="d-sm-flex justify-content-sm-between align-items-sm-center mt-3">
-                                                    {/* Content */}
-                                                    <p className="mb-0 text-center text-sm-start">
-                                                        Showing 1 to 8 of 20 entries
-                                                    </p>
-                                                    {/* Pagination */}
-                                                    <nav
-                                                        className="d-flex justify-content-center mb-0"
-                                                        aria-label="navigation"
-                                                    >
-                                                        <ul className="pagination pagination-sm pagination-primary-soft mb-0 pb-0">
-                                                            <li className="page-item mb-0">
-                                                                <a className="page-link" href="#" tabIndex={-1}>
-                                                                    <i className="fas fa-angle-left" />
-                                                                </a>
-                                                            </li>
-                                                            <li className="page-item mb-0">
-                                                                <a className="page-link" href="#">
-                                                                    1
-                                                                </a>
-                                                            </li>
-                                                            <li className="page-item mb-0 active">
-                                                                <a className="page-link" href="#">
-                                                                    2
-                                                                </a>
-                                                            </li>
-                                                            <li className="page-item mb-0">
-                                                                <a className="page-link" href="#">
-                                                                    3
-                                                                </a>
-                                                            </li>
-                                                            <li className="page-item mb-0">
-                                                                <a className="page-link" href="#">
-                                                                    <i className="fas fa-angle-right" />
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                    </nav>
+                                                <div className="icon-lg bg-purple text-white rounded-circle">
+                                                    <i className="bi bi-people"></i>
                                                 </div>
                                             </div>
-                                            {/* Card body START */}
+                                        </div>
+                                    </div>
+
+                                    {/* Total Revenue */}
+                                    <div className="col-sm-6 col-lg-3">
+                                        <div className="card card-body bg-success bg-opacity-10 border border-success border-opacity-25 p-4 h-100">
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h4 className="mb-2 text-success">{formatCurrency(stats?.total_revenue)}</h4>
+                                                    <h6 className="mb-0">Tổng thu nhập</h6>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Monthly Enrollments */}
+                                    <div className="col-sm-6 col-lg-3">
+                                        <div className="card card-body bg-info bg-opacity-10 border border-info border-opacity-25 p-4 h-100">
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h4 className="mb-2 text-info">{stats?.monthly_enrollments || 0}</h4>
+                                                    <h6 className="mb-0">Đăng ký tháng này</h6>
+                                                </div>
+                                                <div className="icon-lg bg-info text-white rounded-circle">
+                                                    <i className="bi bi-graph-up"></i>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                {/* Course List table END */}
+
+                                {/* Charts Row */}
+                                <div className="row g-4 mb-4">
+                                    {/* Revenue Chart */}
+                                    <div className="col-lg-8">
+                                        <div className="card border h-100">
+                                            <div className="card-header border-bottom d-flex justify-content-between align-items-center">
+                                                <h5 className="card-header-title">Biểu đồ doanh thu</h5>
+                                                <div className="dropdown">
+                                                    <button
+                                                        className="btn btn-sm btn-light dropdown-toggle"
+                                                        type="button"
+                                                        data-bs-toggle="dropdown"
+                                                    >
+                                                        {chartPeriod === 'day' && 'Theo ngày'}
+                                                        {chartPeriod === 'week' && 'Theo tuần'}
+                                                        {chartPeriod === 'month' && 'Theo tháng'}
+                                                        {chartPeriod === 'quarter' && 'Theo quý'}
+                                                    </button>
+                                                    <ul className="dropdown-menu">
+                                                        <li>
+                                                            <button
+                                                                className="dropdown-item"
+                                                                onClick={() => fetchRevenueData('day')}
+                                                            >
+                                                                Theo ngày
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <button
+                                                                className="dropdown-item"
+                                                                onClick={() => fetchRevenueData('week')}
+                                                            >
+                                                                Theo tuần
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <button
+                                                                className="dropdown-item"
+                                                                onClick={() => fetchRevenueData('month')}
+                                                            >
+                                                                Theo tháng
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <button
+                                                                className="dropdown-item"
+                                                                onClick={() => fetchRevenueData('quarter')}
+                                                            >
+                                                                Theo quý
+                                                            </button>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div className="card-body">
+                                                <Line data={chartData} options={chartOptions} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Revenue by Course */}
+                                    <div className="col-lg-4">
+                                        <div className="card border h-100">
+                                            <div className="card-header border-bottom">
+                                                <h5 className="card-header-title">Doanh thu theo khóa học</h5>
+                                            </div>
+                                            <div className="card-body">
+                                                {revenue_by_course?.length > 0 ? (
+                                                    <Doughnut data={doughnutData} />
+                                                ) : (
+                                                    <div className="text-center text-muted py-4">
+                                                        <i className="bi bi-pie-chart display-4"></i>
+                                                        <p className="mt-2">Chưa có dữ liệu doanh thu</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Tables Row */}
+                                <div className="row g-4">
+                                    {/* Latest Enrollments */}
+                                    <div className="col-lg-7">
+                                        <div className="card border">
+                                            <div className="card-header border-bottom d-flex justify-content-between align-items-center">
+                                                <h5 className="card-header-title">Đăng ký mới nhất</h5>
+                                                <a href="/instructor/enrollments" className="btn btn-sm btn-primary-soft">
+                                                    Xem tất cả
+                                                </a>
+                                            </div>
+                                            <div className="card-body">
+                                                {latest_enrollments?.length > 0 ? (
+                                                    <div className="table-responsive">
+                                                        <table className="table table-hover align-middle">
+                                                            <thead className="table-light">
+                                                                <tr>
+                                                                    <th>Học viên</th>
+                                                                    <th>Khóa học</th>
+                                                                    <th>Ngày đăng ký</th>
+                                                                    <th>Trạng thái</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {latest_enrollments.map((enrollment) => (
+                                                                    <tr key={enrollment.id}>
+                                                                        <td>
+                                                                            <div className="d-flex align-items-center">
+                                                                                <div className="avatar avatar-xs me-2">
+                                                                                    <img
+                                                                                        src={enrollment.student?.avatar || '/assets/images/avatar/default.jpg'}
+                                                                                        className="rounded-circle"
+                                                                                        alt={enrollment.student?.name}
+                                                                                    />
+                                                                                </div>
+                                                                                <div>
+                                                                                    <h6 className="mb-0 text-truncate" style={{ maxWidth: '150px' }}>
+                                                                                        {enrollment.student?.name}
+                                                                                    </h6>
+                                                                                    <small className="text-muted">
+                                                                                        {enrollment.student?.email}
+                                                                                    </small>
+                                                                                </div>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td>
+                                                                            <span className="text-truncate d-block" style={{ maxWidth: '200px' }}>
+                                                                                {enrollment.course?.title}
+                                                                            </span>
+                                                                        </td>
+                                                                        <td>
+                                                                            <small>{formatDate(enrollment.created_at)}</small>
+                                                                        </td>
+                                                                        <td>
+                                                                            <span className="badge bg-success">
+                                                                                Đã đăng ký
+                                                                            </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center text-muted py-4">
+                                                        <i className="bi bi-person-plus display-4"></i>
+                                                        <p className="mt-2">Chưa có đăng ký mới</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Popular Courses */}
+                                    <div className="col-lg-5">
+                                        <div className="card border">
+                                            <div className="card-header border-bottom">
+                                                <h5 className="card-header-title">Khóa học phổ biến</h5>
+                                            </div>
+                                            <div className="card-body">
+                                                {popular_courses?.length > 0 ? (
+                                                    <div className="list-group list-group-flush">
+                                                        {popular_courses.map((course, index) => (
+                                                            <div key={course.id} className="list-group-item d-flex justify-content-between align-items-center">
+                                                                <div className="d-flex align-items-center">
+                                                                    <span className="badge bg-primary rounded-pill me-2">
+                                                                        {index + 1}
+                                                                    </span>
+                                                                    <div>
+                                                                        <h6 className="mb-0 text-truncate" style={{ maxWidth: '200px' }}>
+                                                                            {course.title}
+                                                                        </h6>
+                                                                        <small className="text-muted">
+                                                                            {course.enrollments_count} học viên
+                                                                        </small>
+                                                                    </div>
+                                                                </div>
+                                                                <span className="badge bg-light text-dark">
+                                                                    {formatCurrency(course.price)}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center text-muted py-4">
+                                                        <i className="bi bi-star display-4"></i>
+                                                        <p className="mt-2">Chưa có khóa học nào</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            {/* Main content END */}
+                            {/* **************** MAIN CONTENT END **************** */}
                         </div>
-                        {/* Row END */}
                     </div>
                 </section>
-                {/* =======================
-Page content END */}
+                <style jsx>{`
+                    .text-purple {
+                        color: #6f42c1 !important;
+                    }
+                    .bg-purple {
+                        background-color: #6f42c1 !important;
+                    }
+                    .border-purple {
+                        border-color: #6f42c1 !important;
+                    }
+                    .icon-lg {
+                        width: 50px;
+                        height: 50px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 1.5rem;
+                    }
+                    .card {
+                        transition: transform 0.2s ease-in-out;
+                    }
+                    .card:hover {
+                        transform: translateY(-2px);
+                    }
+                `}</style>
             </main>
-            {/* **************** MAIN CONTENT END **************** */}
-        </UserLayout>
+        </InstructorLayout>
     );
-}
-export default dashboard;
+};
+
+export default Dashboard;

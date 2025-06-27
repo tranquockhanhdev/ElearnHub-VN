@@ -25,7 +25,7 @@ const InfoStudent = () => {
                                     <div className="avatar avatar-xxl position-relative mt-n3">
                                         <img
                                             className="avatar-img rounded-circle border-white border-3 shadow"
-                                            src="/assets/images/avatar/01.jpg"
+                                            src="https://www.svgrepo.com/show/384670/account-avatar-profile-user.svg"
                                             alt=""
                                         />
                                     </div>
@@ -34,25 +34,12 @@ const InfoStudent = () => {
                                 <div className="col d-sm-flex justify-content-between align-items-center">
                                     <div>
                                         <h1 className="my-1 fs-4">{auth.user.name}</h1>
-                                        <ul className="list-inline mb-0">
-                                            <li className="list-inline-item me-3 mb-1 mb-sm-0">
-                                                <span className="h6">255</span>
-                                                <span className="text-body fw-light"> points</span>
-                                            </li>
-                                            <li className="list-inline-item me-3 mb-1 mb-sm-0">
-                                                <span className="h6">7</span>
-                                                <span className="text-body fw-light"> Completed courses</span>
-                                            </li>
-                                            <li className="list-inline-item me-3 mb-1 mb-sm-0">
-                                                <span className="h6">52</span>
-                                                <span className="text-body fw-light"> Completed lessons</span>
-                                            </li>
-                                        </ul>
+
                                     </div>
                                     {/* Button */}
                                     <div className="mt-2 mt-sm-0">
-                                        <a href="student-course-list.html" className="btn btn-outline-primary mb-0">
-                                            View my courses
+                                        <a href="/student/courselist" className="btn btn-outline-primary mb-0">
+                                            Xem danh sách khóa học
                                         </a>
                                     </div>
                                 </div>

@@ -17,8 +17,10 @@ class Course extends Model
         'instructor_id',
         'title',
         'slug',
+        'img_url',
         'description',
         'status',
+        'note',
         'price',
         'img_url',
     ];
@@ -43,5 +45,13 @@ class Course extends Model
     public function enrollments()
     {
         return $this->hasMany(Enrollment::class);
+    }
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+    public function courseEdits()
+    {
+        return $this->hasMany(CourseEdit::class);
     }
 }
