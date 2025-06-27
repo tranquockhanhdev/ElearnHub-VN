@@ -98,14 +98,6 @@ export const useImage = (initialImage = null) => {
                 onFileSelect(file, dimensions);
             }
 
-            console.log('✅ Image uploaded:', {
-                name: file.name,
-                size: formatFileSize(file.size),
-                type: file.type,
-                dimensions: `${dimensions.width}x${dimensions.height}`,
-                aspectRatio: dimensions.aspectRatio.toFixed(2)
-            });
-
         } catch (error) {
             setImageError('Có lỗi xảy ra khi tải ảnh');
             setIsUploading(false);
@@ -144,7 +136,6 @@ export const useImage = (initialImage = null) => {
             }
         }
 
-        console.log('🗑️ Image removed');
     };
 
     // Reset all states

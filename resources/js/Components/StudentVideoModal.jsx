@@ -15,7 +15,6 @@ import {
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 const StudentVideoModal = ({ isOpen, onClose, video, courseId, onVideoComplete }) => {
-    console.log('StudentVideoModal rendered with video:', video);
     const modalRef = useRef(null);
     const videoRef = useRef(null);
     const seekWarningTimeoutRef = useRef(null);
@@ -310,7 +309,6 @@ const StudentVideoModal = ({ isOpen, onClose, video, courseId, onVideoComplete }
         // Fallback cho các đường dẫn khác
         return `/video/${video.file_url}`;
     };
-    console.log('Video source:', getVideoSource());
     const isVideoFile = () => {
         return video?.file_type && ['mp4', 'webm', 'ogg', 'mov', 'avi'].includes(video.file_type.toLowerCase());
     };

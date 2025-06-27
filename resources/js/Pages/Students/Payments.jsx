@@ -9,7 +9,6 @@ const Payments = () => {
     const { auth, flash, payments, filters, counts } = usePage().props;
     const [activeTab, setActiveTab] = useState(filters?.status || 'all');
     const [searchTerm, setSearchTerm] = useState(filters?.search || '');
-    console.log('Payments Page Loaded', { counts });
     // Debounce search term
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
 

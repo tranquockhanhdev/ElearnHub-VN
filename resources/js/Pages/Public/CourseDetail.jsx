@@ -198,8 +198,6 @@ const CourseDetail = () => {
             alert('Bạn cần đăng ký khóa học để làm quiz này');
             return;
         }
-        // Navigate to quiz or show quiz modal
-        console.log('Open quiz:', quiz.title);
     };
 
     // Check if user can access quiz

@@ -23,8 +23,6 @@ const Home = () => {
 	};
 
 	const getCourseImage = (course) => {
-		console.log('Course Image:', course);
-
 		if (!course.img_url) {
 			return '/assets/images/courses/4by3/default.jpg';
 		}

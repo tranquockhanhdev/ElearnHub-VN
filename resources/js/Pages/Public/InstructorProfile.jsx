@@ -4,7 +4,6 @@ import UserLayout from '../../Components/Layouts/UserLayout';
 
 const InstructorProfile = () => {
     const { instructor, courses, stats } = usePage().props;
-    console.log(instructor, courses, stats);
     const formatPrice = (price) => {
         return new Intl.NumberFormat('vi-VN', {
             style: 'currency',

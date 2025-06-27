@@ -225,15 +225,12 @@ const CourseDetail = ({ course }) => {
     // Function để bắt đầu chỉnh sửa quiz
     // Function để bắt đầu chỉnh sửa quiz
     const handleEditQuiz = (quiz) => {
-        console.log('Original quiz data:', quiz);
-        console.log('Quiz questions:', quiz.questions);
 
         setShowEditQuiz(quiz.id);
 
         // Đảm bảo questions có dữ liệu đúng và correct_option được preserve
         const questionsData = quiz.questions && quiz.questions.length > 0
             ? quiz.questions.map(q => {
-                console.log('Processing question:', q);
                 return {
                     question_text: q.question_text || '',
                     option_a: q.option_a || '',
@@ -252,7 +249,6 @@ const CourseDetail = ({ course }) => {
                 correct_option: 'A'
             }];
 
-        console.log('Processed questions data:', questionsData);
 
         editQuizForm.setData({
             title: quiz.title || '',
@@ -263,7 +259,6 @@ const CourseDetail = ({ course }) => {
 
         // Log để kiểm tra sau khi setData
         setTimeout(() => {
-            console.log('Form data after setData:', editQuizForm.data);
         }, 100);
     };
 
@@ -429,13 +424,11 @@ const CourseDetail = ({ course }) => {
     };
 
     const handleViewDocument = (document) => {
-        console.log('Viewing document:', document);
         setSelectedDocument(document);
         setShowDocumentModal(true);
     };
 
     const handleViewVideo = (video) => {
-        console.log('Viewing video:', video);
         setSelectedVideo(video);
         setShowVideoModal(true);
     };
