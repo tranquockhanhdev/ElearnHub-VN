@@ -3,7 +3,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 
 const InstructorLayout = ({ children }) => {
-    const { auth, flash_success, flash_error } = usePage().props;
+    const { auth, flash_success, flash_error, setting } = usePage().props;
 
     // Get instructor data from auth
     const instructor = auth?.instructor;
@@ -18,8 +18,16 @@ const InstructorLayout = ({ children }) => {
                     <div className="container">
                         {/* Logo START */}
                         <div className="navbar-brand">
-                            <img className="light-mode-item navbar-brand-item" src="/assets/images/logo.svg" alt="logo" />
-                            <img className="dark-mode-item navbar-brand-item" src="/assets/images/logo-light.svg" alt="logo" />
+                            <img
+                                className="light-mode-item navbar-brand-item"
+                                src={setting?.site_logo_url || "/assets/images/logo.svg"}
+                                alt={setting?.site_name || "logo"}
+                            />
+                            <img
+                                className="dark-mode-item navbar-brand-item"
+                                src={setting?.site_logo_url || "/assets/images/logo-light.svg"}
+                                alt={setting?.site_name || "logo"}
+                            />
                         </div>
                         {/* Logo END */}
 
@@ -281,18 +289,24 @@ const InstructorLayout = ({ children }) => {
                         <div className="col-lg-3">
                             {/* Logo */}
                             <Link className="me-0" href="/">
-                                <img className="h-40px" src="/assets/images/logo-light.svg" alt="logo" />
+                                <img
+                                    className="h-40px"
+                                    src={setting?.site_logo_url || "/assets/images/logo-light.svg"}
+                                    alt={setting?.site_name || "logo"}
+                                />
                             </Link>
                             <p className="my-3 text-muted">
-                                K Edu – Không chỉ là nơi học IT, mà còn là nơi bắt đầu hành trình phát triển nghề nghiệp của bạn.
+                                {setting?.footer_text || "K Edu – Không chỉ là nơi học IT, mà còn là nơi bắt đầu hành trình phát triển nghề nghiệp của bạn."}
                             </p>
                             {/* Social media icons */}
                             <ul className="list-inline mb-0 mt-3">
-                                <li className="list-inline-item">
-                                    <a className="btn btn-white btn-sm shadow px-2 text-facebook" href="#">
-                                        <i className="fab fa-fw fa-facebook-f"></i>
-                                    </a>
-                                </li>
+                                {setting?.facebook_url && (
+                                    <li className="list-inline-item">
+                                        <a className="btn btn-white btn-sm shadow px-2 text-facebook" href={setting.facebook_url} target="_blank" rel="noopener noreferrer">
+                                            <i className="fab fa-fw fa-facebook-f"></i>
+                                        </a>
+                                    </li>
+                                )}
                                 <li className="list-inline-item">
                                     <a className="btn btn-white btn-sm shadow px-2 text-instagram" href="#">
                                         <i className="fab fa-fw fa-instagram"></i>
@@ -377,11 +391,11 @@ const InstructorLayout = ({ children }) => {
                             <h5 className="mb-2 mb-md-4 text-white">Liên Hệ</h5>
                             {/* Contact info */}
                             <p className="mb-2 text-muted">
-                                SĐT: <span className="h6 fw-light text-white ms-2">+1234 568 963</span>
+                                SĐT: <span className="h6 fw-light text-white ms-2">{setting?.support_phone || "+1234 568 963"}</span>
                                 <span className="d-block small">(9:AM đến 8:PM IST)</span>
                             </p>
                             <p className="mb-0 text-muted">
-                                Email: <span className="h6 fw-light text-white ms-2">example@gmail.com</span>
+                                Email: <span className="h6 fw-light text-white ms-2">{setting?.contact_email || "example@gmail.com"}</span>
                             </p>
 
                             {/* App store buttons */}
@@ -411,7 +425,7 @@ const InstructorLayout = ({ children }) => {
                             <div className="d-md-flex justify-content-between align-items-center py-3 text-center text-md-left">
                                 {/* Copyright text */}
                                 <div className="text-muted text-primary-hover">
-                                    Copyrights <Link href="#" className="text-reset">©2025 K Edu</Link>. All rights reserved.
+                                    Copyrights <Link href="#" className="text-reset">©2025 {setting?.site_name || "K Edu"}</Link>. All rights reserved.
                                 </div>
                                 {/* Footer links */}
                                 <div className="mt-3 mt-md-0">

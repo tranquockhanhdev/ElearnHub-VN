@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Models\WebsiteSetting;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -51,6 +52,42 @@ class HandleInertiaRequests extends Middleware
                 'error' => $request->session()->get('error'),
                 'warning' => $request->session()->get('warning'),
             ],
+            'setting' => $this->getWebsiteSettings(),
         ]);
+    }
+
+    /**
+     * Get website settings with caching for better performance
+     *
+     * @return array
+     */
+    private function getWebsiteSettings(): array
+    {
+        $settings = WebsiteSetting::first();
+
+        if (!$settings) {
+            // Return default values if no settings exist
+            return [
+                'site_name' => config('app.name', 'EHub'),
+                'contact_email' => null,
+                'site_logo_url' => null,
+                'homepage_banner' => null,
+                'footer_text' => null,
+                'facebook_url' => null,
+                'support_phone' => null,
+                'maintenance_mode' => false,
+            ];
+        }
+
+        return [
+            'site_name' => $settings->site_name,
+            'contact_email' => $settings->contact_email,
+            'site_logo_url' => $settings->site_logo_url,
+            'homepage_banner' => $settings->homepage_banner,
+            'footer_text' => $settings->footer_text,
+            'facebook_url' => $settings->facebook_url,
+            'support_phone' => $settings->support_phone,
+            'maintenance_mode' => (bool) $settings->maintenance_mode,
+        ];
     }
 }
