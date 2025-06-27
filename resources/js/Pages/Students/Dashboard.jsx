@@ -45,7 +45,12 @@ const StudentDashboard = () => {
 			preserveScroll: true,
 		});
 	};
-
+	// Get course image URL
+	const getCourseImageUrl = (imgUrl) => {
+		if (!imgUrl) return 'https://placehold.co/600x400/EEE/31343C';
+		if (imgUrl.startsWith('http')) return imgUrl;
+		return `/storage/${imgUrl}`;
+	};
 	// Handle per page change
 	const handlePerPageChange = (value) => {
 		setPerPage(value);
@@ -267,7 +272,7 @@ const StudentDashboard = () => {
 																		<div className="d-flex align-items-center">
 																			<div className="flex-shrink-0">
 																				<img
-																					src={course.img_url ? `/storage/${course.img_url}` : '/assets/images/courses/4by3/default.jpg'}
+																					src={getCourseImageUrl(course.img_url)}
 																					className="rounded shadow-sm"
 																					alt={course.title}
 																					style={{ width: '70px', height: '50px', objectFit: 'cover' }}

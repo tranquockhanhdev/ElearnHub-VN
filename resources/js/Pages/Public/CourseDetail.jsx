@@ -1002,10 +1002,14 @@ const CourseDetail = () => {
                                                                 alt={instructor.name}
                                                             />
                                                         </div>
-                                                        <div className="ms-sm-3 mt-2 mt-sm-0">
-                                                            <h5 className="mb-0">
-                                                                <a href="#">{course.instructor.name}</a>
-                                                            </h5>
+                                                        <div className="ms-sm-3 mt-2 mt-sm-0">                                            <h5 className="mb-0">
+                                                            <Link
+                                                                href={route('instructor.profile', course.instructor.id)}
+                                                                className="text-decoration-none"
+                                                            >
+                                                                {course.instructor.name}
+                                                            </Link>
+                                                        </h5>
                                                             <p className="mb-0 small">{instructor.bio}</p>
                                                         </div>
                                                     </div>

@@ -32,7 +32,12 @@ const CourseList = () => {
 			preserveScroll: true
 		});
 	};
-
+	// Get course image URL
+	const getCourseImageUrl = (imgUrl) => {
+		if (!imgUrl) return 'https://placehold.co/600x400/EEE/31343C';
+		if (imgUrl.startsWith('http')) return imgUrl;
+		return `/storage/${imgUrl}`;
+	};
 	// Xử lý hành động khóa học
 	const getCourseAction = (course) => {
 		if (course.is_completed) {
@@ -204,7 +209,7 @@ const CourseList = () => {
 																	<div className="d-flex align-items-center">
 																		<div className="w-100px">
 																			<img
-																				src={course.img_url ? `/storage/${course.img_url}` : '/assets/images/courses/4by3/default.jpg'}
+																				src={getCourseImageUrl(course.img_url)}
 																				className="rounded"
 																				alt={course.title}
 																				style={{ width: '80px', height: '60px', objectFit: 'cover' }}
