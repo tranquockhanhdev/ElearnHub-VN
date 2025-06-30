@@ -57,7 +57,6 @@ class CourseController extends Controller
             $coursesWithProgress = $enrolledCourses->getCollection()->map(function ($course) use ($studentId) {
                 $progress = $this->calculateCourseProgress($studentId, $course->id);
 
-                // Đếm tổng số video đã approved trong tất cả các bài học của khóa học
                 $totalVideos = $course->lessons->sum(function ($lesson) {
                     return $lesson->resources->where('type', 'video')
                         ->where('status', 'approved')

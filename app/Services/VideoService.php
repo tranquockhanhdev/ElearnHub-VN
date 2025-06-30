@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\VideoRepository;
+use App\Models\ResourceEdit;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -178,6 +179,105 @@ class VideoService
             DB::rollback();
             Log::error('Lỗi khi cập nhật thứ tự video: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Lỗi cập nhật thứ tự video'];
+        }
+    }
+    public function uploadVideo(UploadedFile $file, string $title, int $lessonId, bool $isPreview = false): array
+    {
+        // Xử lý file và lưu video
+        $video = $this->createVideo([
+            'file' => $file,
+            'title' => $title,
+            'lesson_id' => $lessonId,
+            'is_preview' => $isPreview,
+        ]);
+
+        return [
+            'success' => true,
+            'message' => 'Video đã được upload thành công',
+            'video' => $video,
+        ];
+    }
+
+    /**
+     * Create a resource edit from chunk upload (after merging)
+     */
+    public function createVideoEditFromChunk(array $data): array
+    {
+        try {
+            $editData = [
+                'resources_id' => $data['video_id'],
+                'edited_title' => $data['title'],
+                'edited_file_url' => $data['file_url'],
+                'is_preview' => $data['is_preview'] ?? false,
+                'status' => ResourceEdit::STATUS_PENDING,
+            ];
+
+            $resourceEdit = ResourceEdit::create($editData);
+
+            return [
+                'success' => true,
+                'message' => 'Yêu cầu chỉnh sửa video đã được gửi thành công!',
+                'resource_edit' => $resourceEdit
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error creating video edit from chunk: ' . $e->getMessage(), $data);
+            return [
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi tạo yêu cầu chỉnh sửa video: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Create a resource edit without file upload (title, URL, or preview changes)
+     */
+    public function createVideoEditWithoutFile(array $data): array
+    {
+        try {
+            $editData = [
+                'resources_id' => $data['video_id'],
+                'edited_title' => $data['title'],
+                'status' => ResourceEdit::STATUS_PENDING,
+            ];
+
+            // Handle file/URL changes
+            if (isset($data['file']) && $data['file'] instanceof \Illuminate\Http\UploadedFile) {
+                // Upload new video file
+                $result = $this->uploadVideo(
+                    $data['file'],
+                    $data['title'],
+                    $data['lesson_id'],
+                    $data['is_preview'] ?? false
+                );
+
+                if ($result['success']) {
+                    $editData['edited_file_url'] = $result['video']->file_url;
+                } else {
+                    return $result;
+                }
+            } elseif (isset($data['url']) && !empty($data['url'])) {
+                // Handle URL video (YouTube, Vimeo, etc.)
+                $editData['edited_file_url'] = $data['url'];
+            }
+
+            // Handle preview flag changes
+            if (isset($data['is_preview'])) {
+                $editData['is_preview'] = $data['is_preview'];
+            }
+
+            $resourceEdit = ResourceEdit::create($editData);
+
+            return [
+                'success' => true,
+                'message' => 'Yêu cầu chỉnh sửa video đã được gửi và đang chờ admin phê duyệt!',
+                'resource_edit' => $resourceEdit
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error creating video edit without file: ' . $e->getMessage(), $data);
+            return [
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi gửi yêu cầu chỉnh sửa: ' . $e->getMessage()
+            ];
         }
     }
 }

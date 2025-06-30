@@ -55,6 +55,7 @@ Route::middleware(['auth', 'verified', 'role:2'])->prefix('instructor')->name('i
                 Route::post('/store', [DocumentController::class, 'store'])->name('store');
                 Route::post('/chunkUpload', [DocumentController::class, 'chunkUpload'])->name('chunkUpload');
                 Route::put('/{documentId}/updateOrder', [DocumentController::class, 'updateOrder'])->name('update-order');
+                Route::post('/{documentId}/edit', [DocumentController::class, 'edit'])->name('edit'); // Thêm route edit
                 Route::delete('{documentId}/delete', [DocumentController::class, 'destroy'])->name('delete');
             });
 
@@ -63,6 +64,7 @@ Route::middleware(['auth', 'verified', 'role:2'])->prefix('instructor')->name('i
                 Route::get('/', [VideoController::class, 'index'])->name('index');
                 Route::post('/store', [VideoController::class, 'store'])->name('store');
                 Route::put('/{videoId}/updateOrder', [VideoController::class, 'updateOrder'])->name('update-order');
+                Route::post('/{videoId}/edit', [VideoController::class, 'edit'])->name('edit'); // Thêm route edit
                 Route::delete('{videoId}/delete', [VideoController::class, 'destroy'])->name('delete');
             });
         });

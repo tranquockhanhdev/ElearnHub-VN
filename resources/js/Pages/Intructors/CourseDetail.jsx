@@ -34,6 +34,8 @@ const CourseDetail = ({ course }) => {
     const [showVideoModal, setShowVideoModal] = useState(false);
     const [editingResourceOrder, setEditingResourceOrder] = useState(null);
     const [showEditQuiz, setShowEditQuiz] = useState(null);
+    const [showEditDocument, setShowEditDocument] = useState(null);
+    const [showEditVideo, setShowEditVideo] = useState(null);
     // Form cho thêm bài giảng
     const lessonForm = useForm({
         course_id: course.id,
@@ -107,6 +109,23 @@ const CourseDetail = ({ course }) => {
     });
     const resourceOrderForm = useForm({
         order: 1
+    });
+    // Form cho chỉnh sửa tài liệu
+    const editDocumentForm = useForm({
+        title: '',
+        file: null,
+        is_preview: 0,
+        uploadProgress: 0
+    });
+
+    // Form cho chỉnh sửa video
+    const editVideoForm = useForm({
+        title: '',
+        file: null,
+        url: '',
+        uploadMethod: 'file',
+        is_preview: 0,
+        uploadProgress: 0
     });
     const handleAddLesson = (e) => {
         e.preventDefault();
@@ -222,8 +241,6 @@ const CourseDetail = ({ course }) => {
         const newQuestions = quizForm.data.questions.filter((_, i) => i !== index);
         quizForm.setData('questions', newQuestions);
     };
-    // Function để bắt đầu chỉnh sửa quiz
-    // Function để bắt đầu chỉnh sửa quiz
     const handleEditQuiz = (quiz) => {
 
         setShowEditQuiz(quiz.id);
@@ -261,7 +278,6 @@ const CourseDetail = ({ course }) => {
         setTimeout(() => {
         }, 100);
     };
-
     // Function để cập nhật quiz
     const handleUpdateQuiz = (e, quizId) => {
         e.preventDefault();
@@ -277,7 +293,6 @@ const CourseDetail = ({ course }) => {
             }
         });
     };
-
     // Function để xóa quiz
     const handleDeleteQuiz = (quizId, quizTitle) => {
         if (confirm(`Bạn có chắc chắn muốn xóa quiz "${quizTitle}"?`)) {
@@ -466,7 +481,238 @@ const CourseDetail = ({ course }) => {
             });
         }
     };
+    // Function để bắt đầu chỉnh sửa document
+    const handleEditDocument = (document) => {
+        setShowEditDocument(document.id);
+        editDocumentForm.setData({
+            title: document.title || '',
+            file: null,
+            is_preview: document.is_preview || 0,
+            uploadProgress: 0
+        });
+        console.log('Editing document:', document);
+    };
 
+    // Function để bắt đầu chỉnh sửa video
+    const handleEditVideo = (video) => {
+        setShowEditVideo(video.id);
+        editVideoForm.setData({
+            title: video.title || '',
+            file: null,
+            url: '',
+            uploadMethod: 'file',
+            is_preview: video.is_preview || 0,
+            uploadProgress: 0
+        });
+    };
+
+    // Function để submit edit document
+    const handleSubmitEditDocument = async (e, documentId, lessonId) => {
+        e.preventDefault();
+
+        if (editDocumentForm.data.file) {
+            // Chunk upload cho document edit
+            await handleEditChunkUpload(editDocumentForm.data.file, lessonId, documentId, 'document');
+        } else {
+            // Chỉ cập nhật title và is_preview
+            const formData = new FormData();
+            formData.append('title', editDocumentForm.data.title);
+            formData.append('is_preview', editDocumentForm.data.is_preview ? 1 : 0);
+
+            try {
+                const response = await axios.post(
+                    route('instructor.courses.lessons.documents.edit', {
+                        id: course.id,
+                        lessonId: lessonId,
+                        documentId: documentId
+                    }),
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    }
+                );
+
+                setShowEditDocument(null);
+                editDocumentForm.reset();
+
+                router.reload({
+                    preserveScroll: true,
+                    preserveState: false
+                });
+            } catch (error) {
+                console.error('Error updating document:', error);
+                alert('Có lỗi xảy ra khi cập nhật tài liệu.');
+            }
+        }
+    };
+
+    // Function để submit edit video
+    const handleSubmitEditVideo = async (e, videoId, lessonId) => {
+        e.preventDefault();
+
+        if (editVideoForm.data.uploadMethod === 'file' && editVideoForm.data.file) {
+            // Chunk upload cho video edit
+            await handleEditChunkUpload(editVideoForm.data.file, lessonId, videoId, 'video');
+        } else if (editVideoForm.data.uploadMethod === 'url' && editVideoForm.data.url) {
+            // URL upload cho video edit
+            const formData = new FormData();
+            formData.append('title', editVideoForm.data.title);
+            formData.append('url', editVideoForm.data.url);
+            formData.append('is_preview', editVideoForm.data.is_preview ? 1 : 0);
+
+            try {
+                const response = await axios.post(
+                    route('instructor.courses.lessons.videos.edit', {
+                        id: course.id,
+                        lessonId: lessonId,
+                        videoId: videoId
+                    }),
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    }
+                );
+
+                setShowEditVideo(null);
+                editVideoForm.reset();
+
+                router.reload({
+                    preserveScroll: true,
+                    preserveState: false
+                });
+            } catch (error) {
+                console.error('Error updating video:', error);
+                alert('Có lỗi xảy ra khi cập nhật video.');
+            }
+        } else {
+            // Chỉ cập nhật title và is_preview
+            const formData = new FormData();
+            formData.append('title', editVideoForm.data.title);
+            formData.append('is_preview', editVideoForm.data.is_preview ? 1 : 0);
+
+            try {
+                const response = await axios.post(
+                    route('instructor.courses.lessons.videos.edit', {
+                        id: course.id,
+                        lessonId: lessonId,
+                        videoId: videoId
+                    }),
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    }
+                );
+
+                setShowEditVideo(null);
+                editVideoForm.reset();
+
+                router.reload({
+                    preserveScroll: true,
+                    preserveState: false
+                });
+            } catch (error) {
+                console.error('Error updating video:', error);
+                alert('Có lỗi xảy ra khi cập nhật video.');
+            }
+        }
+    };
+
+    // Function để handle chunk upload cho edit
+    const handleEditChunkUpload = async (file, lessonId, resourceId, type) => {
+        const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks
+        const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+        const uploadId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+        let uploadUrl, form;
+        if (type === 'video') {
+            uploadUrl = route('instructor.courses.lessons.videos.edit', {
+                id: course.id,
+                lessonId: lessonId,
+                videoId: resourceId
+            });
+            form = editVideoForm;
+        } else {
+            uploadUrl = route('instructor.courses.lessons.documents.edit', {
+                id: course.id,
+                lessonId: lessonId,
+                documentId: resourceId
+            });
+            form = editDocumentForm;
+        }
+
+        try {
+            for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+                const start = chunkIndex * CHUNK_SIZE;
+                const end = Math.min(file.size, start + CHUNK_SIZE);
+                const chunk = file.slice(start, end);
+
+                const formData = new FormData();
+                formData.append('file', chunk);
+                formData.append('chunkIndex', chunkIndex);
+                formData.append('totalChunks', totalChunks);
+                formData.append('fileName', file.name);
+                formData.append('uploadId', uploadId);
+                formData.append('title', form.data.title);
+                formData.append('is_preview', form.data.is_preview ? 1 : 0);
+
+                const response = await axios.post(uploadUrl, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                    onUploadProgress: (progressEvent) => {
+                        const progress = Math.round(
+                            ((chunkIndex + progressEvent.loaded / progressEvent.total) / totalChunks) * 100
+                        );
+                        form.setData('uploadProgress', progress);
+                    },
+                });
+
+                // Kiểm tra xem upload đã hoàn thành chưa
+                if (response.data.isComplete) {
+                    break;
+                }
+            }
+
+            // Reset progress và đóng modal
+            form.setData('uploadProgress', 0);
+            if (type === 'video') {
+                setShowEditVideo(null);
+            } else {
+                setShowEditDocument(null);
+            }
+
+            // Reset form
+            form.reset();
+
+            // Reload trang để hiển thị thay đổi
+            router.reload({
+                preserveScroll: true,
+                preserveState: false
+            });
+
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            alert('Có lỗi xảy ra khi tải lên file.');
+            form.setData('uploadProgress', 0);
+        }
+    };
+
+    // Function để hủy edit
+    const handleCancelEdit = (type) => {
+        if (type === 'video') {
+            setShowEditVideo(null);
+            editVideoForm.reset();
+        } else {
+            setShowEditDocument(null);
+            editDocumentForm.reset();
+        }
+    };
     // Function để xóa bài giảng
     const handleDeleteLesson = (lessonId, lessonTitle) => {
         if (confirm(`Bạn có chắc chắn muốn xóa bài giảng "${lessonTitle}"? Tất cả tài liệu và quiz trong bài giảng này cũng sẽ bị xóa.`)) {
@@ -1066,6 +1312,13 @@ const CourseDetail = ({ course }) => {
                                                                                                 <EyeIcon className="h-4 w-4" />
                                                                                             </button>
                                                                                             <button
+                                                                                                onClick={() => handleEditDocument(resource)}
+                                                                                                className="text-blue-500 hover:text-blue-700 transition-colors"
+                                                                                                title="Chỉnh sửa tài liệu"
+                                                                                            >
+                                                                                                <PencilIcon className="w-4 h-4" />
+                                                                                            </button>
+                                                                                            <button
                                                                                                 onClick={() => handleDeleteResource(lesson.id, resource.id, resource.type)}
                                                                                                 className="text-red-600 hover:text-red-800 p-1"
                                                                                                 title="Xóa tài liệu"
@@ -1184,6 +1437,13 @@ const CourseDetail = ({ course }) => {
                                                                                                 title="Xem video"
                                                                                             >
                                                                                                 <EyeIcon className="h-4 w-4" />
+                                                                                            </button>
+                                                                                            <button
+                                                                                                onClick={() => handleEditVideo(resource)}
+                                                                                                className="text-blue-500 hover:text-blue-700 transition-colors"
+                                                                                                title="Chỉnh sửa video"
+                                                                                            >
+                                                                                                <PencilIcon className="w-4 h-4" />
                                                                                             </button>
                                                                                             <button
                                                                                                 onClick={() => handleDeleteResource(lesson.id, resource.id, resource.type)}
@@ -1976,7 +2236,220 @@ const CourseDetail = ({ course }) => {
                 onClose={closeDocumentModal}
                 document={selectedDocument}
             />
+            {/* Edit Document Modal */}
+            {showEditDocument && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                        <h3 className="text-lg font-semibold mb-4">Chỉnh sửa tài liệu</h3>
+                        <form onSubmit={(e) => handleSubmitEditDocument(e, showEditDocument, course.lessons?.find(l =>
+                            l.documents?.some(d => d.id === showEditDocument) ||
+                            l.resources?.some(r => r.type === 'document' && r.id === showEditDocument)
+                        )?.id)}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Tiêu đề
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editDocumentForm.data.title}
+                                    onChange={(e) => editDocumentForm.setData('title', e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required
+                                />
+                            </div>
 
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    File mới (tùy chọn)
+                                </label>
+                                <input
+                                    type="file"
+                                    onChange={(e) => editDocumentForm.setData('file', e.target.files[0])}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    accept=".pdf,.doc,.docx"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Chỉ chọn file nếu muốn thay thế file hiện tại
+                                </p>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={editDocumentForm.data.is_preview}
+                                        onChange={(e) => editDocumentForm.setData('is_preview', e.target.checked)}
+                                        className="mr-2"
+                                    />
+                                    Cho phép xem trước miễn phí
+                                </label>
+                            </div>
+
+                            {editDocumentForm.data.uploadProgress > 0 && (
+                                <div className="mb-4">
+                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                        <div
+                                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                            style={{ width: `${editDocumentForm.data.uploadProgress}%` }}
+                                        ></div>
+                                    </div>
+                                    <p className="text-sm text-gray-600 mt-1">{editDocumentForm.data.uploadProgress}% hoàn thành</p>
+                                </div>
+                            )}
+
+                            <div className="flex justify-end space-x-2">
+                                <button
+                                    type="button"
+                                    onClick={() => handleCancelEdit('document')}
+                                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                                    disabled={editDocumentForm.data.uploadProgress > 0}
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                    disabled={editDocumentForm.processing || editDocumentForm.data.uploadProgress > 0}
+                                >
+                                    {editDocumentForm.data.uploadProgress > 0 ? 'Đang tải...' : 'Cập nhật'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            {/* Edit Video Modal */}
+            {showEditVideo && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                        <h3 className="text-lg font-semibold mb-4">Chỉnh sửa video</h3>
+                        <form onSubmit={(e) => handleSubmitEditVideo(e, showEditVideo, course.lessons?.find(l =>
+                            l.videos?.some(v => v.id === showEditVideo) ||
+                            l.resources?.some(r => r.type === 'video' && r.id === showEditVideo)
+                        )?.id)}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Tiêu đề
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editVideoForm.data.title}
+                                    onChange={(e) => editVideoForm.setData('title', e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required
+                                />
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Cách thêm video mới (tùy chọn)
+                                </label>
+                                <div className="flex space-x-4">
+                                    <label className="flex items-center">
+                                        <input
+                                            type="radio"
+                                            name="editUploadMethod"
+                                            value="file"
+                                            checked={editVideoForm.data.uploadMethod === 'file'}
+                                            onChange={(e) => editVideoForm.setData('uploadMethod', e.target.value)}
+                                            className="mr-2"
+                                        />
+                                        Upload file video
+                                    </label>
+                                    <label className="flex items-center">
+                                        <input
+                                            type="radio"
+                                            name="editUploadMethod"
+                                            value="url"
+                                            checked={editVideoForm.data.uploadMethod === 'url'}
+                                            onChange={(e) => editVideoForm.setData('uploadMethod', e.target.value)}
+                                            className="mr-2"
+                                        />
+                                        Nhập URL
+                                    </label>
+                                </div>
+                            </div>
+
+                            {editVideoForm.data.uploadMethod === 'file' && (
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        File video mới (tùy chọn)
+                                    </label>
+                                    <input
+                                        type="file"
+                                        onChange={(e) => editVideoForm.setData('file', e.target.files[0])}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        accept="video/*"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Chỉ chọn file nếu muốn thay thế video hiện tại
+                                    </p>
+                                </div>
+                            )}
+
+                            {editVideoForm.data.uploadMethod === 'url' && (
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        URL video mới (tùy chọn)
+                                    </label>
+                                    <input
+                                        type="url"
+                                        value={editVideoForm.data.url}
+                                        onChange={(e) => editVideoForm.setData('url', e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="https://youtube.com/watch?v=... hoặc https://vimeo.com/..."
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Chỉ nhập URL nếu muốn thay thế video hiện tại
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="mb-4">
+                                <label className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={editVideoForm.data.is_preview}
+                                        onChange={(e) => editVideoForm.setData('is_preview', e.target.checked)}
+                                        className="mr-2"
+                                    />
+                                    Cho phép xem trước miễn phí
+                                </label>
+                            </div>
+
+                            {editVideoForm.data.uploadProgress > 0 && (
+                                <div className="mb-4">
+                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                        <div
+                                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                            style={{ width: `${editVideoForm.data.uploadProgress}%` }}
+                                        ></div>
+                                    </div>
+                                    <p className="text-sm text-gray-600 mt-1">{editVideoForm.data.uploadProgress}% hoàn thành</p>
+                                </div>
+                            )}
+
+                            <div className="flex justify-end space-x-2">
+                                <button
+                                    type="button"
+                                    onClick={() => handleCancelEdit('video')}
+                                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                                    disabled={editVideoForm.data.uploadProgress > 0}
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                    disabled={editVideoForm.processing || editVideoForm.data.uploadProgress > 0}
+                                >
+                                    {editVideoForm.data.uploadProgress > 0 ? 'Đang tải...' : 'Cập nhật'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
             {/* Video Modal */}
             <VideoModal
                 isOpen={showVideoModal}

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\ResourceEdit;
 
 class DocumentService
 {
@@ -115,6 +116,90 @@ class DocumentService
             DB::rollback();
             Log::error('Lỗi khi cập nhật thứ tự tài liệu: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Lỗi cập nhật thứ tự tài liệu'];
+        }
+    }
+    /**
+     * Tạo yêu cầu chỉnh sửa document từ chunk upload
+     *
+     * @param array $data
+     * @param string $fileName
+     * @param string $extension
+     * @param int $resourceId
+     * @return array
+     */
+    public function createDocumentEditFromChunk(array $data, string $fileName, string $extension, int $resourceId): array
+    {
+        try {
+            // Validate file type
+            $allowedTypes = ['pdf', 'doc', 'docx'];
+            if (!in_array(strtolower($extension), $allowedTypes)) {
+                return [
+                    'success' => false,
+                    'message' => 'File type không được hỗ trợ. Chỉ chấp nhận: ' . implode(', ', $allowedTypes)
+                ];
+            }
+
+            // Chuẩn bị dữ liệu cho resource_edits
+            $editData = [
+                'resources_id' => $resourceId,
+                'edited_title' => $data['title'] ?? null,
+                'edited_file_url' => 'storage/documents/' . $fileName,
+                'is_preview' => $data['is_preview'] ?? false,
+                'status' => ResourceEdit::STATUS_PENDING,
+                'note' => $data['note'] ?? null,
+            ];
+
+            // Tạo record trong resource_edits
+            $resourceEdit = ResourceEdit::create($editData);
+
+            return [
+                'success' => true,
+                'message' => 'Yêu cầu chỉnh sửa tài liệu đã được tạo thành công!',
+                'resource_edit' => $resourceEdit
+            ];
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi tạo yêu cầu chỉnh sửa tài liệu: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi tạo yêu cầu chỉnh sửa: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Tạo yêu cầu chỉnh sửa document chỉ title và preview (không có file)
+     *
+     * @param array $data
+     * @param int $resourceId
+     * @return array
+     */
+    public function createDocumentEditWithoutFile(array $data, int $resourceId): array
+    {
+        try {
+            // Chuẩn bị dữ liệu cho resource_edits
+            $editData = [
+                'resources_id' => $resourceId,
+                'edited_title' => $data['title'] ?? null,
+                'edited_file_url' => null, // Không có file mới
+                'is_preview' => $data['is_preview'] ?? false,
+                'status' => ResourceEdit::STATUS_PENDING,
+                'note' => $data['note'] ?? null,
+            ];
+
+            // Tạo record trong resource_edits
+            $resourceEdit = ResourceEdit::create($editData);
+
+            return [
+                'success' => true,
+                'message' => 'Yêu cầu chỉnh sửa tài liệu đã được tạo thành công!',
+                'resource_edit' => $resourceEdit
+            ];
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi tạo yêu cầu chỉnh sửa tài liệu: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi tạo yêu cầu chỉnh sửa: ' . $e->getMessage()
+            ];
         }
     }
 }
