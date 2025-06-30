@@ -286,7 +286,7 @@ class CourseService
             // Count total resources and preview resources
             $lesson->total_resources = $lesson->resources->count();
             $lesson->preview_resources = $lesson->resources->where('is_preview', 1)->count();
-
+            $lesson->quiz = $lesson->quiz->where('status', 'approved');
             // Separate preview and locked resources
             $lesson->preview_items = $lesson->resources->where('is_preview', 1);
             $lesson->locked_items = $lesson->resources->where('is_preview', 0);

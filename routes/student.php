@@ -6,7 +6,8 @@ use App\Http\Controllers\Student\{
     CourseController,
     LessonController,
     PaymentController,
-    CheckoutController
+    CheckoutController,
+    QuizController
 };
 
 Route::middleware(['auth', 'verified', 'role:3'])->prefix('student')->name('student.')->group(function () {
@@ -31,6 +32,13 @@ Route::middleware(['auth', 'verified', 'role:3'])->prefix('student')->name('stud
 
     // 🔹 Bài học
     Route::get('/lesson/{id}', [LessonController::class, 'show'])->name('lesson.show');
+
+    // 🔹 Quiz
+    Route::prefix('quiz')->name('quiz.')->group(function () {
+        Route::get('/{quizId}', [QuizController::class, 'show'])->name('show');
+        Route::post('/{quizId}/submit', [QuizController::class, 'submit'])->name('submit');
+        Route::get('/{quizId}/result', [QuizController::class, 'result'])->name('result');
+    });
 
     // 🔹 Thanh toán & giao dịch
     Route::get('/payments', [PaymentController::class, 'index'])->name('payments');

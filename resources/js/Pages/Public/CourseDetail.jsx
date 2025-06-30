@@ -136,6 +136,7 @@ const CourseDetail = () => {
 
     // Process and sort lesson content by type and order
     const processLessonContent = (lesson) => {
+        console.log(lesson);
         const content = [];
 
         // 1. Add videos first (sorted by order)
@@ -171,7 +172,7 @@ const CourseDetail = () => {
                 });
             });
         }
-
+        console.log(lesson.quiz);
         // 3. Add quiz last
         if (lesson.quiz) {
             content.push({
@@ -198,27 +199,20 @@ const CourseDetail = () => {
             alert('Bạn cần đăng ký khóa học để làm quiz này');
             return;
         }
+
+        // Redirect to course learning page
+        window.location.href = `/student/course/${course.id}/learn`;
     };
 
     // Check if user can access quiz
     const canAccessQuiz = (quiz) => {
-        // Quiz logic tương tự resource
-        if (quiz.is_preview) {
-            return true;
-        }
+        // Quiz luôn yêu cầu phải mua khóa học
         return isEnrolled;
     };
 
     // Get quiz button
     const getQuizButton = (quiz) => {
-        if (quiz.is_preview) {
-            return {
-                text: 'Làm quiz miễn phí',
-                class: 'btn btn-sm btn-success mb-0',
-                onClick: () => handleQuizPreview(quiz),
-                show: true
-            };
-        } else if (isEnrolled) {
+        if (isEnrolled) {
             return {
                 text: 'Làm quiz',
                 class: 'btn btn-sm btn-primary mb-0',
@@ -237,9 +231,7 @@ const CourseDetail = () => {
 
     // Get quiz icon
     const getQuizIcon = (quiz) => {
-        if (quiz.is_preview) {
-            return 'fas fa-question-circle text-success';
-        } else if (isEnrolled) {
+        if (isEnrolled) {
             return 'fas fa-question-circle text-primary';
         } else {
             return 'fas fa-lock text-muted';
@@ -270,30 +262,32 @@ const CourseDetail = () => {
                             <i className={getResourceIcon(resource)} />
                         </button>
                         <div className="ms-2 ms-sm-3 mt-1 mt-sm-0">
-                            <h6 className="mb-0 d-flex align-items-center">
-                                {resource.title}
-                                {/* Video Badge */}
-                                <span className="badge bg-primary ms-2 small">
-                                    <i className="fas fa-play me-1"></i>
-                                    Video
-                                </span>
-                                {resource.is_preview === 1 ? (
-                                    <span className="badge bg-success ms-2 small">
-                                        <i className="fas fa-eye me-1"></i>
-                                        Miễn phí
+                            <h6 className="mb-0 d-flex align-items-center flex-wrap">
+                                <span className="me-2 mb-1">{resource.title}</span>
+                                <div className="d-flex flex-wrap gap-1">
+                                    {/* Video Badge */}
+                                    <span className="badge bg-primary rounded-pill small ">
+                                        <i className="fas fa-play me-1"></i>
+                                        Video
                                     </span>
-                                ) : (
-                                    <span className="badge bg-secondary ms-2 small">
-                                        <i className="fas fa-lock me-1"></i>
-                                        Riêng tư
-                                    </span>
-                                )}
-                                {!resource.is_preview && !isEnrolled && (
-                                    <span className="badge bg-warning ms-2 small">
-                                        <i className="fas fa-crown me-1"></i>
-                                        Premium
-                                    </span>
-                                )}
+                                    {resource.is_preview === 1 ? (
+                                        <span className="badge bg-success rounded-pill small">
+                                            <i className="fas fa-eye me-1"></i>
+                                            Miễn phí
+                                        </span>
+                                    ) : (
+                                        <span className="badge bg-secondary rounded-pill small">
+                                            <i className="fas fa-lock me-1"></i>
+                                            Riêng tư
+                                        </span>
+                                    )}
+                                    {!resource.is_preview && !isEnrolled && (
+                                        <span className="badge bg-warning text-dark rounded-pill small">
+                                            <i className="fas fa-crown me-1"></i>
+                                            Premium
+                                        </span>
+                                    )}
+                                </div>
                             </h6>
                             <p className="mb-2 mb-sm-0 small text-muted">
                                 Video •
@@ -321,10 +315,17 @@ const CourseDetail = () => {
                     {/* Hiển thị thông báo cho video premium */}
                     {!resource.is_preview && !isEnrolled && (
                         <div className="text-center">
-                            <small className="text-muted">
-                                <i className="fas fa-lock me-1"></i>
-                                Cần đăng ký khóa học
-                            </small>
+                            {!auth?.user ? (
+                                <Link href="/login" className="btn btn-sm btn-outline-primary">
+                                    <i className="fas fa-sign-in-alt me-1"></i>
+                                    Đăng nhập
+                                </Link>
+                            ) : (
+                                <small className="text-muted">
+                                    <i className="fas fa-lock me-1"></i>
+                                    Cần đăng ký khóa học
+                                </small>
+                            )}
                         </div>
                     )}
                 </div>
@@ -346,30 +347,32 @@ const CourseDetail = () => {
                             <i className={getResourceIcon(resource)} />
                         </button>
                         <div className="ms-2 ms-sm-3 mt-1 mt-sm-0">
-                            <h6 className="mb-0 d-flex align-items-center">
-                                {resource.title}
-                                {/* Document Badge */}
-                                <span className="badge bg-info ms-2 small">
-                                    <i className="fas fa-file-alt me-1"></i>
-                                    Tài liệu
-                                </span>
-                                {resource.is_preview === 1 ? (
-                                    <span className="badge bg-success ms-2 small">
-                                        <i className="fas fa-eye me-1"></i>
-                                        Miễn phí
+                            <h6 className="mb-0 d-flex align-items-center flex-wrap">
+                                <span className="me-2 mb-1">{resource.title}</span>
+                                <div className="d-flex flex-wrap gap-1">
+                                    {/* Document Badge */}
+                                    <span className="badge bg-info text-white rounded-pill small">
+                                        <i className="fas fa-file-alt me-1"></i>
+                                        Tài liệu
                                     </span>
-                                ) : (
-                                    <span className="badge bg-secondary ms-2 small">
-                                        <i className="fas fa-lock me-1"></i>
-                                        Riêng tư
-                                    </span>
-                                )}
-                                {!resource.is_preview && !isEnrolled && (
-                                    <span className="badge bg-warning ms-2 small">
-                                        <i className="fas fa-crown me-1"></i>
-                                        Premium
-                                    </span>
-                                )}
+                                    {resource.is_preview === 1 ? (
+                                        <span className="badge bg-success rounded-pill small">
+                                            <i className="fas fa-eye me-1"></i>
+                                            Miễn phí
+                                        </span>
+                                    ) : (
+                                        <span className="badge bg-secondary rounded-pill small">
+                                            <i className="fas fa-lock me-1"></i>
+                                            Riêng tư
+                                        </span>
+                                    )}
+                                    {!resource.is_preview && !isEnrolled && (
+                                        <span className="badge bg-warning text-dark rounded-pill small">
+                                            <i className="fas fa-crown me-1"></i>
+                                            Premium
+                                        </span>
+                                    )}
+                                </div>
                             </h6>
                             <p className="mb-2 mb-sm-0 small text-muted">
                                 Tài liệu •
@@ -395,10 +398,17 @@ const CourseDetail = () => {
                     {/* Hiển thị thông báo cho tài liệu premium */}
                     {!resource.is_preview && !isEnrolled && (
                         <div className="text-center">
-                            <small className="text-muted">
-                                <i className="fas fa-lock me-1"></i>
-                                Cần đăng ký khóa học
-                            </small>
+                            {!auth?.user ? (
+                                <Link href="/login" className="btn btn-sm btn-outline-primary">
+                                    <i className="fas fa-sign-in-alt me-1"></i>
+                                    Đăng nhập
+                                </Link>
+                            ) : (
+                                <small className="text-muted">
+                                    <i className="fas fa-lock me-1"></i>
+                                    Cần đăng ký khóa học
+                                </small>
+                            )}
                         </div>
                     )}
                 </div>
@@ -416,59 +426,59 @@ const CourseDetail = () => {
             <div key={`quiz-${quiz.id}`}>
                 <div className="d-sm-flex justify-content-sm-between align-items-center">
                     <div className="d-flex">
-                        <button className={`btn ${quiz.is_preview ? 'btn-success-soft' : isEnrolled ? 'btn-primary-soft' : 'btn-light'} btn-round mb-0 flex-shrink-0`}>
+                        <button className={`btn ${isEnrolled ? 'btn-primary-soft' : 'btn-light'} btn-round mb-0 flex-shrink-0`}>
                             <i className={getQuizIcon(quiz)} />
                         </button>
                         <div className="ms-2 ms-sm-3 mt-1 mt-sm-0">
-                            <h6 className="mb-0 d-flex align-items-center">
-                                {quiz.title}
-                                {/* Quiz Badge */}
-                                <span className="badge bg-warning ms-2 small">
-                                    <i className="fas fa-question-circle me-1"></i>
-                                    Quiz
-                                </span>
-                                {quiz.is_preview && (
-                                    <span className="badge bg-success ms-2 small">
-                                        <i className="fas fa-eye me-1"></i>
-                                        Miễn phí
+                            <h6 className="mb-0 d-flex align-items-center flex-wrap">
+                                <span className="me-2 mb-1">{quiz.title}</span>
+                                <div className="d-flex flex-wrap gap-1">
+                                    {/* Quiz Badge */}
+                                    <span className="badge bg-warning text-dark rounded-pill small">
+                                        <i className="fas fa-question-circle me-1"></i>
+                                        Quiz
                                     </span>
-                                )}
-                                {!quiz.is_preview && !isEnrolled && (
-                                    <span className="badge bg-warning ms-2 small">
-                                        <i className="fas fa-crown me-1"></i>
-                                        Premium
-                                    </span>
-                                )}
+                                    {!isEnrolled && (
+                                        <span className="badge bg-warning text-dark rounded-pill small">
+                                            <i className="fas fa-crown me-1"></i>
+                                            Premium
+                                        </span>
+                                    )}
+                                </div>
                             </h6>
                             <p className="mb-2 mb-sm-0 small text-muted">
                                 Quiz • {quiz.questions_count || 0} câu hỏi
                                 {quiz.duration_minutes && ` • ${quiz.duration_minutes} phút`}
                                 {quiz.pass_score && ` • Điểm đậu: ${quiz.pass_score}%`}
-                                {/* {!quiz.is_preview && !isEnrolled && (
-									<span className="text-warning"> • Cần đăng ký</span>
-								)} */}
                             </p>
                         </div>
                     </div>
 
-                    {/* Chỉ hiển thị nút cho quiz miễn phí hoặc đã enroll */}
-                    {(quiz.is_preview || isEnrolled) && (
+                    {/* Chỉ hiển thị nút cho user đã enroll */}
+                    {isEnrolled && (
                         <button
                             className={button.class}
                             onClick={button.onClick}
                         >
-                            <i className={`${quiz.is_preview ? 'fas fa-eye' : 'fas fa-question-circle'} me-1`}></i>
+                            <i className="fas fa-question-circle me-1"></i>
                             {button.text}
                         </button>
                     )}
 
                     {/* Hiển thị thông báo cho quiz premium */}
-                    {!quiz.is_preview && !isEnrolled && (
+                    {!isEnrolled && (
                         <div className="text-center">
-                            <small className="text-muted">
-                                <i className="fas fa-lock me-1"></i>
-                                Cần đăng ký khóa học
-                            </small>
+                            {!auth?.user ? (
+                                <Link href="/login" className="btn btn-sm btn-outline-primary">
+                                    <i className="fas fa-sign-in-alt me-1"></i>
+                                    Đăng nhập
+                                </Link>
+                            ) : (
+                                <small className="text-muted">
+                                    <i className="fas fa-lock me-1"></i>
+                                    Cần đăng ký khóa học
+                                </small>
+                            )}
                         </div>
                     )}
                 </div>
@@ -486,8 +496,7 @@ const CourseDetail = () => {
             totalDocuments: 0,
             totalQuizzes: 0,
             previewVideos: 0,
-            previewDocuments: 0,
-            previewQuizzes: 0
+            previewDocuments: 0
         };
 
         let totalVideos = 0;
@@ -495,7 +504,6 @@ const CourseDetail = () => {
         let totalQuizzes = 0;
         let previewVideos = 0;
         let previewDocuments = 0;
-        let previewQuizzes = 0;
 
         course.lessons.forEach(lesson => {
             if (lesson.resources) {
@@ -513,9 +521,7 @@ const CourseDetail = () => {
             // Count quizzes
             if (lesson.quiz) {
                 totalQuizzes += 1;
-                if (lesson.quiz.is_preview) {
-                    previewQuizzes += 1;
-                }
+                // Quiz không có preview, tất cả đều là premium
             }
         });
 
@@ -526,7 +532,6 @@ const CourseDetail = () => {
             totalQuizzes,
             previewVideos,
             previewDocuments,
-            previewQuizzes,
             // Backward compatibility
             totalResources: totalVideos + totalDocuments,
             previewResources: previewVideos + previewDocuments
@@ -768,13 +773,11 @@ const CourseDetail = () => {
                                                                 {stats.totalDocuments} tài liệu •
                                                                 {stats.totalQuizzes} quiz
                                                             </p>
-                                                            {(stats.previewVideos > 0 || stats.previewDocuments > 0 || stats.previewQuizzes > 0) && (
+                                                            {(stats.previewVideos > 0 || stats.previewDocuments > 0) && (
                                                                 <p className="mb-0 text-success small">
                                                                     {stats.previewVideos > 0 && `${stats.previewVideos} video miễn phí`}
-                                                                    {stats.previewVideos > 0 && (stats.previewDocuments > 0 || stats.previewQuizzes > 0) && ' • '}
+                                                                    {stats.previewVideos > 0 && stats.previewDocuments > 0 && ' • '}
                                                                     {stats.previewDocuments > 0 && `${stats.previewDocuments} tài liệu miễn phí`}
-                                                                    {stats.previewDocuments > 0 && stats.previewQuizzes > 0 && ' • '}
-                                                                    {stats.previewQuizzes > 0 && `${stats.previewQuizzes} quiz miễn phí`}
                                                                 </p>
                                                             )}
                                                         </div>
