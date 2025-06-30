@@ -78,13 +78,33 @@ class StudentDashboardService
             return $completedCourses->map(function ($course) use ($studentId) {
                 $enrollment = $this->enrollmentRepository->getEnrollmentDetails($studentId, $course->id);
 
+                // Đếm tổng số video đã approved
+                $totalVideos = $course->lessons->sum(function ($lesson) {
+                    return $lesson->resources->where('type', 'video')
+                        ->where('status', 'approved')
+                        ->count();
+                });
+
+                // Đếm video đã hoàn thành
+                $completedVideos = \App\Models\LessonProgress::where('student_id', $studentId)
+                    ->whereHas('lesson', function ($query) use ($course) {
+                        $query->where('course_id', $course->id);
+                    })
+                    ->whereHas('resource', function ($query) {
+                        $query->where('type', 'video')
+                            ->where('status', 'approved');
+                    })
+                    ->where('is_complete', true)
+                    ->whereNotNull('resource_id')
+                    ->count();
+
                 return [
                     'id' => $course->id,
                     'title' => $course->title,
                     'img_url' => $course->img_url,
                     'instructor_name' => $course->instructor->name,
-                    'total_lessons' => $course->lessons->count(),
-                    'completed_lessons' => $course->lessons->count(),
+                    'total_videos' => $totalVideos,
+                    'completed_videos' => $completedVideos,
                     'progress' => 100,
                     'enrollment_date' => $enrollment->created_at->format('d/m/Y'),
                     'completed_date' => $enrollment->updated_at->format('d/m/Y')
@@ -160,19 +180,49 @@ class StudentDashboardService
 
             return $inProgressCourses->map(function ($course) use ($studentId) {
                 $enrollment = $this->enrollmentRepository->getEnrollmentDetails($studentId, $course->id);
-                $totalLessons = $course->lessons->count();
-                $completedLessons = $this->progressRepository->getCompletedLessonsCount($studentId, $course->id);
+
+                // Đếm tổng số video đã approved
+                $totalVideos = $course->lessons->sum(function ($lesson) {
+                    return $lesson->resources->where('type', 'video')
+                        ->where('status', 'approved')
+                        ->count();
+                });
+
+                // Đếm video đã hoàn thành
+                $completedVideos = \App\Models\LessonProgress::where('student_id', $studentId)
+                    ->whereHas('lesson', function ($query) use ($course) {
+                        $query->where('course_id', $course->id);
+                    })
+                    ->whereHas('resource', function ($query) {
+                        $query->where('type', 'video')
+                            ->where('status', 'approved');
+                    })
+                    ->where('is_complete', true)
+                    ->whereNotNull('resource_id')
+                    ->count();
+
+                // Lấy thời gian học tập gần đây nhất
+                $lastActivity = \App\Models\LessonProgress::where('student_id', $studentId)
+                    ->whereHas('lesson', function ($query) use ($course) {
+                        $query->where('course_id', $course->id);
+                    })
+                    ->latest('updated_at')
+                    ->first();
+
+                $lastAccessedTime = $lastActivity
+                    ? $lastActivity->updated_at->format('d/m/Y H:i')
+                    : $enrollment->created_at->format('d/m/Y H:i');
 
                 return [
                     'id' => $course->id,
                     'title' => $course->title,
                     'img_url' => $course->img_url,
                     'instructor_name' => $course->instructor->name,
-                    'total_lessons' => $totalLessons,
-                    'completed_lessons' => $completedLessons,
-                    'progress' => $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0,
+                    'total_videos' => $totalVideos,
+                    'completed_videos' => $completedVideos,
+                    'progress' => $totalVideos > 0 ? round(($completedVideos / $totalVideos) * 100) : 0,
                     'enrollment_date' => $enrollment->created_at->format('d/m/Y'),
-                    'last_accessed' => $enrollment->updated_at->format('d/m/Y H:i')
+                    'last_accessed' => $lastAccessedTime
                 ];
             })->toArray();
         } catch (\Exception $e) {
@@ -187,13 +237,15 @@ class StudentDashboardService
     {
         $course = $enrollment->course;
 
-        // Đếm tổng số items cần hoàn thành (resources + quizzes)
+        // Đếm tổng số video đã approved và quizzes
         $totalItems = 0;
         $completedItems = 0;
 
         foreach ($course->lessons as $lesson) {
-            // Đếm resources trong lesson
-            $totalItems += $lesson->resources->count();
+            // Đếm chỉ video resources đã approved
+            $approvedVideos = $lesson->resources->where('type', 'video')
+                ->where('status', 'approved');
+            $totalItems += $approvedVideos->count();
 
             // Đếm quiz nếu có
             if ($lesson->quiz) {
@@ -203,10 +255,14 @@ class StudentDashboardService
 
         // Đếm items đã hoàn thành
         if ($totalItems > 0) {
-            // Đếm resources đã hoàn thành
+            // Đếm video resources đã hoàn thành (chỉ video đã approved)
             $completedResources = \App\Models\LessonProgress::where('student_id', $studentId)
                 ->whereHas('lesson', function ($query) use ($course) {
                     $query->where('course_id', $course->id);
+                })
+                ->whereHas('resource', function ($query) {
+                    $query->where('type', 'video')
+                        ->where('status', 'approved');
                 })
                 ->where('is_complete', true)
                 ->whereNotNull('resource_id')
@@ -232,24 +288,52 @@ class StudentDashboardService
         // Tính progress an toàn
         $progress = $totalItems > 0 ? min(round(($completedItems / $totalItems) * 100), 100) : 0;
 
-        // Đếm lessons để hiển thị
-        $totalLessons = $course->lessons->count();
-        $completedLessons = min($completedItems, $totalLessons); // Đảm bảo không vượt quá tổng số lessons
+        // Đếm tổng số video đã approved để hiển thị
+        $totalVideos = $course->lessons->sum(function ($lesson) {
+            return $lesson->resources->where('type', 'video')
+                ->where('status', 'approved')
+                ->count();
+        });
 
-        // Xác định khóa học đã hoàn thành: progress = 100% VÀ completed_lessons = total_lessons
-        $isCompleted = ($progress === 100) && ($completedLessons === $totalLessons);
+        // Đếm video đã hoàn thành
+        $completedVideos = \App\Models\LessonProgress::where('student_id', $studentId)
+            ->whereHas('lesson', function ($query) use ($course) {
+                $query->where('course_id', $course->id);
+            })
+            ->whereHas('resource', function ($query) {
+                $query->where('type', 'video')
+                    ->where('status', 'approved');
+            })
+            ->where('is_complete', true)
+            ->whereNotNull('resource_id')
+            ->count();
+
+        // Xác định khóa học đã hoàn thành: progress = 100%
+        $isCompleted = ($progress === 100);
+
+        // Lấy thời gian học tập gần đây nhất
+        $lastActivity = \App\Models\LessonProgress::where('student_id', $studentId)
+            ->whereHas('lesson', function ($query) use ($course) {
+                $query->where('course_id', $course->id);
+            })
+            ->latest('updated_at')
+            ->first();
+
+        $lastAccessedTime = $lastActivity
+            ? $lastActivity->updated_at->format('d/m/Y H:i')
+            : $enrollment->created_at->format('d/m/Y H:i');
 
         return [
             'id' => $course->id,
             'title' => $course->title,
             'img_url' => $course->img_url,
             'instructor_name' => $course->instructor->name,
-            'total_lessons' => $totalLessons,
-            'completed_lessons' => $completedLessons,
+            'total_videos' => $totalVideos,
+            'completed_videos' => $completedVideos,
             'progress' => $progress,
             'is_completed' => $isCompleted,
             'enrollment_date' => $enrollment->created_at->format('d/m/Y'),
-            'last_accessed' => $enrollment->updated_at->format('d/m/Y H:i')
+            'last_accessed' => $lastAccessedTime
         ];
     }
 

@@ -196,7 +196,7 @@ const CourseList = () => {
 															<th scope="col" className="border-0 rounded-start">
 																Tên khóa học
 															</th>
-															<th scope="col" className="border-0">Tổng số bài</th>
+															<th scope="col" className="border-0">Tổng số video</th>
 															<th scope="col" className="border-0">Đã hoàn thành</th>
 															<th scope="col" className="border-0 rounded-end">Hành động</th>
 														</tr>
@@ -251,7 +251,7 @@ const CourseList = () => {
 																</td>
 																<td>
 																	<span className="badge bg-light text-dark">
-																		{course.total_lessons}
+																		{course.total_videos}
 																	</span>
 																</td>
 																<td>

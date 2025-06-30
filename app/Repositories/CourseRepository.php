@@ -176,7 +176,15 @@ class CourseRepository
      */
     public function getEnrolledCourses($studentId, $filters = [], $perPage = 12)
     {
-        $query = $this->course->with(['categories', 'instructor', 'lessons'])
+        $query = $this->course->with([
+            'categories',
+            'instructor',
+            'lessons.resources' => function ($query) {
+                $query->where('type', 'video')
+                    ->where('status', 'approved')
+                    ->orderBy('order', 'asc');
+            }
+        ])
             ->whereHas('enrollments', function ($q) use ($studentId) {
                 $q->where('student_id', $studentId);
             })
@@ -359,7 +367,8 @@ class CourseRepository
                     ->orderBy('order', 'asc');
             },
             'lessons.resources' => function ($query) {
-                $query->where('status', 'approved')
+                $query->where('type', 'video')
+                    ->where('status', 'approved')
                     ->orderBy('order', 'asc');
             },
             'lessons.quiz' => function ($query) {

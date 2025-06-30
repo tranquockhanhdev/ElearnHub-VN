@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class EnrollmentRepository
 {
@@ -20,14 +21,52 @@ class EnrollmentRepository
     {
         return $this->model->where('student_id', $studentId)->count();
     }
-
     public function getRecentStudentEnrollments(int $studentId, int $limit = 5): Collection
     {
-        return $this->model->with(['course.lessons', 'course.instructor'])
-            ->where('student_id', $studentId)
-            ->orderBy('created_at', 'desc')
+        // Lấy danh sách course_id có học tập gần đây nhất
+        $recentCourseIds = DB::table('lesson_progress')
+            ->join('lessons', 'lesson_progress.lesson_id', '=', 'lessons.id')
+            ->where('lesson_progress.student_id', $studentId)
+            ->select('lessons.course_id', DB::raw('MAX(lesson_progress.updated_at) as latest_activity'))
+            ->groupBy('lessons.course_id')
+            ->orderBy('latest_activity', 'desc')
             ->limit($limit)
+            ->pluck('lessons.course_id')
+            ->toArray();
+
+        // Nếu không có hoạt động học tập, lấy theo thứ tự đăng ký
+        if (empty($recentCourseIds)) {
+            return $this->model->with([
+                'course.lessons.resources' => function ($query) {
+                    $query->where('type', 'video')
+                        ->where('status', 'approved')
+                        ->orderBy('order', 'asc');
+                },
+                'course.instructor'
+            ])
+                ->where('student_id', $studentId)
+                ->orderBy('created_at', 'desc')
+                ->limit($limit)
+                ->get();
+        }
+
+        // Lấy enrollments theo thứ tự hoạt động gần đây
+        $enrollments = $this->model->with([
+            'course.lessons.resources' => function ($query) {
+                $query->where('type', 'video')
+                    ->where('status', 'approved')
+                    ->orderBy('order', 'asc');
+            },
+            'course.instructor'
+        ])
+            ->where('student_id', $studentId)
+            ->whereIn('course_id', $recentCourseIds)
             ->get();
+
+        // Sắp xếp theo thứ tự trong $recentCourseIds
+        return $enrollments->sortBy(function ($enrollment) use ($recentCourseIds) {
+            return array_search($enrollment->course_id, $recentCourseIds);
+        })->values();
     }
     /**
      * Lấy tất cả enrollment
@@ -122,7 +161,14 @@ class EnrollmentRepository
      */
     public function getAllStudentEnrollments(int $studentId): Collection
     {
-        return $this->model->with(['course.lessons'])
+        return $this->model->with([
+            'course.lessons.resources' => function ($query) {
+                $query->where('type', 'video')
+                    ->where('status', 'approved')
+                    ->orderBy('order', 'asc');
+            },
+            'course.instructor'
+        ])
             ->where('student_id', $studentId)
             ->get();
     }
