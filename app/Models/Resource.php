@@ -22,7 +22,15 @@ class Resource extends Model
         'is_preview',
         'order',
         'status',
-        'note'
+        'note',
+        'encrypted_path',
+        'decrypt_key',
+        'is_encrypted'
+    ];
+
+    protected $casts = [
+        'is_preview' => 'boolean',
+        'is_encrypted' => 'boolean'
     ];
 
     public $timestamps = true;

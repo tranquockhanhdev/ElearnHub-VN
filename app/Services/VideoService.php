@@ -37,7 +37,15 @@ class VideoService
             'file_type' => $fileData['file_type'],
             'is_preview' => $data['is_preview'] ?? false,
             'order' => $newOrder,
+            'status' => 'pending', // Video cần admin phê duyệt trước khi active
         ];
+
+        // Thêm DRM data nếu có
+        if (isset($fileData['encrypted_path'])) {
+            $videoData['encrypted_path'] = $fileData['encrypted_path'];
+            $videoData['decrypt_key'] = $fileData['decrypt_key'];
+            $videoData['is_encrypted'] = true;
+        }
 
         return $this->videoRepository->create($videoData);
     }
@@ -63,6 +71,7 @@ class VideoService
             'file_type' => strtolower($extension),
             'is_preview' => $data['is_preview'] ?? false,
             'order' => $newOrder,
+            'status' => 'pending', // Video cần admin phê duyệt trước khi active
         ];
 
         return $this->videoRepository->create($videoData);

@@ -120,6 +120,14 @@ const AdminLayout = ({ children }) => {
                                                         Danh mục khóa học
                                                     </Link>
                                                 </li>
+                                                <li className="nav-item">
+                                                    <Link
+                                                        className={`nav-link ${isRoute("admin.course-approvals.index") ? "active" : ""}`}
+                                                        href={route("admin.course-approvals.index")}
+                                                    >
+                                                        Khoá học chờ duyệt
+                                                    </Link>
+                                                </li>
                                             </ul>
                                         )}
                                 </li>
