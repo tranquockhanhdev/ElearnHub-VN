@@ -174,7 +174,7 @@ class AdminCourseController extends Controller
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
 
-        // Lấy các khóa học có course_edits pending hoặc resource_edits pending (bao gồm cả video và document)
+        // Lấy các khóa học có course_edits pending, lesson pending hoặc resource_edits pending (bao gồm cả video và document)
         $query = Course::with(['instructor', 'courseEdits' => function ($q) {
             $q->where('status', 'pending');
         }])
@@ -182,7 +182,10 @@ class AdminCourseController extends Controller
                 if ($changeType === 'content') {
                     $q->whereHas('courseEdits', function ($subQ) {
                         $subQ->where('status', 'pending');
-                    });
+                    })
+                        ->orWhereHas('lessons', function ($subQ) {
+                            $subQ->where('status', 'pending');
+                        });
                 } elseif ($changeType === 'resource') {
                     $q->where(function ($subQ) {
                         $subQ->whereHas('lessons.resources.edits', function ($subSubQ) {
@@ -198,6 +201,9 @@ class AdminCourseController extends Controller
                     $q->whereHas('courseEdits', function ($subQ) {
                         $subQ->where('status', 'pending');
                     })
+                        ->orWhereHas('lessons', function ($subQ) {
+                            $subQ->where('status', 'pending');
+                        })
                         ->orWhereHas('lessons.resources.edits', function ($subQ) {
                             $subQ->where('status', 'pending');
                         })
@@ -245,8 +251,9 @@ class AdminCourseController extends Controller
 
         // Thêm thống kê cho mỗi khóa học
         $courses->getCollection()->transform(function ($course) {
-            // Đếm số thay đổi nội dung pending
+            // Đếm số thay đổi nội dung pending (course edits + lesson pending)
             $contentChanges = $course->courseEdits()->where('status', 'pending')->count();
+            $lessonChanges = $course->lessons()->where('status', 'pending')->count();
 
             // Đếm số tài nguyên pending (bao gồm cả edits và resources có status pending)
             $resourceChanges = 0;
@@ -264,7 +271,7 @@ class AdminCourseController extends Controller
                 }
             }
 
-            $course->pending_content_changes = $contentChanges;
+            $course->pending_content_changes = $contentChanges + $lessonChanges;
             $course->pending_resource_changes = $resourceChanges + $pendingResources;
             $course->latest_edit_date = $course->courseEdits()
                 ->where('status', 'pending')
@@ -280,8 +287,13 @@ class AdminCourseController extends Controller
             'filters' => $request->only(['search', 'instructor', 'change_type', 'date_from', 'date_to', 'sort_by', 'sort_order']),
             'stats' => [
                 'total' => $courses->total(),
-                'content_changes' => Course::whereHas('courseEdits', function ($q) {
-                    $q->where('status', 'pending');
+                'content_changes' => Course::where(function ($q) {
+                    $q->whereHas('courseEdits', function ($subQ) {
+                        $subQ->where('status', 'pending');
+                    })
+                        ->orWhereHas('lessons', function ($subQ) {
+                            $subQ->where('status', 'pending');
+                        });
                 })->count(),
                 'resource_changes' => Course::where(function ($q) {
                     $q->whereHas('lessons.resources.edits', function ($subQ) {
@@ -307,6 +319,13 @@ class AdminCourseController extends Controller
             'courseEdits' => function ($q) {
                 $q->where('status', 'pending')->latest();
             },
+            'lessons' => function ($q) {
+                $q->where('status', 'pending')->orWhereHas('resources', function ($subQ) {
+                    $subQ->where('status', 'pending')->orWhereHas('edits', function ($editQ) {
+                        $editQ->where('status', 'pending');
+                    });
+                });
+            },
             'lessons.resources.edits' => function ($q) {
                 $q->where('status', 'pending')->latest();
             },
@@ -324,16 +343,34 @@ class AdminCourseController extends Controller
         ])->findOrFail($id);
 
         // Chuẩn bị dữ liệu cho tab thay đổi nội dung
-        $contentChanges = $course->courseEdits->map(function ($edit) use ($course) {
-            return [
+        $contentChanges = collect();
+
+        // Course edits
+        $course->courseEdits->each(function ($edit) use ($course, $contentChanges) {
+            $contentChanges->push([
                 'id' => $edit->id,
+                'type' => 'course_edit',
                 'field' => $this->getChangedFields($course, $edit),
                 'original_value' => $this->getOriginalValue($course, $edit),
                 'new_value' => $this->getNewValue($edit),
                 'status' => $edit->status,
                 'created_at' => $edit->created_at,
                 'submitter' => $edit->submitter
-            ];
+            ]);
+        });
+
+        // Lesson pending
+        $course->lessons()->where('status', 'pending')->get()->each(function ($lesson) use ($contentChanges) {
+            $contentChanges->push([
+                'id' => $lesson->id,
+                'type' => 'lesson',
+                'field' => 'Bài giảng mới',
+                'original_value' => 'Không có',
+                'new_value' => $lesson->title,
+                'status' => $lesson->status,
+                'created_at' => $lesson->created_at,
+                'lesson_data' => $lesson
+            ]);
         });
 
         // Chuẩn bị dữ liệu cho tab tài nguyên
@@ -391,20 +428,25 @@ class AdminCourseController extends Controller
      */
     public function approveCourse($id, Request $request)
     {
-        $type = $request->input('type'); // 'content', 'resource', hoặc 'new_resource'
+        $type = $request->input('type'); // 'content', 'resource', 'lesson', hoặc 'new_resource'
         $editId = $request->input('edit_id');
         $resourceId = $request->input('resource_id'); // For new resources
+        $lessonId = $request->input('lesson_id'); // For lessons
 
         \Illuminate\Support\Facades\Log::info("Approving course {$id}", [
             'type' => $type,
             'edit_id' => $editId,
-            'resource_id' => $resourceId
+            'resource_id' => $resourceId,
+            'lesson_id' => $lessonId
         ]);
 
         try {
             if ($type === 'content') {
                 $this->approveCourseEdit($editId);
                 $message = 'Đã phê duyệt thay đổi nội dung thành công!';
+            } elseif ($type === 'lesson') {
+                $this->approveLesson($lessonId);
+                $message = 'Đã phê duyệt bài giảng thành công!';
             } elseif ($type === 'resource') {
                 $this->approveResourceEdit($editId);
                 $message = 'Đã phê duyệt chỉnh sửa tài nguyên thành công!';
@@ -428,11 +470,14 @@ class AdminCourseController extends Controller
         $type = $request->input('type');
         $editId = $request->input('edit_id');
         $resourceId = $request->input('resource_id'); // For new resources
+        $lessonId = $request->input('lesson_id'); // For lessons
         $note = $request->input('note', '');
 
         try {
             if ($type === 'content') {
                 $this->rejectCourseEdit($editId, $note);
+            } elseif ($type === 'lesson') {
+                $this->rejectLesson($lessonId, $note);
             } elseif ($type === 'resource') {
                 $this->rejectResourceEdit($editId, $note);
             } elseif ($type === 'new_resource') {
@@ -612,6 +657,43 @@ class AdminCourseController extends Controller
                     \Illuminate\Support\Facades\Log::error('Error deleting rejected resource file: ' . $e->getMessage());
                 }
             }
+        }
+    }
+
+    /**
+     * Phê duyệt bài giảng (lesson)
+     */
+    private function approveLesson($lessonId)
+    {
+        $lesson = \App\Models\Lesson::findOrFail($lessonId);
+
+        // Chỉ approve lesson có status pending
+        if ($lesson->status === 'pending') {
+            $lesson->status = 'approved';
+            $lesson->save();
+
+            \Illuminate\Support\Facades\Log::info("Lesson {$lessonId} approved successfully, new status: {$lesson->status}");
+        } else {
+            \Illuminate\Support\Facades\Log::warning("Lesson {$lessonId} is not pending, current status: {$lesson->status}");
+        }
+    }
+
+    /**
+     * Từ chối bài giảng (lesson)
+     */
+    private function rejectLesson($lessonId, $note)
+    {
+        $lesson = \App\Models\Lesson::findOrFail($lessonId);
+
+        // Chỉ reject lesson có status pending
+        if ($lesson->status === 'pending') {
+            $lesson->status = 'rejected';
+            $lesson->note = $note;
+            $lesson->save();
+
+            \Illuminate\Support\Facades\Log::info("Lesson {$lessonId} rejected successfully");
+        } else {
+            \Illuminate\Support\Facades\Log::warning("Lesson {$lessonId} is not pending, current status: {$lesson->status}");
         }
     }
 }

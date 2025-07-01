@@ -29,10 +29,12 @@ const CourseApprovalDetail = () => {
     const [rejectData, setRejectData] = useState(null);
     const [rejectNote, setRejectNote] = useState('');
 
-    const handleApprove = (type, editId, resourceId = null) => {
+    const handleApprove = (type, editId, resourceId = null, lessonId = null) => {
         const requestData = { type };
         if (type === 'new_resource') {
             requestData.resource_id = resourceId;
+        } else if (type === 'lesson') {
+            requestData.lesson_id = lessonId;
         } else {
             requestData.edit_id = editId;
         }
@@ -46,8 +48,8 @@ const CourseApprovalDetail = () => {
         });
     };
 
-    const handleReject = (type, editId, resourceId = null) => {
-        setRejectData({ type, editId, resourceId });
+    const handleReject = (type, editId, resourceId = null, lessonId = null) => {
+        setRejectData({ type, editId, resourceId, lessonId });
         setShowRejectModal(true);
     };
 
@@ -59,6 +61,8 @@ const CourseApprovalDetail = () => {
 
         if (rejectData.type === 'new_resource') {
             requestData.resource_id = rejectData.resourceId;
+        } else if (rejectData.type === 'lesson') {
+            requestData.lesson_id = rejectData.lessonId;
         } else {
             requestData.edit_id = rejectData.editId;
         }
@@ -250,30 +254,52 @@ const CourseApprovalDetail = () => {
                                                                         <span className="text-white font-bold text-xs">{index + 1}</span>
                                                                     </div>
                                                                     <h4 className="text-sm font-bold text-gray-900">
-                                                                        Trường: <span className="text-amber-700">{change.field}</span>
+                                                                        {change.type === 'lesson' ? (
+                                                                            <span>Bài giảng mới: <span className="text-amber-700">{change.new_value}</span></span>
+                                                                        ) : (
+                                                                            <span>Trường: <span className="text-amber-700">{change.field}</span></span>
+                                                                        )}
                                                                     </h4>
                                                                 </div>
 
-                                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
-                                                                    <div className="space-y-1">
-                                                                        <div className="flex items-center gap-1">
-                                                                            <XMarkIcon className="w-3 h-3 text-red-500" />
-                                                                            <span className="text-xs font-semibold text-red-700">Giá trị cũ</span>
-                                                                        </div>
-                                                                        <div className="p-2 bg-red-50 border-l-2 border-red-400 rounded">
-                                                                            <p className="text-xs text-gray-800 leading-relaxed">{change.original_value}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="space-y-1">
-                                                                        <div className="flex items-center gap-1">
-                                                                            <CheckIcon className="w-3 h-3 text-green-500" />
-                                                                            <span className="text-xs font-semibold text-green-700">Giá trị mới</span>
-                                                                        </div>
-                                                                        <div className="p-2 bg-green-50 border-l-2 border-green-400 rounded">
-                                                                            <p className="text-xs text-gray-800 leading-relaxed">{change.new_value}</p>
+                                                                {change.type === 'lesson' ? (
+                                                                    <div className="space-y-2 mb-3">
+                                                                        <div className="p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
+                                                                            <div className="flex items-start gap-2">
+                                                                                <DocumentTextIcon className="w-4 h-4 text-blue-600 mt-0.5" />
+                                                                                <div>
+                                                                                    <p className="text-sm font-medium text-blue-800">Bài giảng mới</p>
+                                                                                    <p className="text-sm text-blue-700">Tiêu đề: {change.lesson_data?.title}</p>
+                                                                                    <p className="text-xs text-blue-600 mt-1">Thứ tự: {change.lesson_data?.order}</p>
+                                                                                    {change.lesson_data?.note && (
+                                                                                        <p className="text-xs text-blue-600 mt-1">Ghi chú: {change.lesson_data.note}</p>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
+                                                                ) : (
+                                                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
+                                                                        <div className="space-y-1">
+                                                                            <div className="flex items-center gap-1">
+                                                                                <XMarkIcon className="w-3 h-3 text-red-500" />
+                                                                                <span className="text-xs font-semibold text-red-700">Giá trị cũ</span>
+                                                                            </div>
+                                                                            <div className="p-2 bg-red-50 border-l-2 border-red-400 rounded">
+                                                                                <p className="text-xs text-gray-800 leading-relaxed">{change.original_value}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="space-y-1">
+                                                                            <div className="flex items-center gap-1">
+                                                                                <CheckIcon className="w-3 h-3 text-green-500" />
+                                                                                <span className="text-xs font-semibold text-green-700">Giá trị mới</span>
+                                                                            </div>
+                                                                            <div className="p-2 bg-green-50 border-l-2 border-green-400 rounded">
+                                                                                <p className="text-xs text-gray-800 leading-relaxed">{change.new_value}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
 
                                                                 <div className="flex items-center gap-2">
                                                                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-300">
@@ -285,14 +311,20 @@ const CourseApprovalDetail = () => {
 
                                                             <div className="flex flex-col sm:flex-row gap-2 lg:flex-col lg:w-32">
                                                                 <button
-                                                                    onClick={() => handleApprove('content', change.id)}
+                                                                    onClick={() => change.type === 'lesson'
+                                                                        ? handleApprove('lesson', null, null, change.id)
+                                                                        : handleApprove('content', change.id)
+                                                                    }
                                                                     className="flex items-center justify-center px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-semibold rounded-md hover:from-green-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
                                                                 >
                                                                     <CheckCircleIcon className="h-3 w-3 mr-1" />
                                                                     Phê duyệt
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => handleReject('content', change.id)}
+                                                                    onClick={() => change.type === 'lesson'
+                                                                        ? handleReject('lesson', null, null, change.id)
+                                                                        : handleReject('content', change.id)
+                                                                    }
                                                                     className="flex items-center justify-center px-3 py-1.5 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-semibold rounded-md hover:from-red-600 hover:to-red-700 transform hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
                                                                 >
                                                                     <XMarkIcon className="h-3 w-3 mr-1" />

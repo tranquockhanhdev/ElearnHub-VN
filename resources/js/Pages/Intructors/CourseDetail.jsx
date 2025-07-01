@@ -36,6 +36,8 @@ const CourseDetail = ({ course }) => {
     const [showEditQuiz, setShowEditQuiz] = useState(null);
     const [showEditDocument, setShowEditDocument] = useState(null);
     const [showEditVideo, setShowEditVideo] = useState(null);
+    const [expandedResourceEdits, setExpandedResourceEdits] = useState({});
+
     // Form cho thêm bài giảng
     const lessonForm = useForm({
         course_id: course.id,
@@ -334,7 +336,12 @@ const CourseDetail = ({ course }) => {
             [lessonId]: !prev[lessonId]
         }));
     };
-
+    const toggleResourceEditsExpand = (resourceId) => {
+        setExpandedResourceEdits(prev => ({
+            ...prev,
+            [resourceId]: !prev[resourceId]
+        }));
+    };
     const handleUpdateOrder = (lessonId, currentOrder) => {
         setEditingOrder(lessonId);
         orderForm.setData('order', currentOrder);
@@ -1327,6 +1334,80 @@ const CourseDetail = ({ course }) => {
                                                                                             </button>
                                                                                         </div>
                                                                                     </div>
+                                                                                    {/* Resource Edits - thêm sau phần hiển thị resource chính */}
+                                                                                    {resource.edits && resource.edits.length > 0 && (
+                                                                                        <div className="mt-3">
+                                                                                            <button
+                                                                                                onClick={() => toggleResourceEditsExpand(resource.id)}
+                                                                                                className="flex items-center space-x-2 text-sm text-orange-600 hover:text-orange-800 font-medium"
+                                                                                            >
+                                                                                                {expandedResourceEdits[resource.id] ? (
+                                                                                                    <ChevronDownIcon className="h-4 w-4" />
+                                                                                                ) : (
+                                                                                                    <ChevronRightIcon className="h-4 w-4" />
+                                                                                                )}
+                                                                                                <span>📝 Lịch sử chỉnh sửa ({resource.edits.length})</span>
+                                                                                            </button>
+
+                                                                                            {expandedResourceEdits[resource.id] && (
+                                                                                                <div className="mt-2 pl-6 border-l-2 border-orange-200">
+                                                                                                    <div className="space-y-2">
+                                                                                                        {resource.edits
+                                                                                                            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                                                                                                            .map((edit) => (
+                                                                                                                <div key={edit.id} className="bg-orange-50 p-3 rounded border border-orange-200">
+                                                                                                                    <div className="flex items-start justify-between">
+                                                                                                                        <div className="flex-1">
+                                                                                                                            <div className="flex items-center space-x-2 mb-2">
+                                                                                                                                <span className="text-sm font-medium text-orange-800">
+                                                                                                                                    {edit.edited_title || resource.title}
+                                                                                                                                </span>
+
+                                                                                                                                {/* Trạng thái edit */}
+                                                                                                                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(edit.status)}`}>
+                                                                                                                                    <span className="mr-1">{getStatusIcon(edit.status)}</span>
+                                                                                                                                    {getStatusText(edit.status)}
+                                                                                                                                </span>
+
+                                                                                                                                {/* Loại file */}
+                                                                                                                                <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                                                                                                                                    📄 {edit.edited_file_type || resource.file_type}
+                                                                                                                                </span>
+
+                                                                                                                                {/* Preview status */}
+                                                                                                                                {edit.is_preview ? (
+                                                                                                                                    <span className="inline-flex items-center text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                                                                                                                        <GlobeAltIcon className="w-3 h-3 mr-1" />
+                                                                                                                                        Public
+                                                                                                                                    </span>
+                                                                                                                                ) : (
+                                                                                                                                    <span className="inline-flex items-center text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                                                                                                                                        <LockClosedIcon className="w-3 h-3 mr-1" />
+                                                                                                                                        Private
+                                                                                                                                    </span>
+                                                                                                                                )}
+                                                                                                                            </div>
+
+                                                                                                                            {/* Ghi chú edit */}
+                                                                                                                            {edit.note && (
+                                                                                                                                <div className="mt-2 text-xs text-orange-600 italic bg-white px-2 py-1 rounded border-l-2 border-orange-300">
+                                                                                                                                    <span className="font-medium">Ghi chú:</span> {edit.note}
+                                                                                                                                </div>
+                                                                                                                            )}
+
+                                                                                                                            {/* Thời gian */}
+                                                                                                                            <div className="mt-1 text-xs text-orange-500">
+                                                                                                                                Chỉnh sửa lúc: {new Date(edit.created_at).toLocaleString('vi-VN')}
+                                                                                                                            </div>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            ))}
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    )}
                                                                                 </div>
                                                                             ))}
                                                                     </div>
@@ -1454,6 +1535,81 @@ const CourseDetail = ({ course }) => {
                                                                                             </button>
                                                                                         </div>
                                                                                     </div>
+                                                                                    {/* Resource Edits - thêm sau phần hiển thị resource chính */}
+                                                                                    {resource.edits && resource.edits.length > 0 && (
+                                                                                        <div className="mt-3">
+                                                                                            <button
+                                                                                                onClick={() => toggleResourceEditsExpand(resource.id)}
+                                                                                                className="flex items-center space-x-2 text-sm text-orange-600 hover:text-orange-800 font-medium"
+                                                                                            >
+                                                                                                {expandedResourceEdits[resource.id] ? (
+                                                                                                    <ChevronDownIcon className="h-4 w-4" />
+                                                                                                ) : (
+                                                                                                    <ChevronRightIcon className="h-4 w-4" />
+                                                                                                )}
+                                                                                                <span>📝 Lịch sử chỉnh sửa ({resource.edits.length})</span>
+                                                                                            </button>
+
+                                                                                            {expandedResourceEdits[resource.id] && (
+                                                                                                <div className="mt-2 pl-6 border-l-2 border-orange-200">
+                                                                                                    <div className="space-y-2">
+                                                                                                        {resource.edits
+                                                                                                            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                                                                                                            .map((edit) => (
+                                                                                                                <div key={edit.id} className="bg-orange-50 p-3 rounded border border-orange-200">
+                                                                                                                    <div className="flex items-start justify-between">
+                                                                                                                        <div className="flex-1">
+                                                                                                                            <div className="flex items-center space-x-2 mb-2">
+                                                                                                                                <span className="text-sm font-medium text-orange-800">
+                                                                                                                                    {edit.edited_title || resource.title}
+                                                                                                                                </span>
+
+                                                                                                                                {/* Trạng thái edit */}
+                                                                                                                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(edit.status)}`}>
+                                                                                                                                    <span className="mr-1">{getStatusIcon(edit.status)}</span>
+                                                                                                                                    {getStatusText(edit.status)}
+                                                                                                                                </span>
+
+                                                                                                                                {/* Loại file */}
+                                                                                                                                <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                                                                                                                                    📄 {edit.edited_file_type || resource.file_type}
+                                                                                                                                </span>
+
+                                                                                                                                {/* Preview status */}
+                                                                                                                                {edit.is_preview ? (
+                                                                                                                                    <span className="inline-flex items-center text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                                                                                                                        <GlobeAltIcon className="w-3 h-3 mr-1" />
+                                                                                                                                        Public
+                                                                                                                                    </span>
+                                                                                                                                ) : (
+                                                                                                                                    <span className="inline-flex items-center text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                                                                                                                                        <LockClosedIcon className="w-3 h-3 mr-1" />
+                                                                                                                                        Private
+                                                                                                                                    </span>
+                                                                                                                                )}
+                                                                                                                            </div>
+
+                                                                                                                            {/* Ghi chú edit */}
+                                                                                                                            {edit.note && (
+                                                                                                                                <div className="mt-2 text-xs text-orange-600 italic bg-white px-2 py-1 rounded border-l-2 border-orange-300">
+                                                                                                                                    <span className="font-medium">Ghi chú:</span> {edit.note}
+                                                                                                                                </div>
+                                                                                                                            )}
+
+                                                                                                                            {/* Thời gian */}
+                                                                                                                            <div className="mt-1 text-xs text-orange-500">
+                                                                                                                                Chỉnh sửa lúc: {new Date(edit.created_at).toLocaleString('vi-VN')}
+                                                                                                                            </div>
+                                                                                                                        </div>
+
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            ))}
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    )}
                                                                                 </div>
                                                                             ))}
                                                                     </div>
