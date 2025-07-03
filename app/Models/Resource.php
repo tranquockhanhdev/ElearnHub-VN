@@ -23,14 +23,10 @@ class Resource extends Model
         'order',
         'status',
         'note',
-        'encrypted_path',
-        'decrypt_key',
-        'is_encrypted'
     ];
 
     protected $casts = [
         'is_preview' => 'boolean',
-        'is_encrypted' => 'boolean'
     ];
 
     public $timestamps = true;
