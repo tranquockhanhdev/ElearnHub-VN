@@ -301,15 +301,26 @@ const CourseDetail = () => {
                         </div>
                     </div>
 
-                    {/* Chỉ hiển thị nút cho video miễn phí hoặc đã enroll */}
-                    {(resource.is_preview || isEnrolled) && (
+                    {/* Hiển thị nút cho video miễn phí */}
+                    {resource.is_preview && (
                         <button
                             className={button.class}
                             onClick={button.onClick}
                         >
-                            <i className={`${resource.is_preview ? 'fas fa-eye' : 'fas fa-play'} me-1`}></i>
+                            <i className="fas fa-eye me-1"></i>
                             {button.text}
                         </button>
+                    )}
+
+                    {/* Hiển thị link vào học cho video premium khi đã enroll */}
+                    {!resource.is_preview && isEnrolled && (
+                        <Link
+                            href={`/student/course/${course.id}/learn`}
+                            className="btn btn-sm btn-primary mb-0"
+                        >
+                            <i className="fas fa-arrow-right me-1"></i>
+                            Vào học ngay
+                        </Link>
                     )}
 
                     {/* Hiển thị thông báo cho video premium */}
@@ -384,15 +395,26 @@ const CourseDetail = () => {
                         </div>
                     </div>
 
-                    {/* Chỉ hiển thị nút cho tài liệu miễn phí hoặc đã enroll */}
-                    {(resource.is_preview || isEnrolled) && (
+                    {/* Hiển thị nút cho tài liệu miễn phí */}
+                    {resource.is_preview && (
                         <button
                             className={button.class}
                             onClick={button.onClick}
                         >
-                            <i className={`${resource.is_preview ? 'fas fa-eye' : 'fas fa-file-alt'} me-1`}></i>
+                            <i className="fas fa-eye me-1"></i>
                             {button.text}
                         </button>
+                    )}
+
+                    {/* Hiển thị link vào học cho tài liệu premium khi đã enroll */}
+                    {!resource.is_preview && isEnrolled && (
+                        <Link
+                            href={`/student/course/${course.id}/learn`}
+                            className="btn btn-sm btn-primary mb-0"
+                        >
+                            <i className="fas fa-arrow-right me-1"></i>
+                            Vào học ngay
+                        </Link>
                     )}
 
                     {/* Hiển thị thông báo cho tài liệu premium */}
@@ -454,15 +476,15 @@ const CourseDetail = () => {
                         </div>
                     </div>
 
-                    {/* Chỉ hiển thị nút cho user đã enroll */}
+                    {/* Hiển thị link vào học cho quiz khi đã enroll */}
                     {isEnrolled && (
-                        <button
-                            className={button.class}
-                            onClick={button.onClick}
+                        <Link
+                            href={`/student/course/${course.id}/learn`}
+                            className="btn btn-sm btn-primary mb-0"
                         >
-                            <i className="fas fa-question-circle me-1"></i>
-                            {button.text}
-                        </button>
+                            <i className="fas fa-arrow-right me-1"></i>
+                            Vào học ngay
+                        </Link>
                     )}
 
                     {/* Hiển thị thông báo cho quiz premium */}
@@ -627,6 +649,23 @@ const CourseDetail = () => {
                                     <div className="row g-4">
                                         {/* Title START */}
                                         <div className="col-12">
+                                            {/* Update notification banner */}
+                                            <div className="alert alert-info border-0 d-flex align-items-center mb-3" role="alert">
+                                                <div className="flex-shrink-0">
+                                                    <i className="fas fa-sync-alt text-info fa-spin me-2"></i>
+                                                </div>
+                                                <div className="flex-grow-1">
+                                                    <h6 className="alert-heading mb-1">
+                                                        <i className="fas fa-bell me-1"></i>
+                                                        Khóa học đang được cập nhật liên tục
+                                                    </h6>
+                                                    <p className="mb-0 small">
+                                                        Nội dung khóa học được cập nhật hàng ngày với kiến thức mới nhất.
+                                                        Học viên sẽ được truy cập miễn phí vào tất cả nội dung mới được thêm vào sau khi mua khoá học.
+                                                    </p>
+                                                </div>
+                                            </div>
+
                                             {/* Categories */}
                                             <div className="mb-2">
                                                 {renderCategories()}
@@ -929,6 +968,21 @@ const CourseDetail = () => {
                                                     {/* Divider */}
                                                     <hr />
 
+                                                    {/* Update notice */}
+                                                    <div className="bg-light rounded p-3 mb-3">
+                                                        <div className="d-flex align-items-center">
+                                                            <div className="flex-shrink-0">
+                                                                <i className="fas fa-calendar-alt text-primary"></i>
+                                                            </div>
+                                                            <div className="flex-grow-1 ms-2">
+                                                                <h6 className="mb-1 text-primary">Cập nhật thường xuyên</h6>
+                                                                <p className="mb-0 small text-muted">
+                                                                    Khóa học được cập nhật nội dung mới hàng tuần
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
                                                     {/* Course includes */}
                                                     <h5 className="mb-3">Khóa học bao gồm</h5>
                                                     <ul className="list-group list-group-borderless border-0">
@@ -987,6 +1041,13 @@ const CourseDetail = () => {
                                                                 Truy cập
                                                             </span>
                                                             <span>Trọn đời</span>
+                                                        </li>
+                                                        <li className="list-group-item px-0 d-flex justify-content-between">
+                                                            <span className="h6 fw-light mb-0">
+                                                                <i className="fas fa-fw fa-sync-alt text-success" />
+                                                                Cập nhật nội dung
+                                                            </span>
+                                                            <span className="text-success small">Hàng tuần</span>
                                                         </li>
                                                     </ul>
 

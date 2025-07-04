@@ -23,23 +23,24 @@ Route::middleware(['auth', 'verified', 'role:3'])->prefix('student')->name('stud
     Route::get('/courselist', [CourseController::class, 'index'])->name('courselist');
     Route::get('/course/{id}', [CourseController::class, 'show'])->name('course.show');
 
-    Route::get('/course/{id}/learn', [CourseController::class, 'learn'])->name('course.learn'); //student.course.learn
+    Route::middleware(['seb'])->group(function () {
+        Route::get('/course/{id}/learn', [CourseController::class, 'learn'])->name('course.learn'); //student.course.learn
 
-    Route::get('/course/{courseId}/download/{documentId}', [
-        CourseController::class,
-        'downloadDocument'
-    ])->name('course.downloadDocument');
+        Route::get('/course/{courseId}/download/{documentId}', [
+            CourseController::class,
+            'downloadDocument'
+        ])->name('course.downloadDocument');
 
-    // 🔹 Bài học
-    Route::get('/lesson/{id}', [LessonController::class, 'show'])->name('lesson.show');
+        // 🔹 Bài học
+        Route::get('/lesson/{id}', [LessonController::class, 'show'])->name('lesson.show');
 
-    // 🔹 Quiz
-    Route::prefix('quiz')->name('quiz.')->group(function () {
-        Route::get('/{quizId}', [QuizController::class, 'show'])->name('show');
-        Route::post('/{quizId}/submit', [QuizController::class, 'submit'])->name('submit');
-        Route::get('/{quizId}/result', [QuizController::class, 'result'])->name('result');
+        // 🔹 Quiz
+        Route::prefix('quiz')->name('quiz.')->group(function () {
+            Route::get('/{quizId}', [QuizController::class, 'show'])->name('show');
+            Route::post('/{quizId}/submit', [QuizController::class, 'submit'])->name('submit');
+            Route::get('/{quizId}/result', [QuizController::class, 'result'])->name('result');
+        });
     });
-
     // 🔹 Thanh toán & giao dịch
     Route::get('/payments', [PaymentController::class, 'index'])->name('payments');
 

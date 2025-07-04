@@ -15,7 +15,8 @@ const Checkout = () => {
         course_id: course?.id || null,
         payment_method_id: null,
         payment_time: new Date().toISOString(),
-        country: 'VN'
+        country: 'VN',
+        agree_terms: false
     });
 
     const [errors, setErrors] = useState({});
@@ -86,6 +87,10 @@ const Checkout = () => {
 
         if (!formData.payment_method_id) {
             newErrors.payment_method_id = 'Vui lòng chọn phương thức thanh toán';
+        }
+
+        if (!formData.agree_terms) {
+            newErrors.agree_terms = 'Vui lòng đồng ý với điều khoản sử dụng';
         }
 
         setErrors(newErrors);
@@ -410,6 +415,67 @@ const Checkout = () => {
                                                     )}
                                                 </div>
                                             </div>
+
+                                            {/* Terms Agreement START */}
+                                            <div className="card border-0 shadow-sm mt-4">
+                                                <div className="card-body p-4">
+                                                    <div className="form-check d-flex align-items-start">
+                                                        <input
+                                                            className={`form-check-input me-3 mt-1 ${errors.agree_terms ? 'is-invalid' : ''}`}
+                                                            type="checkbox"
+                                                            id="agreeTerms"
+                                                            name="agree_terms"
+                                                            checked={formData.agree_terms}
+                                                            onChange={(e) => {
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    agree_terms: e.target.checked
+                                                                });
+                                                                if (errors.agree_terms) {
+                                                                    setErrors({
+                                                                        ...errors,
+                                                                        agree_terms: null
+                                                                    });
+                                                                }
+                                                            }}
+                                                            style={{ transform: 'scale(1.2)' }}
+                                                        />
+                                                        <label className="form-check-label text-gray-700" htmlFor="agreeTerms">
+                                                            <span className="fw-semibold">Tôi đồng ý với </span>
+                                                            <Link
+                                                                href={route('terms')}
+                                                                className="text-primary text-decoration-none fw-semibold"
+                                                                target="_blank"
+                                                            >
+                                                                Điều khoản sử dụng
+                                                            </Link>
+                                                            <span className="fw-semibold"> và </span>
+                                                            <Link
+                                                                href="#"
+                                                                className="text-primary text-decoration-none fw-semibold"
+                                                                target="_blank"
+                                                            >
+                                                                Chính sách bảo mật
+                                                            </Link>
+                                                            <span className="fw-semibold"> của K-EDU</span>
+                                                            <span className="text-danger ms-1">*</span>
+                                                        </label>
+                                                    </div>
+                                                    {errors.agree_terms && (
+                                                        <div className="text-danger small mt-2 ms-4">
+                                                            <i className="bi bi-exclamation-triangle me-1"></i>
+                                                            {errors.agree_terms}
+                                                        </div>
+                                                    )}
+                                                    <div className="mt-3 ms-4">
+                                                        <small className="text-muted">
+                                                            <i className="bi bi-info-circle me-1"></i>
+                                                            Bằng việc đồng ý, bạn xác nhận đã đọc và hiểu các điều khoản sử dụng cũng như chính sách bảo mật của chúng tôi.
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {/* Terms Agreement END */}
                                         </>
                                     )}
 
@@ -448,6 +514,13 @@ const Checkout = () => {
                                                                         {formData.country === 'US' && '🇺🇸 Hoa Kỳ'}
                                                                         {formData.country === 'CN' && '🇨🇳 Trung Quốc'}
                                                                         {formData.country === 'JP' && '🇯🇵 Nhật Bản'}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="col-12">
+                                                                    <small className="text-gray-400d">Đồng ý điều khoản:</small>
+                                                                    <div className="fw-semibold d-flex align-items-center">
+                                                                        <i className="bi bi-check-circle-fill text-success me-2"></i>
+                                                                        Đã đồng ý với điều khoản sử dụng
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -667,7 +740,7 @@ const Checkout = () => {
                                                             </div>
                                                             <small className="text-gray-400d">
                                                                 Bằng cách thanh toán, bạn đồng ý với{" "}
-                                                                <Link href="#" className="text-decoration-none fw-semibold">
+                                                                <Link href={route('terms')} className="text-decoration-none fw-semibold" target="_blank">
                                                                     Điều khoản dịch vụ
                                                                 </Link>
                                                             </small>
