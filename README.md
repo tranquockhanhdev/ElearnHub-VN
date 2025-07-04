@@ -1,4 +1,4 @@
-# K-Edu - Hệ thống Học tập Trực tuyến
+u - Hệ thống Học tập Trực tuyến
 
 ## 📖 Giới thiệu
 

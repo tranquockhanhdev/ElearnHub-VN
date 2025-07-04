@@ -15,7 +15,7 @@ class CheckSEBUserAgent
 
         if (!str_contains($userAgent, 'SEB')) {
             if ($request->hasHeader('X-Inertia')) {
-                return Inertia::location('/guideseb');
+                return Inertia::location('/guideseb?showAlert=true');
             }
             return response()->json([
                 'message' => 'Vui lòng truy cập bằng Safe Exam Browser (SEB)',

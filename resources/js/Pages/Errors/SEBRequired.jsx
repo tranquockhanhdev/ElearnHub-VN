@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import {
     ShieldCheckIcon,
@@ -10,12 +10,45 @@ import {
     QuestionMarkCircleIcon
 } from '@heroicons/react/24/outline';
 import UserLayout from '../../Components/Layouts/UserLayout';
+import SEBAlert from '../../Components/Common/SEBAlert';
 
 const SEBRequired = () => {
+    const [showAlert, setShowAlert] = useState(false);
+
+    useEffect(() => {
+        // Kiểm tra URL params để hiển thị alert
+        const urlParams = new URLSearchParams(window.location.search);
+        const shouldShowAlert = urlParams.get('showAlert');
+
+        if (shouldShowAlert === 'true') {
+            setShowAlert(true);
+            // Xóa query param khỏi URL sau khi đã xử lý
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+        }
+    }, []);
+
+    const handleCloseAlert = () => {
+        setShowAlert(false);
+    };
+
+    const handleOpenApp = () => {
+        // Logic xử lý sau khi nhấn Open App
+        console.log('Attempting to open SEB...');
+    };
+
     return (
         <UserLayout>
             <>
                 <Head title="Yêu cầu Safe Exam Browser - K-EDU" />
+
+                {/* SEB Alert Modal */}
+                {showAlert && (
+                    <SEBAlert
+                        onClose={handleCloseAlert}
+                        onOpenApp={handleOpenApp}
+                    />
+                )}
 
                 <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
                     {/* Header Section */}
@@ -235,7 +268,16 @@ const SEBRequired = () => {
                         </div>
 
                         {/* Return Button */}
-                        <div className="text-center">
+                        <div className="text-center space-y-3">
+                            <button
+                                onClick={() => setShowAlert(true)}
+                                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm mr-4 shadow-lg"
+                            >
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                                Thử mở SEB ngay
+                            </button>
                             <Link
                                 href="/"
                                 className="inline-flex items-center px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium text-sm"
