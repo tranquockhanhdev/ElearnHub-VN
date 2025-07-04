@@ -13,7 +13,7 @@ K-Edu là một nền tảng học tập trực tuyến toàn diện được x�
 - **Xem video bài giảng**: Phát video với Plyr player tích hợp
 - **Đọc tài liệu**: Xem PDF và tài liệu học tập với PDF.js
 - **Quản lý thanh toán**: Theo dõi lịch sử thanh toán và giao dịch
-
+  
 ### 👨‍🏫 Dành cho Giảng viên (Instructors)
 - **Tạo và quản lý khóa học**: Tạo khóa học với editor Quill rich text
 - **Quản lý bài giảng**: Thêm/sửa/xóa bài giảng và sắp xếp thứ tự
