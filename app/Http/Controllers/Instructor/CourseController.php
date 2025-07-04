@@ -93,6 +93,7 @@ class CourseController extends Controller
             'categories',
             'enrollments.student',
             'lessons.resources',
+            'lessons.resources.edits',
             'lessons.quiz',
             'lessons.quiz.questions',
             'lessons' => function ($query) {

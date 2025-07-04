@@ -82,6 +82,22 @@ const UserLayout = ({ children }) => {
                                     <li className="nav-item">
                                         <Link
                                             className="nav-link"
+                                            href="/terms"
+                                        >
+                                            Điều Khoản & Điều Kiện
+                                        </Link>
+                                    </li>
+                                    <li className="nav-item">
+                                        <Link
+                                            className="nav-link"
+                                            href="/guideseb"
+                                        >
+                                            Hướng Dẫn SEB
+                                        </Link>
+                                    </li>
+                                    <li className="nav-item">
+                                        <Link
+                                            className="nav-link"
                                             href="/login"
                                         >
                                             Đăng Nhập
@@ -120,6 +136,22 @@ const UserLayout = ({ children }) => {
                                             href="/courses"
                                         >
                                             Khóa Học
+                                        </Link>
+                                    </li>
+                                    <li className="nav-item">
+                                        <Link
+                                            className="nav-link"
+                                            href="/terms"
+                                        >
+                                            Điều Khoản & Điều Kiện
+                                        </Link>
+                                    </li>
+                                    <li className="nav-item">
+                                        <Link
+                                            className="nav-link"
+                                            href="/guideseb"
+                                        >
+                                            Hướng Dẫn SEB
                                         </Link>
                                     </li>
                                     <li className="nav-item">
@@ -450,6 +482,14 @@ const UserLayout = ({ children }) => {
                                                 href="/terms"
                                             >
                                                 Điều Khoản & Điều Kiện
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link"
+                                                href="/guideseb"
+                                            >
+                                                Hướng Dẫn SEB
                                             </Link>
                                         </li>
                                     </ul>

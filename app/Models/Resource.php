@@ -22,7 +22,11 @@ class Resource extends Model
         'is_preview',
         'order',
         'status',
-        'note'
+        'note',
+    ];
+
+    protected $casts = [
+        'is_preview' => 'boolean',
     ];
 
     public $timestamps = true;
@@ -30,5 +34,9 @@ class Resource extends Model
     public function lesson()
     {
         return $this->belongsTo(Lesson::class);
+    }
+    public function edits()
+    {
+        return $this->hasMany(ResourceEdit::class, 'resources_id');
     }
 }

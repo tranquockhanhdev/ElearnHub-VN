@@ -120,6 +120,14 @@ const AdminLayout = ({ children }) => {
                                                         Danh mục khóa học
                                                     </Link>
                                                 </li>
+                                                <li className="nav-item">
+                                                    <Link
+                                                        className={`nav-link ${isRoute("admin.course-approvals.index") ? "active" : ""}`}
+                                                        href={route("admin.course-approvals.index")}
+                                                    >
+                                                        Khoá học chờ duyệt
+                                                    </Link>
+                                                </li>
                                             </ul>
                                         )}
                                 </li>
@@ -178,18 +186,7 @@ const AdminLayout = ({ children }) => {
                                                     </Link>
                                                 </li>
 
-                                                {/* Tạm thời chưa làm, dùng link disabled hoặc placeholder */}
-                                                <li className="nav-item">
-                                                    <a
-                                                        className="nav-link disabled"
-                                                        href="#"
-                                                    >
-                                                        Yêu cầu giảng viên{" "}
-                                                        <small className="text-muted">
-                                                            (đang phát triển)
-                                                        </small>
-                                                    </a>
-                                                </li>
+
                                             </ul>
                                         )}
                                 </li>
@@ -222,68 +219,14 @@ const AdminLayout = ({ children }) => {
                                     </Link>
                                 </li>
 
-                                {/* Xác thực */}
-                                <li className="nav-item">
-                                    <a
-                                        className="nav-link d-flex justify-content-between align-items-center"
-                                        onClick={() => setShowAuth(!showAuth)}
-                                        role="button"
-                                    >
-                                        <span>
-                                            <i className="bi bi-lock fa-fw me-2"></i>
-                                            Xác Thực
-                                        </span>
-                                        <i
-                                            className={`bi ms-2 ${showAuth
-                                                ? "bi-chevron-up"
-                                                : "bi-chevron-down"
-                                                }`}
-                                        ></i>
-                                    </a>
-                                    {showAuth && (
-                                        <ul className="nav flex-column ms-3">
-                                            <li className="nav-item">
-                                                <Link
-                                                    className="nav-link"
-                                                    href="/sign-up"
-                                                >
-                                                    Sign Up
-                                                </Link>
-                                            </li>
-                                            <li className="nav-item">
-                                                <Link
-                                                    className="nav-link"
-                                                    href="/sign-in"
-                                                >
-                                                    Sign In
-                                                </Link>
-                                            </li>
-                                            <li className="nav-item">
-                                                <Link
-                                                    className="nav-link"
-                                                    href="/forgot-password"
-                                                >
-                                                    Forgot Password
-                                                </Link>
-                                            </li>
-                                            <li className="nav-item">
-                                                <Link
-                                                    className="nav-link"
-                                                    href="/admin-error-404"
-                                                >
-                                                    Error 404
-                                                </Link>
-                                            </li>
-                                        </ul>
-                                    )}
-                                </li>
+
                             </ul>
 
                             <div className="px-3 mt-auto pt-3">
                                 <div className="d-flex align-items-center justify-content-between text-primary-hover">
                                     <Link
                                         className="h5 mb-0 text-body"
-                                        href="/admin-setting"
+                                        href={route("admin.settings")}
                                     >
                                         <i className="bi bi-gear-fill"></i>
                                     </Link>
@@ -340,7 +283,7 @@ const AdminLayout = ({ children }) => {
                                     role="button"
                                 >
                                     <img
-                                        src="/assets/images/avatar/01.jpg"
+                                        src="https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?semt=ais_hybrid&w=740"
                                         alt="avatar"
                                         className="avatar-img rounded-circle shadow-sm"
                                         style={{
@@ -362,7 +305,7 @@ const AdminLayout = ({ children }) => {
                                     <li className="px-3 pt-2 pb-1 border-bottom">
                                         <div className="d-flex align-items-center">
                                             <img
-                                                src="/assets/images/avatar/01.jpg"
+                                                src="https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?semt=ais_hybrid&w=740"
                                                 alt="avatar"
                                                 className="rounded-circle me-3"
                                                 style={{
@@ -374,11 +317,11 @@ const AdminLayout = ({ children }) => {
                                                 <h6 className="mb-0">
                                                     {auth.user.name}
                                                 </h6>
-                                                <small className="text-muted">
+                                                <small className="text-black">
                                                     {auth.user.email}
                                                 </small>
                                                 <br />
-                                                <small className="text-muted">
+                                                <small className="text-black">
                                                     Role:{" "}
                                                     {auth.user.role === 1
                                                         ? "Admin"
@@ -387,36 +330,7 @@ const AdminLayout = ({ children }) => {
                                             </div>
                                         </div>
                                     </li>
-                                    <li>
-                                        <Link
-                                            className="dropdown-item"
-                                            href="#"
-                                        >
-                                            <i className="bi bi-person fa-fw me-2"></i>
-                                            Edit Profile
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link
-                                            className="dropdown-item"
-                                            href="#"
-                                        >
-                                            <i className="bi bi-gear fa-fw me-2"></i>
-                                            Account Settings
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link
-                                            className="dropdown-item"
-                                            href="#"
-                                        >
-                                            <i className="bi bi-info-circle fa-fw me-2"></i>
-                                            Help
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <hr className="dropdown-divider" />
-                                    </li>
+
                                     <li>
                                         <Link
                                             className="dropdown-item text-danger"

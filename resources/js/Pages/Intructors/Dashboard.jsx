@@ -430,7 +430,7 @@ const Dashboard = () => {
                                         <div className="card border">
                                             <div className="card-header border-bottom d-flex justify-content-between align-items-center">
                                                 <h5 className="card-header-title">Đăng ký mới nhất</h5>
-                                                <a href="/instructor/enrollments" className="btn btn-sm btn-primary-soft">
+                                                <a href="/instructor/students" className="btn btn-sm btn-primary-soft">
                                                     Xem tất cả
                                                 </a>
                                             </div>
@@ -453,7 +453,7 @@ const Dashboard = () => {
                                                                             <div className="d-flex align-items-center">
                                                                                 <div className="avatar avatar-xs me-2">
                                                                                     <img
-                                                                                        src={enrollment.student?.avatar || '/assets/images/avatar/default.jpg'}
+                                                                                        src={enrollment.student?.avatar || 'https://img.freepik.com/premium-vector/character-avatar-isolated_729149-194801.jpg?semt=ais_hybrid&w=740'}
                                                                                         className="rounded-circle"
                                                                                         alt={enrollment.student?.name}
                                                                                     />

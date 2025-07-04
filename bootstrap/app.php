@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'seb'  => \App\Http\Middleware\CheckSEBUserAgent::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

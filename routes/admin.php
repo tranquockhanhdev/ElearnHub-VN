@@ -112,4 +112,15 @@ Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
         ->name('admin.payments.show');
     Route::get('/admin/payments/export/excel', [AdminPaymentController::class, 'exportExcel'])
         ->name('admin.payments.export.excel');
+
+    Route::get('/admin/course-approvals', [AdminCourseController::class, 'courseApprovals'])
+        ->name('admin.course-approvals.index'); // Danh sách khóa học chờ phê duyệt
+
+    Route::post('/admin/course-approvals/{id}/approve', [AdminCourseController::class, 'approveCourse'])
+        ->name('admin.course-approvals.approve'); // Phê duyệt khóa học
+    Route::post('/admin/course-approvals/{id}/reject', [AdminCourseController::class, 'rejectCourse'])
+        ->name('admin.course-approvals.reject'); // Từ chối khóa học
+
+    Route::get('/admin/course-approvals/{id}', [AdminCourseController::class, 'showCourseApproval'])
+        ->name('admin.course-approvals.show'); // Chi tiết khóa học chờ phê duyệt
 });

@@ -9,7 +9,15 @@ const CourseGridView = ({ courses, onDelete, formatDate }) => {
             </div>
         );
     }
-
+    const getCourseImage = (course) => {
+        if (!course.img_url) {
+            return "/images/default-thumbnail.jpg";
+        }
+        if (course.img_url.startsWith("bannercourse/")) {
+            return `/storage/${course.img_url}`;
+        }
+        return course.img_url;
+    };
     return (
         <div className="row g-4">
             {courses.map((course) => (
@@ -17,8 +25,7 @@ const CourseGridView = ({ courses, onDelete, formatDate }) => {
                     <div className="card h-100 shadow-sm border">
                         <img
                             src={
-                                course.img_url ||
-                                "/images/default-thumbnail.jpg"
+                                getCourseImage(course)
                             }
                             className="card-img-top"
                             alt={course.title}
@@ -36,20 +43,19 @@ const CourseGridView = ({ courses, onDelete, formatDate }) => {
                                 <strong>Danh mục:</strong>{" "}
                                 {course.categories.length > 0
                                     ? course.categories
-                                          .map((cat) => cat.name)
-                                          .join(", ")
+                                        .map((cat) => cat.name)
+                                        .join(", ")
                                     : "---"}
                             </p>
                             <p className="mb-1">
                                 <strong>Trạng thái:</strong>{" "}
                                 <span
-                                    className={`badge bg-${
-                                        course.status === "active"
-                                            ? "success"
-                                            : course.status === "pending"
+                                    className={`badge bg-${course.status === "active"
+                                        ? "success"
+                                        : course.status === "pending"
                                             ? "warning"
                                             : "secondary"
-                                    }`}
+                                        }`}
                                 >
                                     {course.status}
                                 </span>

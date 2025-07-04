@@ -24,7 +24,6 @@ const Profile = () => {
         linkedin_url: instructor?.linkedin_url || '',
         avatar: null,
     });
-    console.log('Profile Form Data:', profileForm.data);
     // Add this useEffect after your state declarations
     useEffect(() => {
         // Cleanup function to revoke object URLs

@@ -58,10 +58,8 @@ const CourseDetail = () => {
     // Đánh dấu document đã hoàn thành
     const markDocumentComplete = async (documentId) => {
         try {
-            console.log('Marking document as complete:', '/student/course/' + course.id + '/resource/' + documentId + '/complete');
             const response = await axios.post(`/student/course/${course.id}/resource/${documentId}/complete`);
             if (response.data.success) {
-                console.log('Document marked as complete successfully');
             }
         } catch (error) {
             console.error('Error marking document as complete:', error);

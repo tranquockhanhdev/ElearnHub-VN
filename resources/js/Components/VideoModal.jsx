@@ -35,16 +35,72 @@ const VideoModal = ({ isOpen, onClose, video }) => {
 
         // Lấy URL video từ file_url hoặc file
         let videoUrl = video.file_url || video.file;
+        const fileType = video.file_type?.toLowerCase();
 
         if (!videoUrl) return null;
 
+        // Xử lý theo file_type trước
+        if (fileType === 'youtube') {
+            const videoId = extractYouTubeId(videoUrl);
+            if (videoId) {
+                return {
+                    type: 'video',
+                    sources: [{
+                        src: videoId,
+                        provider: 'youtube'
+                    }]
+                };
+            }
+        }
+
+        if (fileType === 'vimeo') {
+            const videoId = extractVimeoId(videoUrl);
+            if (videoId) {
+                return {
+                    type: 'video',
+                    sources: [{
+                        src: videoId,
+                        provider: 'vimeo'
+                    }]
+                };
+            }
+        }
+
+        // Xử lý URL có chứa youtube/vimeo
+        if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+            const videoId = extractYouTubeId(videoUrl);
+            if (videoId) {
+                return {
+                    type: 'video',
+                    sources: [{
+                        src: videoId,
+                        provider: 'youtube'
+                    }]
+                };
+            }
+        }
+
+        if (videoUrl.includes('vimeo.com')) {
+            const videoId = extractVimeoId(videoUrl);
+            if (videoId) {
+                return {
+                    type: 'video',
+                    sources: [{
+                        src: videoId,
+                        provider: 'vimeo'
+                    }]
+                };
+            }
+        }
+
+        // Xử lý các URL khác
         if (videoUrl.startsWith('http')) {
             return {
                 type: 'video',
                 sources: [
                     {
                         src: videoUrl,
-                        provider: getVideoProvider(videoUrl),
+                        provider: 'html5',
                     }
                 ]
             };
@@ -55,6 +111,8 @@ const VideoModal = ({ isOpen, onClose, video }) => {
         if (videoUrl.startsWith('storage/videos/')) {
             const fileName = videoUrl.replace('storage/videos/', '');
             streamingUrl = `/video/${fileName}`;
+        } else if (videoUrl.startsWith('storage/')) {
+            streamingUrl = `${window.location.origin}/${videoUrl}`;
         } else if (!videoUrl.startsWith('/')) {
             streamingUrl = `/video/${videoUrl}`;
         } else {
@@ -166,79 +224,18 @@ const VideoModal = ({ isOpen, onClose, video }) => {
                 <div className="p-4">
                     {videoSource ? (
                         <div className="w-full relative">
-                            {(() => {
-                                const videoUrl = video.file_url || video.file;
-                                const provider = getVideoProvider(videoUrl);
-
-                                if (provider === 'youtube') {
-                                    return (
-                                        <div className="relative">
-                                            <Plyr
-                                                source={{
-                                                    type: 'video',
-                                                    sources: [
-                                                        {
-                                                            src: extractYouTubeId(videoUrl),
-                                                            provider: 'youtube'
-                                                        }
-                                                    ]
-                                                }}
-                                                options={plyrOptions}
-                                            />
-                                            {/* Logo Watermark */}
-                                            <div className="absolute top-4 right-4 z-10 pointer-events-none">
-                                                <img
-                                                    src="/assets/images/avatar/kedu.png"
-                                                    alt="K-EDU"
-                                                    className="w-36 h-36 opacity-80"
-                                                />
-                                            </div>
-                                        </div>
-                                    );
-                                } else if (provider === 'vimeo') {
-                                    return (
-                                        <div className="relative">
-                                            <Plyr
-                                                source={{
-                                                    type: 'video',
-                                                    sources: [
-                                                        {
-                                                            src: extractVimeoId(videoUrl),
-                                                            provider: 'vimeo'
-                                                        }
-                                                    ]
-                                                }}
-                                                options={plyrOptions}
-                                            />
-                                            {/* Logo Watermark */}
-                                            <div className="absolute top-4 right-4 z-10 pointer-events-none">
-                                                <img
-                                                    src="/assets/images/avatar/kedu.png"
-                                                    alt="K-EDU"
-                                                    className="w-36 h-36 opacity-80"
-                                                />
-                                            </div>
-                                        </div>
-                                    );
-                                } else {
-                                    return (
-                                        <div className="relative">
-                                            <Plyr
-                                                source={videoSource}
-                                                options={plyrOptions}
-                                            />
-                                            {/* Logo Watermark */}
-                                            <div className="absolute top-4 right-4 z-10 pointer-events-none">
-                                                <img
-                                                    src="/assets/images/avatar/kedu.png"
-                                                    alt="K-EDU"
-                                                    className="w-36 h-36 opacity-80"
-                                                />
-                                            </div>
-                                        </div>
-                                    );
-                                }
-                            })()}
+                            <Plyr
+                                source={videoSource}
+                                options={plyrOptions}
+                            />
+                            {/* Logo Watermark */}
+                            <div className="absolute top-4 right-4 z-10 pointer-events-none">
+                                <img
+                                    src="/assets/images/avatar/kedu.png"
+                                    alt="K-EDU"
+                                    className="w-36 h-36 opacity-80"
+                                />
+                            </div>
                         </div>
                     ) : (
                         <div className="text-center py-8">

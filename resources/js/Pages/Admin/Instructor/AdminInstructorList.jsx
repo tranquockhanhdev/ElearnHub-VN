@@ -97,9 +97,8 @@ const AdminInstructorList = ({ instructors }) => {
                     preserveScroll
                     key={i}
                     href={`?page=${i}`}
-                    className={`page-link ${
-                        instructors.current_page === i ? "active" : ""
-                    }`}
+                    className={`page-link ${instructors.current_page === i ? "active" : ""
+                        }`}
                 >
                     {i}
                 </Link>
@@ -160,11 +159,10 @@ const AdminInstructorList = ({ instructors }) => {
                                 <ul className="list-inline nav nav-pills justify-content-end">
                                     <li className="nav-item">
                                         <button
-                                            className={`nav-link ${
-                                                activeTab === "grid"
-                                                    ? "active"
-                                                    : ""
-                                            }`}
+                                            className={`nav-link ${activeTab === "grid"
+                                                ? "active"
+                                                : ""
+                                                }`}
                                             onClick={() => setActiveTab("grid")}
                                         >
                                             <i className="fas fa-th-large"></i>
@@ -172,11 +170,10 @@ const AdminInstructorList = ({ instructors }) => {
                                     </li>
                                     <li className="nav-item">
                                         <button
-                                            className={`nav-link ${
-                                                activeTab === "list"
-                                                    ? "active"
-                                                    : ""
-                                            }`}
+                                            className={`nav-link ${activeTab === "list"
+                                                ? "active"
+                                                : ""
+                                                }`}
                                             onClick={() => setActiveTab("list")}
                                         >
                                             <i className="fas fa-list-ul"></i>

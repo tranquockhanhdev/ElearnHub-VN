@@ -27,4 +27,12 @@ class HomeController extends Controller
     {
         return Inertia::render('Public/About');
     }
+    public function terms()
+    {
+        return Inertia::render('Public/Terms');
+    }
+    public function seb()
+    {
+        return Inertia::render('Errors/SEBRequired');
+    }
 }

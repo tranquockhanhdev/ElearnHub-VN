@@ -45,7 +45,12 @@ const StudentDashboard = () => {
 			preserveScroll: true,
 		});
 	};
-
+	// Get course image URL
+	const getCourseImageUrl = (imgUrl) => {
+		if (!imgUrl) return 'https://placehold.co/600x400/EEE/31343C';
+		if (imgUrl.startsWith('http')) return imgUrl;
+		return `/storage/${imgUrl}`;
+	};
 	// Handle per page change
 	const handlePerPageChange = (value) => {
 		setPerPage(value);
@@ -84,7 +89,7 @@ const StudentDashboard = () => {
 		{
 			icon: 'fas fa-tasks',
 			count: stats?.completed_lessons || 0,
-			label: 'Bài học đã hoàn thành',
+			label: 'Video đã hoàn thành',
 			color: 'success',
 			gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)'
 		},
@@ -232,8 +237,8 @@ const StudentDashboard = () => {
 									<div className="card-header bg-white border-bottom">
 										<div className="d-flex align-items-center justify-content-between">
 											<h4 className="mb-0 fw-semibold">
-												<i className="fas fa-clock text-primary me-2"></i>
-												Khóa học gần đây
+												<i className="fas fa-history text-primary me-2"></i>
+												Học tập gần đây
 											</h4>
 											<div className="d-flex align-items-center gap-2">
 												<span className="badge bg-primary-soft text-primary">
@@ -255,7 +260,7 @@ const StudentDashboard = () => {
 														<thead className="table-light">
 															<tr>
 																<th className="border-0 rounded-start fw-semibold">Khóa học</th>
-																<th className="border-0 fw-semibold">Bài học</th>
+																<th className="border-0 fw-semibold">Video</th>
 																<th className="border-0 fw-semibold">Tiến độ</th>
 																<th className="border-0 rounded-end fw-semibold">Hành động</th>
 															</tr>
@@ -267,7 +272,7 @@ const StudentDashboard = () => {
 																		<div className="d-flex align-items-center">
 																			<div className="flex-shrink-0">
 																				<img
-																					src={course.img_url ? `/storage/${course.img_url}` : '/assets/images/courses/4by3/default.jpg'}
+																					src={getCourseImageUrl(course.img_url)}
 																					className="rounded shadow-sm"
 																					alt={course.title}
 																					style={{ width: '70px', height: '50px', objectFit: 'cover' }}
@@ -283,16 +288,16 @@ const StudentDashboard = () => {
 																					Giảng viên: {course.instructor_name}
 																				</div>
 																				<div className="small text-black">
-																					<i className="fas fa-calendar me-1"></i>
-																					Đăng ký: {course.enrollment_date}
+																					<i className="fas fa-clock me-1"></i>
+																					Học gần đây: {course.last_accessed}
 																				</div>
 																			</div>
 																		</div>
 																	</td>
 																	<td>
 																		<div className="text-center">
-																			<div className="fw-semibold">{course.completed_lessons}/{course.total_lessons}</div>
-																			<small className="text-black">đã hoàn thành</small>
+																			<div className="fw-semibold">{course.completed_videos}/{course.total_videos}</div>
+																			<small className="text-black">video đã hoàn thành</small>
 																		</div>
 																	</td>
 																	<td>
@@ -310,7 +315,7 @@ const StudentDashboard = () => {
 																		</small>
 																	</td>
 																	<td>
-																		{(course.progress === 100 && course.completed_lessons === course.total_lessons) ? (
+																		{course.progress === 100 ? (
 																			<div className="d-flex gap-1">
 																				<span className="badge bg-success">
 																					<i className="fas fa-check me-1"></i>Hoàn thành

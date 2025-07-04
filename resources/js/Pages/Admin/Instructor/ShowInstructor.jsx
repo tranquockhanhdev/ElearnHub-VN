@@ -73,9 +73,8 @@ export default function InstructorDetail({ instructor, courses }) {
                     preserveScroll
                     key={i}
                     href={`?page=${i}`}
-                    className={`page-link ${
-                        courses.current_page === i ? "active" : ""
-                    }`}
+                    className={`page-link ${courses.current_page === i ? "active" : ""
+                        }`}
                 >
                     {i}
                 </Link>
@@ -217,46 +216,46 @@ export default function InstructorDetail({ instructor, courses }) {
                                         <div className="mt-1 d-flex gap-2">
                                             {instructor.instructor
                                                 ?.facebook_url && (
-                                                <a
-                                                    href={
-                                                        instructor.instructor
-                                                            .facebook_url
-                                                    }
-                                                    className="text-primary"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                >
-                                                    Facebook
-                                                </a>
-                                            )}
+                                                    <a
+                                                        href={
+                                                            instructor.instructor
+                                                                .facebook_url
+                                                        }
+                                                        className="text-primary"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        Facebook
+                                                    </a>
+                                                )}
                                             {instructor.instructor
                                                 ?.twitter_url && (
-                                                <a
-                                                    href={
-                                                        instructor.instructor
-                                                            .twitter_url
-                                                    }
-                                                    className="text-info"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                >
-                                                    Twitter
-                                                </a>
-                                            )}
+                                                    <a
+                                                        href={
+                                                            instructor.instructor
+                                                                .twitter_url
+                                                        }
+                                                        className="text-info"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        Twitter
+                                                    </a>
+                                                )}
                                             {instructor.instructor
                                                 ?.linkedin_url && (
-                                                <a
-                                                    href={
-                                                        instructor.instructor
-                                                            .linkedin_url
-                                                    }
-                                                    className="text-primary"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                >
-                                                    LinkedIn
-                                                </a>
-                                            )}
+                                                    <a
+                                                        href={
+                                                            instructor.instructor
+                                                                .linkedin_url
+                                                        }
+                                                        className="text-primary"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        LinkedIn
+                                                    </a>
+                                                )}
                                         </div>
                                     </li>
                                 </ul>
@@ -376,8 +375,8 @@ export default function InstructorDetail({ instructor, courses }) {
                                                     </td>
                                                     <td>
                                                         {course.categories &&
-                                                        course.categories
-                                                            .length > 0 ? (
+                                                            course.categories
+                                                                .length > 0 ? (
                                                             course.categories.map(
                                                                 (category) => (
                                                                     <span
@@ -400,15 +399,14 @@ export default function InstructorDetail({ instructor, courses }) {
                                                     </td>
                                                     <td>
                                                         <span
-                                                            className={`badge rounded-pill px-3 py-2 ${
-                                                                course.status ===
-                                                                "active"
+                                                            className={`badge rounded-pill px-3 py-2 ${course.status ===
+                                                                    "active"
                                                                     ? "bg-success text-white"
                                                                     : course.status ===
-                                                                      "pending"
-                                                                    ? "bg-warning text-dark"
-                                                                    : "bg-danger text-white"
-                                                            }`}
+                                                                        "pending"
+                                                                        ? "bg-warning text-dark"
+                                                                        : "bg-danger text-white"
+                                                                }`}
                                                         >
                                                             {course.status
                                                                 .charAt(0)

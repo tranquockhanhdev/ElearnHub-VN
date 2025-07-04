@@ -19,8 +19,6 @@ const DocumentModal = ({ isOpen, onClose, document }) => {
             fileUrl = `${window.location.origin}/storage/${fileUrl}`;
         }
 
-        console.log('File URL:', fileUrl); // Debug log
-
         switch (fileType) {
             case 'pdf':
                 return (

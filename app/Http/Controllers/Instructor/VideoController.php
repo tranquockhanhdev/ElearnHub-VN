@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\InstructorRequest;
 use App\Models\Resource;
 use App\Models\Course;
+use App\Models\ResourceEdit;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -318,6 +319,222 @@ class VideoController extends Controller
             return redirect()->back()->withErrors(['general' => $result['message']]);
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['general' => 'Có lỗi xảy ra khi cập nhật thứ tự video.']);
+        }
+    }
+
+    /**
+     * Edit video - tạo yêu cầu chỉnh sửa để admin phê duyệt
+     */
+    public function edit(Request $request, $courseId, $lessonId, $videoId)
+    {
+        try {
+            // Kiểm tra quyền truy cập
+            $course = Course::where('instructor_id', Auth::id())->findOrFail($courseId);
+            $lesson = $course->lessons()->findOrFail($lessonId);
+
+            // Kiểm tra video thuộc lesson
+            $video = Resource::where('type', 'video')
+                ->where('lesson_id', $lessonId)
+                ->findOrFail($videoId);
+
+            // Kiểm tra xem đã có yêu cầu chỉnh sửa pending chưa
+            $existingEdit = ResourceEdit::where('resources_id', $videoId)
+                ->where('status', ResourceEdit::STATUS_PENDING)
+                ->first();
+
+            if ($existingEdit) {
+                return redirect()->back()->withErrors(['general' => 'Đã có yêu cầu chỉnh sửa đang chờ phê duyệt cho video này.']);
+            }            // Kiểm tra xem có phải chunk upload không
+            if ($request->has('chunkIndex') && $request->has('totalChunks')) {
+                return $this->handleEditChunkUpload($request, $courseId, $lessonId, $videoId);
+            }
+
+            // Prepare data for non-chunk edit
+            $editData = [
+                'video_id' => $videoId,
+                'title' => $request->input('title'),
+                'lesson_id' => $lessonId,
+            ];
+
+            // Add file if provided
+            if ($request->hasFile('file')) {
+                $editData['file'] = $request->file('file');
+            }
+
+            // Add URL if provided
+            if ($request->filled('url')) {
+                $editData['url'] = $request->input('url');
+            }
+
+            // Add preview flag if provided
+            if ($request->has('is_preview')) {
+                $editData['is_preview'] = $request->boolean('is_preview');
+            }
+
+            // Use service to create the edit request
+            $result = $this->videoService->createVideoEditWithoutFile($editData);
+
+            if ($result['success']) {
+                return redirect()->back()->with('success', $result['message']);
+            } else {
+                return redirect()->back()->withErrors(['general' => $result['message']]);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['general' => 'Có lỗi xảy ra khi gửi yêu cầu chỉnh sửa: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Xử lý chunk upload cho edit video
+     */
+    private function handleEditChunkUpload(Request $request, $courseId, $lessonId, $videoId)
+    {
+        // Validate chunk data
+        $validatedData = $request->validate([
+            'file' => 'required|file|max:10240', // 10MB per chunk
+            'chunkIndex' => 'required|integer|min:0',
+            'totalChunks' => 'required|integer|min:1',
+            'fileName' => 'required|string',
+            'uploadId' => 'required|string',
+            'title' => 'required|string|max:255',
+            'is_preview' => 'nullable|boolean'
+        ]);
+
+        $chunkIndex = $validatedData['chunkIndex'];
+        $totalChunks = $validatedData['totalChunks'];
+        $fileName = $validatedData['fileName'];
+        $uploadId = $validatedData['uploadId'];
+        $title = $validatedData['title'];
+        $isPreview = $validatedData['is_preview'] ?? false;
+
+        try {
+            // Tạo thư mục tạm cho chunks edit
+            $tempDir = storage_path('app/temp/edit_video_chunks/' . $uploadId);
+            if (!file_exists($tempDir)) {
+                mkdir($tempDir, 0777, true);
+            }
+
+            // Lưu chunk với tên có thứ tự để đảm bảo đúng order
+            $chunkFile = $request->file('file');
+            $safeFileName = $uploadId . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
+            $chunkFileName = $safeFileName . '.part' . str_pad($chunkIndex, 4, '0', STR_PAD_LEFT);
+
+            if (!$chunkFile->move($tempDir, $chunkFileName)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể lưu chunk'
+                ], 500);
+            }
+
+            Log::info("Edit video chunk upload progress", [
+                'uploadId' => $uploadId,
+                'videoId' => $videoId,
+                'chunkIndex' => $chunkIndex,
+                'totalChunks' => $totalChunks
+            ]);
+
+            // Kiểm tra xem đã upload đủ chunks chưa
+            if ($chunkIndex + 1 == $totalChunks) {
+                // Tạo thư mục videos nếu chưa có
+                $videosDir = storage_path('app/public/videos');
+                if (!file_exists($videosDir)) {
+                    mkdir($videosDir, 0777, true);
+                }
+
+                // Tạo tên file cuối cùng
+                $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+                $sanitizedTitle = preg_replace('/[^a-zA-Z0-9-_]/', '', $title);
+                $finalFileName = $sanitizedTitle . '_edit_' . time() . '.' . $extension;
+                $finalPath = $videosDir . '/' . $finalFileName;
+
+                // Merge chunks
+                $success = $this->mergeVideoChunks($tempDir, $safeFileName, $totalChunks, $finalPath);
+
+                if (!$success) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Lỗi khi ghép file video'
+                    ], 500);
+                }
+
+                // Cleanup chunks
+                $this->cleanupEditVideoChunks($tempDir, $safeFileName, $totalChunks);
+
+                // Detect loại video từ extension
+                $fileType = strtolower($extension);
+                if (!in_array($fileType, ['mp4', 'avi', 'mov', 'wmv', 'webm'])) {
+                    $fileType = 'mp4'; // default
+                }
+
+                // Use service to create the edit request
+                $editData = [
+                    'video_id' => $videoId,
+                    'title' => $title,
+                    'file_url' => 'storage/videos/' . $finalFileName,
+                    'file_type' => $fileType,
+                    'is_preview' => $isPreview,
+                ];
+
+                $result = $this->videoService->createVideoEditFromChunk($editData);
+
+                if (!$result['success']) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $result['message']
+                    ], 500);
+                }
+
+                Log::info("Edit video merged successfully", [
+                    'videoId' => $videoId,
+                    'finalPath' => $finalPath,
+                    'fileSize' => filesize($finalPath),
+                    'totalChunks' => $totalChunks
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['message'],
+                    'isComplete' => true
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Chunk ' . ($chunkIndex + 1) . '/' . $totalChunks . ' đã được upload',
+                'isComplete' => false
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Edit video chunk upload error', [
+                'uploadId' => $uploadId,
+                'videoId' => $videoId,
+                'chunkIndex' => $chunkIndex,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi upload chunk: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cleanup video chunks sau khi merge cho edit
+     */
+    private function cleanupEditVideoChunks($tempDir, $baseFileName, $totalChunks)
+    {
+        for ($i = 0; $i < $totalChunks; $i++) {
+            $chunkFileName = $baseFileName . '.part' . str_pad($i, 4, '0', STR_PAD_LEFT);
+            $chunkPath = $tempDir . '/' . $chunkFileName;
+
+            if (file_exists($chunkPath)) {
+                unlink($chunkPath);
+            }
+        }
+
+        // Xóa thư mục nếu rỗng
+        if (is_dir($tempDir) && count(glob($tempDir . '/*')) === 0) {
+            rmdir($tempDir);
         }
     }
 }

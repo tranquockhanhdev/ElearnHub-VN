@@ -10,7 +10,6 @@ import {
 import axios from 'axios';
 
 const ExternalVideoModal = ({ isOpen, onClose, video, courseId, onVideoComplete }) => {
-    console.log('ExternalVideoModal rendered with video:', video);
     const modalRef = useRef(null);
     const plyrRef = useRef(null);
 
@@ -48,7 +47,6 @@ const ExternalVideoModal = ({ isOpen, onClose, video, courseId, onVideoComplete 
 
     const markVideoComplete = async () => {
         try {
-            console.log('Marking video as complete:', '/student/course/' + courseId + '/resource/' + video.id + '/complete');
             const response = await axios.post(`/student/course/${courseId}/resource/${video.id}/complete`);
             if (response.data.success) {
                 setIsCompleted(true);
@@ -99,7 +97,6 @@ const ExternalVideoModal = ({ isOpen, onClose, video, courseId, onVideoComplete 
 
         if (provider === 'youtube') {
             const videoId = extractYouTubeId(video.file_url);
-            console.log('YouTube video ID:', videoId);
             return {
                 type: 'video',
                 sources: [

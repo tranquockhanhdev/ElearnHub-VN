@@ -57,13 +57,19 @@ class CourseController extends Controller
             $coursesWithProgress = $enrolledCourses->getCollection()->map(function ($course) use ($studentId) {
                 $progress = $this->calculateCourseProgress($studentId, $course->id);
 
+                $totalVideos = $course->lessons->sum(function ($lesson) {
+                    return $lesson->resources->where('type', 'video')
+                        ->where('status', 'approved')
+                        ->count();
+                });
+
                 return [
                     'id' => $course->id,
                     'title' => $course->title,
                     'slug' => $course->slug,
                     'img_url' => $course->img_url,
                     'instructor_name' => $course->instructor->name,
-                    'total_lessons' => $course->lessons->count(),
+                    'total_videos' => $totalVideos,
                     'progress' => $progress,
                     'is_completed' => $progress === 100,
                     'categories' => $course->categories->pluck('name')->toArray(),
@@ -200,9 +206,15 @@ class CourseController extends Controller
      */
     private function calculateCourseProgress($studentId, $courseId)
     {
-        // Lấy tất cả lessons của khóa học
+        // Lấy tất cả lessons của khóa học với video resources đã approved
         $lessons = \App\Models\Lesson::where('course_id', $courseId)
-            ->with(['resources', 'quiz'])
+            ->with([
+                'resources' => function ($query) {
+                    $query->where('type', 'video')
+                        ->where('status', 'approved');
+                },
+                'quiz'
+            ])
             ->get();
 
         if ($lessons->isEmpty()) {
@@ -216,7 +228,7 @@ class CourseController extends Controller
         $progress = $this->getStudentProgress($studentId, $courseId);
 
         foreach ($lessons as $lesson) {
-            // Đếm resources
+            // Đếm chỉ video resources đã approved
             foreach ($lesson->resources as $resource) {
                 $totalItems++;
                 if (in_array($resource->id, $progress['completedResources'])) {
