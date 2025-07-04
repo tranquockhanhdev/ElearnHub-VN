@@ -57,7 +57,6 @@ const AdminCourseList = ({
             onFinish: () => setIsDeleting(false),
         });
     };
-
     const handleSearch = (e) => {
         e.preventDefault();
         router.get(
@@ -175,18 +174,16 @@ const AdminCourseList = ({
                 <div className="d-flex justify-content-end mb-3">
                     <div className="btn-group">
                         <button
-                            className={`btn btn-outline-primary ${
-                                activeTab === "grid" ? "active" : ""
-                            }`}
+                            className={`btn btn-outline-primary ${activeTab === "grid" ? "active" : ""
+                                }`}
                             onClick={() => handleTabChange("grid")}
                         >
                             {" "}
                             <i className="bi bi-grid"></i>
                         </button>
                         <button
-                            className={`btn btn-outline-primary ${
-                                activeTab === "list" ? "active" : ""
-                            }`}
+                            className={`btn btn-outline-primary ${activeTab === "list" ? "active" : ""
+                                }`}
                             onClick={() => handleTabChange("list")}
                         >
                             {" "}
@@ -222,11 +219,10 @@ const AdminCourseList = ({
                                                 ...searchFilters,
                                                 page: i + 1,
                                             })}
-                                            className={`page-link ${
-                                                courses.current_page === i + 1
-                                                    ? "active"
-                                                    : ""
-                                            }`}
+                                            className={`page-link ${courses.current_page === i + 1
+                                                ? "active"
+                                                : ""
+                                                }`}
                                         >
                                             {i + 1}
                                         </Link>

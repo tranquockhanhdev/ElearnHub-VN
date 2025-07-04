@@ -54,14 +54,6 @@ class AdminCourseController extends Controller
 
         $courses = $query->paginate($perPage)->withQueryString();
 
-        // Xử lý đường dẫn ảnh nếu có
-        $courses->getCollection()->transform(function ($course) {
-            if ($course->img_url) {
-                $course->img_url = asset('storage/bannercourse/' . basename($course->img_url));
-            }
-            return $course;
-        });
-
         return Inertia::render('Admin/Course/AdminCourseList', [
             'courses' => $courses,
             'instructors' => \App\Models\User::where('role_id', 2)->select('id', 'name')->get(),

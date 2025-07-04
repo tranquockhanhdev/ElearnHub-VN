@@ -419,6 +419,13 @@ const Students = () => {
                                                                                     <h6 className="mb-0">
                                                                                         <a href="#" className="stretched-link">{student.name}</a>
                                                                                     </h6>
+                                                                                    {student.role_id === 3 && (
+                                                                                        <small className="text-black d-block">
+                                                                                            <i className="bi bi-person-badge fa-fw me-1"></i>
+                                                                                            Học viên
+                                                                                        </small>
+                                                                                    )}
+
                                                                                     <span className="text-body small">
                                                                                         <i className="bi bi-calendar fa-fw me-1 mt-1"></i>
                                                                                         Tham gia: {new Date(student.created_at).toLocaleDateString('vi-VN')}

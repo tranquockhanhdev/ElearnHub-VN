@@ -9,7 +9,18 @@ const CourseTableView = ({ courses, onDelete, formatDate }) => {
             </div>
         );
     }
+    const getCourseImage = (course) => {
 
+        if (!course.img_url) {
+            return '/assets/images/courses/4by3/default.jpg';
+        }
+
+        if (course.img_url.startsWith('bannercourse/')) {
+            return `/storage/${course.img_url}`;
+        }
+
+        return course.img_url;
+    };
     return (
         <div className="table-responsive">
             <table className="table table-bordered align-middle">
@@ -31,8 +42,7 @@ const CourseTableView = ({ courses, onDelete, formatDate }) => {
                             <td className="d-flex align-items-center gap-2">
                                 <img
                                     src={
-                                        course.img_url ||
-                                        "/images/default-thumbnail.jpg"
+                                        getCourseImage(course)
                                     }
                                     alt={course.title}
                                     style={{
@@ -47,19 +57,18 @@ const CourseTableView = ({ courses, onDelete, formatDate }) => {
                             <td>
                                 {course.categories.length > 0
                                     ? course.categories
-                                          .map((cat) => cat.name)
-                                          .join(", ")
+                                        .map((cat) => cat.name)
+                                        .join(", ")
                                     : "---"}
                             </td>
                             <td>
                                 <span
-                                    className={`badge bg-${
-                                        course.status === "active"
-                                            ? "success"
-                                            : course.status === "pending"
+                                    className={`badge bg-${course.status === "active"
+                                        ? "success"
+                                        : course.status === "pending"
                                             ? "warning"
                                             : "secondary"
-                                    }`}
+                                        }`}
                                 >
                                     {course.status}
                                 </span>
