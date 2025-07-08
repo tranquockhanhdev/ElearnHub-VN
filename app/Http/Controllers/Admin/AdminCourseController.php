@@ -371,19 +371,22 @@ class AdminCourseController extends Controller
             foreach ($lesson->resources as $resource) {
                 // Xử lý resource edits (thay đổi tài nguyên hiện có)
                 foreach ($resource->edits as $edit) {
+                    // Kiểm tra xem có phải là delete request không
+                    $isDeleteRequest = ($edit->edited_file_url === null &&
+                        in_array($edit->note, ['Yêu cầu xóa tài liệu', 'Yêu cầu xóa video']));
+
                     $resourceChanges->push([
                         'id' => $edit->id,
-                        'type' => 'edit',
+                        'type' => $isDeleteRequest ? 'delete' : 'edit',
                         'resource_id' => $resource->id,
                         'lesson_title' => $lesson->title,
                         'original_title' => $resource->title,
-                        'new_title' => $edit->edited_title,
-                        'file_type' => $edit->edited_file_type ?? $resource->file_type,
+                        'new_title' => $isDeleteRequest ? null : $edit->edited_title,
                         'original_file_url' => $resource->file_url,
-                        'new_file_url' => $edit->edited_file_url,
+                        'new_file_url' => $isDeleteRequest ? null : $edit->edited_file_url,
                         'status' => $edit->status,
                         'created_at' => $edit->created_at,
-                        'can_preview' => in_array($edit->edited_file_type ?? $resource->file_type, ['mp4', 'pdf', 'youtube', 'vimeo', 'doc', 'docx'])
+                        'is_delete_request' => $isDeleteRequest
                     ]);
                 }
 
@@ -440,8 +443,15 @@ class AdminCourseController extends Controller
                 $this->approveLesson($lessonId);
                 $message = 'Đã phê duyệt bài giảng thành công!';
             } elseif ($type === 'resource') {
-                $this->approveResourceEdit($editId);
-                $message = 'Đã phê duyệt chỉnh sửa tài nguyên thành công!';
+                // Kiểm tra xem có phải là delete request không
+                $edit = \App\Models\ResourceEdit::findOrFail($editId);
+                if ($edit->edited_file_url === null && in_array($edit->note, ['Yêu cầu xóa tài liệu', 'Yêu cầu xóa video'])) {
+                    $this->approveDeleteResource($editId);
+                    $message = 'Đã phê duyệt yêu cầu xóa tài nguyên thành công!';
+                } else {
+                    $this->approveResourceEdit($editId);
+                    $message = 'Đã phê duyệt chỉnh sửa tài nguyên thành công!';
+                }
             } elseif ($type === 'new_resource') {
                 $this->approveNewResource($resourceId);
                 $message = 'Đã phê duyệt tài nguyên mới thành công!';
@@ -471,7 +481,13 @@ class AdminCourseController extends Controller
             } elseif ($type === 'lesson') {
                 $this->rejectLesson($lessonId, $note);
             } elseif ($type === 'resource') {
-                $this->rejectResourceEdit($editId, $note);
+                // Kiểm tra xem có phải là delete request không
+                $edit = \App\Models\ResourceEdit::findOrFail($editId);
+                if ($edit->edited_file_url === null && in_array($edit->note, ['Yêu cầu xóa tài liệu', 'Yêu cầu xóa video'])) {
+                    $this->rejectDeleteResource($editId, $note);
+                } else {
+                    $this->rejectResourceEdit($editId, $note);
+                }
             } elseif ($type === 'new_resource') {
                 $this->rejectNewResource($resourceId, $note);
             }
@@ -566,9 +582,6 @@ class AdminCourseController extends Controller
         }
         if ($edit->edited_file_url) {
             $resource->file_url = $edit->edited_file_url;
-        }
-        if ($edit->edited_file_type) {
-            $resource->file_type = $edit->edited_file_type;
         }
         if (isset($edit->is_preview)) {
             $resource->is_preview = $edit->is_preview;
@@ -687,5 +700,63 @@ class AdminCourseController extends Controller
         } else {
             \Illuminate\Support\Facades\Log::warning("Lesson {$lessonId} is not pending, current status: {$lesson->status}");
         }
+    }
+
+    /**
+     * Phê duyệt yêu cầu xóa resource (từ ResourceEdit với edited_file_url = null)
+     */
+    private function approveDeleteResource($editId)
+    {
+        $edit = \App\Models\ResourceEdit::findOrFail($editId);
+        $resource = $edit->resource;
+
+        // Kiểm tra nếu đây là yêu cầu xóa (edited_file_url = null)
+        if ($edit->edited_file_url === null && $edit->note === 'Yêu cầu xóa tài liệu' || $edit->note === 'Yêu cầu xóa video') {
+            // Xóa file vật lý
+            if ($resource->file_url && !filter_var($resource->file_url, FILTER_VALIDATE_URL)) {
+                try {
+                    // Xóa file mã hóa nếu có
+                    if ($resource->encrypted_path) {
+                        $encryptedFullPath = storage_path('app/' . $resource->encrypted_path);
+                        if (file_exists($encryptedFullPath)) {
+                            unlink($encryptedFullPath);
+                        }
+                    }
+
+                    // Xóa file gốc
+                    $filePath = str_replace('storage/', '', $resource->file_url);
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($filePath);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Error deleting resource file: ' . $e->getMessage());
+                }
+            }
+
+            // Xóa resource khỏi database
+            $resource->delete();
+
+            // Cập nhật trạng thái edit
+            $edit->status = \App\Models\ResourceEdit::STATUS_APPROVED;
+            $edit->save();
+
+            \Illuminate\Support\Facades\Log::info("Delete resource request approved and resource {$resource->id} deleted");
+        } else {
+            // Xử lý edit bình thường
+            $this->approveResourceEdit($editId);
+        }
+    }
+
+    /**
+     * Từ chối yêu cầu xóa resource
+     */
+    private function rejectDeleteResource($editId, $note)
+    {
+        $edit = \App\Models\ResourceEdit::findOrFail($editId);
+
+        // Cập nhật trạng thái edit
+        $edit->status = \App\Models\ResourceEdit::STATUS_REJECTED;
+        $edit->note = $note;
+        $edit->save();
+
+        \Illuminate\Support\Facades\Log::info("Delete resource request rejected for edit {$editId}");
     }
 }

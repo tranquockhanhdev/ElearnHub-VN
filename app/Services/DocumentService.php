@@ -60,6 +60,21 @@ class DocumentService
     public function deleteDocument($id)
     {
         $document = $this->documentRepository->findById($id);
+        if (!$document) {
+            throw new \Exception('Document không tồn tại');
+        }
+
+        // Kiểm tra status của resource
+        if ($document->status === 'approved') {
+            // Tạo ResourceEdit với action xóa thay vì xóa trực tiếp
+            $this->createDeleteResourceEdit($document);
+            throw new \Exception('Document đã được phê duyệt. Yêu cầu xóa đã được gửi để admin xử lý.');
+        }
+
+        // Chỉ cho phép xóa trực tiếp nếu status là draft hoặc pending
+        if (!in_array($document->status, ['draft', 'pending'])) {
+            throw new \Exception('Chỉ có thể xóa document có trạng thái nháp hoặc chờ phê duyệt.');
+        }
 
         // Xóa file nếu có (chỉ xóa file upload, không xóa URL)
         if ($document->file_url && !filter_var($document->file_url, FILTER_VALIDATE_URL)) {
@@ -68,6 +83,22 @@ class DocumentService
         }
 
         return $this->documentRepository->delete($id);
+    }
+
+    /**
+     * Tạo ResourceEdit với action xóa cho document đã được approve
+     */
+    private function createDeleteResourceEdit($document)
+    {
+        // Tạo một ResourceEdit với edited_file_url = null để đánh dấu là xóa
+        \App\Models\ResourceEdit::create([
+            'resources_id' => $document->id,
+            'edited_title' => null,
+            'edited_file_url' => null, // null có nghĩa là xóa
+            'is_preview' => $document->is_preview,
+            'status' => 'pending',
+            'note' => 'Yêu cầu xóa tài liệu'
+        ]);
     }
 
     public function updateDocumentOrder(int $documentId, int $lessonId, int $newOrder): array

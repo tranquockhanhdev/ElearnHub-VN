@@ -384,6 +384,10 @@ const CourseApprovalDetail = () => {
                                                                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
                                                                                     ✨ Tài nguyên mới
                                                                                 </span>
+                                                                            ) : resource.type === 'delete' || resource.is_delete_request ? (
+                                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 border border-red-200">
+                                                                                    🗑️ Yêu cầu xóa
+                                                                                </span>
                                                                             ) : (
                                                                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200">
                                                                                     ✏️ Chỉnh sửa
@@ -403,6 +407,21 @@ const CourseApprovalDetail = () => {
                                                                                 <span className="font-semibold">Bài học:</span> {resource.lesson_title}
                                                                             </p>
                                                                         </div>
+
+                                                                        {(resource.type === 'delete' || resource.is_delete_request) && (
+                                                                            <div className="bg-red-50 border-l-2 border-red-400 p-2 rounded mb-2">
+                                                                                <div className="flex items-center">
+                                                                                    <ExclamationTriangleIcon className="h-3 w-3 text-red-400 mr-1" />
+                                                                                    <span className="text-xs font-medium text-red-800">Yêu cầu xóa tài nguyên</span>
+                                                                                </div>
+                                                                                <p className="text-xs text-red-700 mt-1">
+                                                                                    <span className="font-medium">Tài nguyên sẽ bị xóa:</span> {resource.original_title}
+                                                                                </p>
+                                                                                <p className="text-xs text-red-600 mt-1">
+                                                                                    ⚠️ Hành động này không thể hoàn tác
+                                                                                </p>
+                                                                            </div>
+                                                                        )}
 
                                                                         {resource.type === 'edit' && resource.new_title && resource.new_title !== resource.original_title && (
                                                                             <div className="bg-yellow-50 border-l-2 border-yellow-400 p-2 rounded mb-2">

@@ -156,6 +156,13 @@ const CourseDetail = ({ course }) => {
 
         if (videoForm.data.uploadMethod === 'file') {
             if (videoForm.data.file) {
+                // Kiểm tra định dạng file
+                const fileName = videoForm.data.file.name.toLowerCase();
+                if (!fileName.endsWith('.webm')) {
+                    alert('Chỉ cho phép upload file định dạng WebM.');
+                    return;
+                }
+
                 await handleChunkUpload(videoForm.data.file, showAddResource, 'video');
             } else {
                 alert('Vui lòng chọn file video để tải lên.');
@@ -465,27 +472,68 @@ const CourseDetail = ({ course }) => {
         setSelectedVideo(null);
     };
     // Function để xóa tài liệu
-    const handleDeleteResource = (lessonId, resourceId, type) => {
-        if (confirm('Bạn có chắc chắn muốn xóa tài liệu này?')) {
-            const deleteRoute = type === 'video'
-                ? route('instructor.courses.lessons.videos.delete', {
-                    id: course.id,
-                    lessonId: lessonId,
-                    videoId: resourceId
-                })
-                : route('instructor.courses.lessons.documents.delete', {
-                    id: course.id,
-                    lessonId: lessonId,
-                    documentId: resourceId
-                });
+    const handleDeleteResource = (lessonId, resourceId, type, resource) => {
+        // Kiểm tra status của resource
+        if (resource.status === 'approved') {
+            if (confirm('Tài liệu này đã được phê duyệt. Bạn có muốn gửi yêu cầu xóa để admin xử lý không?')) {
+                const deleteRoute = type === 'video'
+                    ? route('instructor.courses.lessons.videos.delete', {
+                        id: course.id,
+                        lessonId: lessonId,
+                        videoId: resourceId
+                    })
+                    : route('instructor.courses.lessons.documents.delete', {
+                        id: course.id,
+                        lessonId: lessonId,
+                        documentId: resourceId
+                    });
 
-            router.delete(deleteRoute, {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    // Có thể thêm toast notification ở đây
-                }
-            });
+                router.delete(deleteRoute, {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: () => {
+                        // Có thể thêm toast notification ở đây
+                    },
+                    onError: (errors) => {
+                        console.error('Lỗi:', errors);
+                        // Hiển thị thông báo lỗi cho user
+                        if (errors.error) {
+                            alert(errors.error);
+                        }
+                    }
+                });
+            }
+        } else if (resource.status === 'draft' || resource.status === 'pending') {
+            if (confirm('Bạn có chắc chắn muốn xóa tài liệu này?')) {
+                const deleteRoute = type === 'video'
+                    ? route('instructor.courses.lessons.videos.delete', {
+                        id: course.id,
+                        lessonId: lessonId,
+                        videoId: resourceId
+                    })
+                    : route('instructor.courses.lessons.documents.delete', {
+                        id: course.id,
+                        lessonId: lessonId,
+                        documentId: resourceId
+                    });
+
+                router.delete(deleteRoute, {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: () => {
+                        // Có thể thêm toast notification ở đây
+                    },
+                    onError: (errors) => {
+                        console.error('Lỗi:', errors);
+                        // Hiển thị thông báo lỗi cho user
+                        if (errors.error) {
+                            alert(errors.error);
+                        }
+                    }
+                });
+            }
+        } else {
+            alert('Không thể xóa tài liệu này do trạng thái không phù hợp.');
         }
     };
     // Function để bắt đầu chỉnh sửa document
@@ -560,6 +608,13 @@ const CourseDetail = ({ course }) => {
         e.preventDefault();
 
         if (editVideoForm.data.uploadMethod === 'file' && editVideoForm.data.file) {
+            // Kiểm tra định dạng file
+            const fileName = editVideoForm.data.file.name.toLowerCase();
+            if (!fileName.endsWith('.webm')) {
+                alert('Chỉ cho phép upload file định dạng WebM.');
+                return;
+            }
+
             // Chunk upload cho video edit
             await handleEditChunkUpload(editVideoForm.data.file, lessonId, videoId, 'video');
         } else if (editVideoForm.data.uploadMethod === 'url' && editVideoForm.data.url) {
@@ -721,7 +776,8 @@ const CourseDetail = ({ course }) => {
         }
     };
     // Function để xóa bài giảng
-    const handleDeleteLesson = (lessonId, lessonTitle) => {
+    const handleDeleteLesson = (lessonId, lessonTitle, lesson) => {
+        // Bỏ tất cả kiểm tra status, cho phép xóa thẳng
         if (confirm(`Bạn có chắc chắn muốn xóa bài giảng "${lessonTitle}"? Tất cả tài liệu và quiz trong bài giảng này cũng sẽ bị xóa.`)) {
             router.delete(route('instructor.courses.lessons.delete', {
                 id: course.id,
@@ -734,7 +790,13 @@ const CourseDetail = ({ course }) => {
                 },
                 onError: (errors) => {
                     console.error('Lỗi xóa bài giảng:', errors);
-                    alert('Có lỗi xảy ra khi xóa bài giảng.');
+                    if (errors.general) {
+                        alert(errors.general);
+                    } else if (errors.error) {
+                        alert(errors.error);
+                    } else {
+                        alert('Có lỗi xảy ra khi xóa bài giảng.');
+                    }
                 }
             });
         }
@@ -888,7 +950,16 @@ const CourseDetail = ({ course }) => {
                 return '❓';
         }
     };
+    // Thêm hàm helper này vào component
+    const hasLinkedFiles = (lesson) => {
+        // Kiểm tra xem lesson có resources (documents hoặc videos) hay không
+        const hasResources = lesson.resources && lesson.resources.length > 0;
 
+        // Kiểm tra xem lesson có quiz hay không
+        const hasQuiz = lesson.quiz && lesson.quiz.id;
+
+        return hasResources || hasQuiz;
+    };
     return (
         <InstructorLayout>
             <Head title={`Chi tiết khóa học - ${course.title}`} />
@@ -1194,13 +1265,15 @@ const CourseDetail = ({ course }) => {
                                                             >
                                                                 <QuestionMarkCircleIcon className="h-4 w-4" />
                                                             </button>
-                                                            <button
-                                                                onClick={() => handleDeleteLesson(lesson.id, lesson.title)}
-                                                                className="text-red-600 hover:text-red-800 p-2"
-                                                                title="Xóa bài giảng"
-                                                            >
-                                                                <TrashIcon className="h-4 w-4" />
-                                                            </button>
+                                                            {!hasLinkedFiles(lesson) && (
+                                                                <button
+                                                                    onClick={() => handleDeleteLesson(lesson.id, lesson.title, lesson)}
+                                                                    className="text-red-600 hover:text-red-800 p-2"
+                                                                    title="Xóa bài giảng"
+                                                                >
+                                                                    <TrashIcon className="h-4 w-4" />
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
 
@@ -1326,7 +1399,7 @@ const CourseDetail = ({ course }) => {
                                                                                                 <PencilIcon className="w-4 h-4" />
                                                                                             </button>
                                                                                             <button
-                                                                                                onClick={() => handleDeleteResource(lesson.id, resource.id, resource.type)}
+                                                                                                onClick={() => handleDeleteResource(lesson.id, resource.id, resource.type, resource)}
                                                                                                 className="text-red-600 hover:text-red-800 p-1"
                                                                                                 title="Xóa tài liệu"
                                                                                             >
@@ -1527,7 +1600,7 @@ const CourseDetail = ({ course }) => {
                                                                                                 <PencilIcon className="w-4 h-4" />
                                                                                             </button>
                                                                                             <button
-                                                                                                onClick={() => handleDeleteResource(lesson.id, resource.id, resource.type)}
+                                                                                                onClick={() => handleDeleteResource(lesson.id, resource.id, resource.type, resource)}
                                                                                                 className="text-red-600 hover:text-red-800 p-1"
                                                                                                 title="Xóa video"
                                                                                             >
@@ -1854,17 +1927,18 @@ const CourseDetail = ({ course }) => {
                                                                                 type="file"
                                                                                 onChange={(e) => videoForm.setData('file', e.target.files[0])}
                                                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                                                accept="video/*"
+                                                                                accept=".webm,video/webm"
                                                                                 required
                                                                             />
+                                                                            <p className="text-xs text-gray-500 mt-1">
+                                                                                Chỉ hỗ trợ: WebM (tối đa 100MB)
+                                                                            </p>
                                                                             {videoForm.errors.file && (
                                                                                 <div className="text-red-600 text-sm mt-1">
                                                                                     {videoForm.errors.file}
                                                                                 </div>
                                                                             )}
-                                                                            <p className="text-xs text-gray-500 mt-1">
-                                                                                Hỗ trợ: MP4, AVI, MOV, WMV, WebM (tối đa 100MB)
-                                                                            </p>
+
                                                                         </div>
                                                                     )}
 
@@ -2535,7 +2609,7 @@ const CourseDetail = ({ course }) => {
                                         type="file"
                                         onChange={(e) => editVideoForm.setData('file', e.target.files[0])}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        accept="video/*"
+                                        accept=".webm,video/webm"
                                     />
                                     <p className="text-xs text-gray-500 mt-1">
                                         Chỉ chọn file nếu muốn thay thế video hiện tại

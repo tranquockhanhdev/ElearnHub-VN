@@ -1014,13 +1014,7 @@ const CourseDetail = () => {
                                                             </span>
                                                             <span>{stats.totalQuizzes}</span>
                                                         </li>
-                                                        <li className="list-group-item px-0 d-flex justify-content-between">
-                                                            <span className="h6 fw-light mb-0">
-                                                                <i className="fas fa-fw fa-eye text-primary" />
-                                                                Xem trước miễn phí
-                                                            </span>
-                                                            <span>{stats.previewVideos + stats.previewDocuments + stats.previewQuizzes}</span>
-                                                        </li>
+
                                                         <li className="list-group-item px-0 d-flex justify-content-between">
                                                             <span className="h6 fw-light mb-0">
                                                                 <i className="fas fa-fw fa-signal text-primary" />

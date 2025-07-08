@@ -132,6 +132,21 @@ class VideoService
     public function deleteVideo($id)
     {
         $video = $this->videoRepository->findById($id);
+        if (!$video) {
+            throw new \Exception('Video không tồn tại');
+        }
+
+        // Kiểm tra status của resource
+        if ($video->status === 'approved') {
+            // Tạo ResourceEdit với action xóa thay vì xóa trực tiếp
+            $this->createDeleteResourceEdit($video);
+            throw new \Exception('Video đã được phê duyệt. Yêu cầu xóa đã được gửi để admin xử lý.');
+        }
+
+        // Chỉ cho phép xóa trực tiếp nếu status là draft hoặc pending
+        if (!in_array($video->status, ['draft', 'pending'])) {
+            throw new \Exception('Chỉ có thể xóa video có trạng thái nháp hoặc chờ phê duyệt.');
+        }
 
         // Xóa file nếu có (chỉ xóa file upload, không xóa URL)
         if ($video->file_url && !filter_var($video->file_url, FILTER_VALIDATE_URL)) {
@@ -140,6 +155,22 @@ class VideoService
         }
 
         return $this->videoRepository->delete($id);
+    }
+
+    /**
+     * Tạo ResourceEdit với action xóa cho video đã được approve
+     */
+    private function createDeleteResourceEdit($video)
+    {
+        // Tạo một ResourceEdit với edited_file_url = null để đánh dấu là xóa
+        \App\Models\ResourceEdit::create([
+            'resources_id' => $video->id,
+            'edited_title' => null,
+            'edited_file_url' => null, // null có nghĩa là xóa
+            'is_preview' => $video->is_preview,
+            'status' => 'pending',
+            'note' => 'Yêu cầu xóa video'
+        ]);
     }
 
     public function updateVideoOrder(int $videoId, int $lessonId, int $newOrder): array

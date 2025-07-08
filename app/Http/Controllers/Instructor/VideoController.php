@@ -53,7 +53,7 @@ class VideoController extends Controller
         if ($request->hasFile('file')) {
             // Upload file video trực tiếp
             $request->validate([
-                'file' => 'file|mimes:mp4,avi,mov,wmv,webm|max:102400', // 100MB
+                'file' => 'file|mimes:webm|max:102400', // 100MB
             ]);
             $validatedData['file'] = $request->file('file');
         } elseif ($request->filled('file')) {
@@ -125,6 +125,15 @@ class VideoController extends Controller
         $uploadId = $validatedData['uploadId'];
         $title = $validatedData['title'];
         $isPreview = $validatedData['is_preview'] ?? false;
+
+        // Validate file extension for WebM only
+        $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        if ($extension !== 'webm') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Chỉ cho phép upload file định dạng WebM.'
+            ], 422);
+        }
 
         try {
             // Tạo thư mục tạm cho chunks
@@ -407,6 +416,15 @@ class VideoController extends Controller
         $title = $validatedData['title'];
         $isPreview = $validatedData['is_preview'] ?? false;
 
+        // Validate file extension for WebM only
+        $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        if ($extension !== 'webm') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Chỉ cho phép upload file định dạng WebM.'
+            ], 422);
+        }
+
         try {
             // Tạo thư mục tạm cho chunks edit
             $tempDir = storage_path('app/temp/edit_video_chunks/' . $uploadId);
@@ -462,8 +480,8 @@ class VideoController extends Controller
 
                 // Detect loại video từ extension
                 $fileType = strtolower($extension);
-                if (!in_array($fileType, ['mp4', 'avi', 'mov', 'wmv', 'webm'])) {
-                    $fileType = 'mp4'; // default
+                if (!in_array($fileType, ['webm'])) {
+                    $fileType = 'webm'; // default
                 }
 
                 // Use service to create the edit request

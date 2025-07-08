@@ -15,7 +15,6 @@ class ResourceEdit extends Model
         'resources_id',
         'edited_title',
         'edited_file_url',
-        'edited_file_type',
         'is_preview',
         'status',
         'note',

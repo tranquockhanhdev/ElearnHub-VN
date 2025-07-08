@@ -181,7 +181,7 @@ class LessonService
     }
 
     /**
-     * Xóa bài học
+     * Xóa bài học với logic kiểm tra status
      */
     public function deleteLesson(int $id): array
     {
