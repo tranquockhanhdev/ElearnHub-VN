@@ -41,6 +41,7 @@ Route::middleware(['auth', 'verified', 'role:3'])->prefix('student')->name('stud
             Route::get('/{quizId}/result', [QuizController::class, 'result'])->name('result');
         });
     });
+
     // 🔹 Thanh toán & giao dịch
     Route::get('/payments', [PaymentController::class, 'index'])->name('payments');
 

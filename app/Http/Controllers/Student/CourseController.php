@@ -138,7 +138,6 @@ class CourseController extends Controller
 
             // Lấy tiến độ học tập
             $progress = $this->getStudentProgress($studentId, $id);
-
             return Inertia::render('Students/CourseDetail', [
                 'course' => $course,
                 'progress' => $progress

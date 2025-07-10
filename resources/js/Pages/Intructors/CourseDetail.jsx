@@ -305,7 +305,7 @@ const CourseDetail = ({ course }) => {
     // Function để xóa quiz
     const handleDeleteQuiz = (quizId, quizTitle) => {
         if (confirm(`Bạn có chắc chắn muốn xóa quiz "${quizTitle}"?`)) {
-            router.delete(route('instructor.courses.quizzes.destroy', [course.id, quizId]), {
+            router.delete(route('instructor.courses.quizzes.delete', [course.id, quizId]), {
                 preserveScroll: true,
                 preserveState: true,
                 onError: (errors) => {

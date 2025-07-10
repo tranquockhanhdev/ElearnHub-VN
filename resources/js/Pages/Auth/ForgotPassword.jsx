@@ -104,6 +104,7 @@ const ForgotPassword = () => {
                                                     value={values.email}
                                                     onChange={handleChange}
                                                     autoComplete="email"
+                                                    required
                                                 />
                                             </div>
                                             {errors.email && <div className="text-red-600">{errors.email}</div>}

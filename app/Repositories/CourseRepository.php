@@ -180,10 +180,10 @@ class CourseRepository
             'categories',
             'instructor',
             'lessons.resources' => function ($query) {
-                $query->where('type', 'video')
+                $query->whereIn('type', ['video', 'document'])
                     ->where('status', 'approved')
                     ->orderBy('order', 'asc');
-            }
+            },
         ])
             ->whereHas('enrollments', function ($q) use ($studentId) {
                 $q->where('student_id', $studentId);
@@ -367,7 +367,7 @@ class CourseRepository
                     ->orderBy('order', 'asc');
             },
             'lessons.resources' => function ($query) {
-                $query->where('type', 'video')
+                $query->whereIn('type', ['video', 'document'])
                     ->where('status', 'approved')
                     ->orderBy('order', 'asc');
             },

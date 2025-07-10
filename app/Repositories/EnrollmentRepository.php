@@ -38,7 +38,7 @@ class EnrollmentRepository
         if (empty($recentCourseIds)) {
             return $this->model->with([
                 'course.lessons.resources' => function ($query) {
-                    $query->where('type', 'video')
+                    $query->whereIn('type', ['video', 'document'])
                         ->where('status', 'approved')
                         ->orderBy('order', 'asc');
                 },
@@ -53,7 +53,7 @@ class EnrollmentRepository
         // Lấy enrollments theo thứ tự hoạt động gần đây
         $enrollments = $this->model->with([
             'course.lessons.resources' => function ($query) {
-                $query->where('type', 'video')
+                $query->whereIn('type', ['video', 'document'])
                     ->where('status', 'approved')
                     ->orderBy('order', 'asc');
             },
@@ -163,7 +163,7 @@ class EnrollmentRepository
     {
         return $this->model->with([
             'course.lessons.resources' => function ($query) {
-                $query->where('type', 'video')
+                $query->whereIn('type', ['video', 'document'])
                     ->where('status', 'approved')
                     ->orderBy('order', 'asc');
             },
