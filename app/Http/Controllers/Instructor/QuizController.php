@@ -223,11 +223,10 @@ class QuizController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy($id, $quizId)
     {
         try {
-            $quiz = Quiz::with('lesson.course')->findOrFail($id);
-
+            $quiz = Quiz::with('lesson.course')->findOrFail($quizId);
             // Kiểm tra quyền sở hữu
             if ($quiz->lesson->course->instructor_id !== Auth::id()) {
                 return redirect()->back()
@@ -252,6 +251,48 @@ class QuizController extends Controller
             return redirect()->back()
                 ->withErrors(['general' => 'Có lỗi xảy ra khi xóa quiz. Vui lòng thử lại.'])
                 ->with('error', 'Có lỗi xảy ra khi xóa quiz.');
+        }
+    }
+
+    /**
+     * Update the status of quiz.
+     */
+    public function updateStatus(Request $request, $courseId, $quizId)
+    {
+        try {
+            $request->validate([
+                'status' => 'required|in:draft,pending,approved,rejected'
+            ]);
+
+            $quiz = Quiz::with('lesson.course')->findOrFail($quizId);
+
+            // Kiểm tra quyền sở hữu
+            if ($quiz->lesson->course->instructor_id !== Auth::id()) {
+                return redirect()->back()
+                    ->withErrors(['general' => 'Bạn không có quyền cập nhật trạng thái quiz này.'])
+                    ->with('error', 'Không có quyền truy cập.');
+            }
+
+            $quiz->status = $request->status;
+            $quiz->save();
+
+            $statusText = [
+                'draft' => 'nháp',
+                'pending' => 'chờ phê duyệt',
+                'approved' => 'đã phê duyệt',
+                'rejected' => 'bị từ chối'
+            ];
+
+            return redirect()->back()->with('success', "Cập nhật trạng thái quiz thành '{$statusText[$request->status]}' thành công!");
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->back()
+                ->withErrors(['general' => 'Quiz không tồn tại.'])
+                ->with('error', 'Quiz không tồn tại.');
+        } catch (\Exception $e) {
+            Log::error('Error updating quiz status: ' . $e->getMessage());
+            return redirect()->back()
+                ->withErrors(['general' => 'Có lỗi xảy ra khi cập nhật trạng thái quiz.'])
+                ->with('error', 'Có lỗi xảy ra khi cập nhật trạng thái quiz.');
         }
     }
 }

@@ -48,6 +48,7 @@ Route::middleware(['auth', 'verified', 'role:2'])->prefix('instructor')->name('i
             Route::get('{lessonId}/edit', [LessonController::class, 'edit'])->name('edit');
             Route::put('{lessonId}/update', [LessonController::class, 'update'])->name('update');
             Route::delete('{lessonId}/delete', [LessonController::class, 'destroy'])->name('delete');
+            Route::put('/{lessonId}/updateStatus', [LessonController::class, 'updateStatus'])->name('update-status');
 
             // 📄 Tài liệu (Documents)
             Route::prefix('{lessonId}/documents')->name('documents.')->group(function () {
@@ -57,6 +58,7 @@ Route::middleware(['auth', 'verified', 'role:2'])->prefix('instructor')->name('i
                 Route::put('/{documentId}/updateOrder', [DocumentController::class, 'updateOrder'])->name('update-order');
                 Route::post('/{documentId}/edit', [DocumentController::class, 'edit'])->name('edit'); // Thêm route edit
                 Route::delete('{documentId}/delete', [DocumentController::class, 'destroy'])->name('delete');
+                Route::put('/{documentId}/updateStatus', [DocumentController::class, 'updateStatus'])->name('update-status');
             });
 
             // 🎥 Video Resources
@@ -66,9 +68,9 @@ Route::middleware(['auth', 'verified', 'role:2'])->prefix('instructor')->name('i
                 Route::put('/{videoId}/updateOrder', [VideoController::class, 'updateOrder'])->name('update-order');
                 Route::post('/{videoId}/edit', [VideoController::class, 'edit'])->name('edit'); // Thêm route edit
                 Route::delete('{videoId}/delete', [VideoController::class, 'destroy'])->name('delete');
+                Route::put('/{videoId}/updateStatus', [VideoController::class, 'updateStatus'])->name('update-status');
             });
         });
-
         // 📝 Bài kiểm tra
         Route::prefix('{id}/quizzes')->name('quizzes.')->group(function () {
             Route::get('/', [QuizController::class, 'index'])->name('index');
@@ -77,6 +79,7 @@ Route::middleware(['auth', 'verified', 'role:2'])->prefix('instructor')->name('i
             Route::get('{quizId}/edit', [QuizController::class, 'edit'])->name('edit');
             Route::put('{quizId}/update', [QuizController::class, 'update'])->name('update');
             Route::delete('{quizId}/delete', [QuizController::class, 'destroy'])->name('delete');
+            Route::put('{quizId}/updateStatus', [QuizController::class, 'updateStatus'])->name('update-status');
 
             // 🧠 Câu hỏi
             Route::prefix('{quizId}/questions')->name('questions.')->group(function () {

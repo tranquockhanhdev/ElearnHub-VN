@@ -31,9 +31,9 @@ class RevenueController extends Controller
             'courses.price',
             'courses.created_at',
             DB::raw('COUNT(DISTINCT enrollments.id) as total_students'),
-            DB::raw('COALESCE(SUM(CASE WHEN payments.status = "completed" THEN payments.amount ELSE 0 END), 0) as total_revenue'),
+            DB::raw('COALESCE(SUM(CASE WHEN payments.status = "completed" THEN payments.amount ELSE 0 END), 0) * 0.8 as total_revenue'),
             DB::raw('COUNT(DISTINCT CASE WHEN enrollments.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN enrollments.id END) as students_this_month'),
-            DB::raw('COALESCE(SUM(CASE WHEN payments.status = "completed" AND payments.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN payments.amount ELSE 0 END), 0) as revenue_this_month')
+            DB::raw('COALESCE(SUM(CASE WHEN payments.status = "completed" AND payments.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN payments.amount ELSE 0 END), 0) * 0.8 as revenue_this_month')
         ])
             ->leftJoin('enrollments', 'courses.id', '=', 'enrollments.course_id')
             ->leftJoin('payments', 'enrollments.payment_id', '=', 'payments.id')
@@ -90,14 +90,14 @@ class RevenueController extends Controller
             return $course;
         });
 
-        // Get overall statistics
+        // Get overall statistics (Instructor nhận 80%)
         $stats = [
             'total_courses' => Course::where('instructor_id', $instructorId)->count(),
             'total_revenue' => Payment::join('enrollments', 'payments.id', '=', 'enrollments.payment_id')
                 ->join('courses', 'enrollments.course_id', '=', 'courses.id')
                 ->where('courses.instructor_id', $instructorId)
                 ->where('payments.status', 'completed')
-                ->sum('payments.amount'),
+                ->sum('payments.amount') * 0.8,
             'total_students' => DB::table('enrollments')
                 ->join('courses', 'enrollments.course_id', '=', 'courses.id')
                 ->where('courses.instructor_id', $instructorId)
@@ -109,7 +109,7 @@ class RevenueController extends Controller
                 ->where('payments.status', 'completed')
                 ->whereMonth('payments.created_at', now()->month)
                 ->whereYear('payments.created_at', now()->year)
-                ->sum('payments.amount'),
+                ->sum('payments.amount') * 0.8,
         ];
 
         return Inertia::render('Intructors/Revenue', [
@@ -175,12 +175,12 @@ class RevenueController extends Controller
 
         $payments = $query->paginate(15)->withQueryString();
 
-        // Course statistics
+        // Course statistics (Instructor nhận 80%)
         $courseStats = [
             'total_revenue' => Payment::join('enrollments', 'payments.id', '=', 'enrollments.payment_id')
                 ->where('enrollments.course_id', $courseId)
                 ->where('payments.status', 'completed')
-                ->sum('payments.amount'),
+                ->sum('payments.amount') * 0.8,
             'total_students' => Payment::join('enrollments', 'payments.id', '=', 'enrollments.payment_id')
                 ->where('enrollments.course_id', $courseId)
                 ->where('payments.status', 'completed')
@@ -188,13 +188,13 @@ class RevenueController extends Controller
             'avg_revenue_per_student' => Payment::join('enrollments', 'payments.id', '=', 'enrollments.payment_id')
                 ->where('enrollments.course_id', $courseId)
                 ->where('payments.status', 'completed')
-                ->avg('payments.amount'),
+                ->avg('payments.amount') * 0.8,
             'revenue_this_month' => Payment::join('enrollments', 'payments.id', '=', 'enrollments.payment_id')
                 ->where('enrollments.course_id', $courseId)
                 ->where('payments.status', 'completed')
                 ->whereMonth('payments.created_at', now()->month)
                 ->whereYear('payments.created_at', now()->year)
-                ->sum('payments.amount'),
+                ->sum('payments.amount') * 0.8,
         ];
 
         return Inertia::render('Intructors/RevenueDetail', [

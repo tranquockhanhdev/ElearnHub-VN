@@ -38,10 +38,10 @@ class InstructorRepository
             $query->where('instructor_id', $instructorId);
         })->distinct('student_id')->count();
 
-        // Tổng thu nhập
+        // Tổng thu nhập (Instructor nhận 80%)
         $totalRevenue = $this->payment->whereHas('course', function ($query) use ($instructorId) {
             $query->where('instructor_id', $instructorId);
-        })->where('status', 'completed')->sum('amount');
+        })->where('status', 'completed')->sum('amount') * 0.8;
 
         // Tổng số đăng ký trong tháng
         $monthlyEnrollments = $this->enrollment->whereHas('course', function ($query) use ($instructorId) {
@@ -67,7 +67,7 @@ class InstructorRepository
 
         switch ($period) {
             case 'day':
-                $data = $query->selectRaw('DATE(created_at) as date, SUM(amount) as revenue')
+                $data = $query->selectRaw('DATE(created_at) as date, SUM(amount) * 0.8 as revenue')
                     ->where('created_at', '>=', Carbon::now()->subDays(30))
                     ->groupBy('date')
                     ->orderBy('date')
@@ -75,7 +75,7 @@ class InstructorRepository
                 break;
 
             case 'week':
-                $data = $query->selectRaw('YEARWEEK(created_at) as week, SUM(amount) as revenue')
+                $data = $query->selectRaw('YEARWEEK(created_at) as week, SUM(amount) * 0.8 as revenue')
                     ->where('created_at', '>=', Carbon::now()->subWeeks(12))
                     ->groupBy('week')
                     ->orderBy('week')
@@ -83,7 +83,7 @@ class InstructorRepository
                 break;
 
             case 'quarter':
-                $data = $query->selectRaw('QUARTER(created_at) as quarter, YEAR(created_at) as year, SUM(amount) as revenue')
+                $data = $query->selectRaw('QUARTER(created_at) as quarter, YEAR(created_at) as year, SUM(amount) * 0.8 as revenue')
                     ->where('created_at', '>=', Carbon::now()->subYears(2))
                     ->groupBy('quarter', 'year')
                     ->orderBy('year')
@@ -92,7 +92,7 @@ class InstructorRepository
                 break;
 
             default: // month
-                $data = $query->selectRaw('MONTH(created_at) as month, YEAR(created_at) as year, SUM(amount) as revenue')
+                $data = $query->selectRaw('MONTH(created_at) as month, YEAR(created_at) as year, SUM(amount) * 0.8 as revenue')
                     ->where('created_at', '>=', Carbon::now()->subMonths(12))
                     ->groupBy('month', 'year')
                     ->orderBy('year')
@@ -131,7 +131,7 @@ class InstructorRepository
     }
 
     /**
-     * Lấy doanh thu theo khóa học
+     * Lấy doanh thu theo khóa học (Instructor nhận 80%)
      */
     public function getRevenueByCourse($instructorId)
     {
@@ -139,9 +139,16 @@ class InstructorRepository
             ->withSum(['payments as total_revenue' => function ($query) {
                 $query->where('status', 'completed');
             }], 'amount')
-            ->having('total_revenue', '>', 0)
-            ->orderBy('total_revenue', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($course) {
+                $course->total_revenue = ($course->total_revenue ?? 0) * 0.8;
+                return $course;
+            })
+            ->filter(function ($course) {
+                return $course->total_revenue > 0;
+            })
+            ->sortByDesc('total_revenue')
+            ->values();
     }
 
     public function getInstructorByUserId($userId)

@@ -256,6 +256,8 @@ const CourseApprovalDetail = () => {
                                                                     <h4 className="text-sm font-bold text-gray-900">
                                                                         {change.type === 'lesson' ? (
                                                                             <span>Bài giảng mới: <span className="text-amber-700">{change.new_value}</span></span>
+                                                                        ) : change.type === 'quiz' ? (
+                                                                            <span>Quiz mới: <span className="text-amber-700">{change.new_value}</span></span>
                                                                         ) : (
                                                                             <span>Trường: <span className="text-amber-700">{change.field}</span></span>
                                                                         )}
@@ -274,6 +276,21 @@ const CourseApprovalDetail = () => {
                                                                                     {change.lesson_data?.note && (
                                                                                         <p className="text-xs text-blue-600 mt-1">Ghi chú: {change.lesson_data.note}</p>
                                                                                     )}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : change.type === 'quiz' ? (
+                                                                    <div className="space-y-2 mb-3">
+                                                                        <div className="p-3 bg-purple-50 border-l-4 border-purple-400 rounded">
+                                                                            <div className="flex items-start gap-2">
+                                                                                <ShieldCheckIcon className="w-4 h-4 text-purple-600 mt-0.5" />
+                                                                                <div>
+                                                                                    <p className="text-sm font-medium text-purple-800">Quiz mới</p>
+                                                                                    <p className="text-sm text-purple-700">Tiêu đề: {change.quiz_data?.title}</p>
+                                                                                    <p className="text-xs text-purple-600 mt-1">Thuộc bài giảng: {change.lesson_title}</p>
+                                                                                    <p className="text-xs text-purple-600">Thời gian: {change.quiz_data?.duration_minutes} phút</p>
+                                                                                    <p className="text-xs text-purple-600">Điểm qua: {change.quiz_data?.pass_score}%</p>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -313,7 +330,9 @@ const CourseApprovalDetail = () => {
                                                                 <button
                                                                     onClick={() => change.type === 'lesson'
                                                                         ? handleApprove('lesson', null, null, change.id)
-                                                                        : handleApprove('content', change.id)
+                                                                        : change.type === 'quiz'
+                                                                            ? handleApprove('quiz', change.id)
+                                                                            : handleApprove('content', change.id)
                                                                     }
                                                                     className="flex items-center justify-center px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-semibold rounded-md hover:from-green-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
                                                                 >
@@ -323,7 +342,9 @@ const CourseApprovalDetail = () => {
                                                                 <button
                                                                     onClick={() => change.type === 'lesson'
                                                                         ? handleReject('lesson', null, null, change.id)
-                                                                        : handleReject('content', change.id)
+                                                                        : change.type === 'quiz'
+                                                                            ? handleReject('quiz', change.id)
+                                                                            : handleReject('content', change.id)
                                                                     }
                                                                     className="flex items-center justify-center px-3 py-1.5 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-semibold rounded-md hover:from-red-600 hover:to-red-700 transform hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
                                                                 >

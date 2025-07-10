@@ -382,4 +382,45 @@ class DocumentController extends Controller
             rmdir($tempDir);
         }
     }
+
+    /**
+     * Update the status of document.
+     */
+    public function updateStatus(Request $request, $courseId, $lessonId, $documentId)
+    {
+        try {
+            $request->validate([
+                'status' => 'required|in:draft,pending,approved,rejected'
+            ]);
+
+            // Kiểm tra quyền truy cập
+            $course = Course::where('instructor_id', Auth::id())->findOrFail($courseId);
+            $lesson = $course->lessons()->findOrFail($lessonId);
+
+            // Kiểm tra document thuộc lesson
+            $document = Resource::where('type', 'document')
+                ->where('lesson_id', $lessonId)
+                ->findOrFail($documentId);
+
+            $document->status = $request->status;
+            $document->save();
+
+            $statusText = [
+                'draft' => 'nháp',
+                'pending' => 'chờ phê duyệt',
+                'approved' => 'đã phê duyệt',
+                'rejected' => 'bị từ chối'
+            ];
+
+            return redirect()->back()->with('success', "Cập nhật trạng thái tài liệu thành '{$statusText[$request->status]}' thành công!");
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->back()
+                ->withErrors(['general' => 'Tài liệu không tồn tại.'])
+                ->with('error', 'Tài liệu không tồn tại.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withErrors(['general' => 'Có lỗi xảy ra khi cập nhật trạng thái tài liệu.'])
+                ->with('error', 'Có lỗi xảy ra khi cập nhật trạng thái tài liệu.');
+        }
+    }
 }

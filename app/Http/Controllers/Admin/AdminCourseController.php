@@ -177,6 +177,9 @@ class AdminCourseController extends Controller
                     })
                         ->orWhereHas('lessons', function ($subQ) {
                             $subQ->where('status', 'pending');
+                        })
+                        ->orWhereHas('lessons.quiz', function ($subQ) {
+                            $subQ->where('status', 'pending');
                         });
                 } elseif ($changeType === 'resource') {
                     $q->where(function ($subQ) {
@@ -194,6 +197,9 @@ class AdminCourseController extends Controller
                         $subQ->where('status', 'pending');
                     })
                         ->orWhereHas('lessons', function ($subQ) {
+                            $subQ->where('status', 'pending');
+                        })
+                        ->orWhereHas('lessons.quiz', function ($subQ) {
                             $subQ->where('status', 'pending');
                         })
                         ->orWhereHas('lessons.resources.edits', function ($subQ) {
@@ -243,9 +249,17 @@ class AdminCourseController extends Controller
 
         // Thêm thống kê cho mỗi khóa học
         $courses->getCollection()->transform(function ($course) {
-            // Đếm số thay đổi nội dung pending (course edits + lesson pending)
+            // Đếm số thay đổi nội dung pending (course edits + lesson pending + quiz pending)
             $contentChanges = $course->courseEdits()->where('status', 'pending')->count();
             $lessonChanges = $course->lessons()->where('status', 'pending')->count();
+            $quizChanges = 0;
+
+            // Đếm quiz pending
+            foreach ($course->lessons as $lesson) {
+                if ($lesson->quiz && $lesson->quiz->status === 'pending') {
+                    $quizChanges++;
+                }
+            }
 
             // Đếm số tài nguyên pending (bao gồm cả edits và resources có status pending)
             $resourceChanges = 0;
@@ -263,7 +277,7 @@ class AdminCourseController extends Controller
                 }
             }
 
-            $course->pending_content_changes = $contentChanges + $lessonChanges;
+            $course->pending_content_changes = $contentChanges + $lessonChanges + $quizChanges;
             $course->pending_resource_changes = $resourceChanges + $pendingResources;
             $course->latest_edit_date = $course->courseEdits()
                 ->where('status', 'pending')
@@ -312,11 +326,20 @@ class AdminCourseController extends Controller
                 $q->where('status', 'pending')->latest();
             },
             'lessons' => function ($q) {
-                $q->where('status', 'pending')->orWhereHas('resources', function ($subQ) {
-                    $subQ->where('status', 'pending')->orWhereHas('edits', function ($editQ) {
-                        $editQ->where('status', 'pending');
-                    });
+                $q->where(function ($subQ) {
+                    $subQ->where('status', 'pending')
+                        ->orWhereHas('quiz', function ($quizQ) {
+                            $quizQ->where('status', 'pending');
+                        })
+                        ->orWhereHas('resources', function ($resQ) {
+                            $resQ->where('status', 'pending')->orWhereHas('edits', function ($editQ) {
+                                $editQ->where('status', 'pending');
+                            });
+                        });
                 });
+            },
+            'lessons.quiz' => function ($q) {
+                $q->where('status', 'pending');
             },
             'lessons.resources.edits' => function ($q) {
                 $q->where('status', 'pending')->latest();
@@ -364,6 +387,24 @@ class AdminCourseController extends Controller
                 'lesson_data' => $lesson
             ]);
         });
+
+        // Quiz pending
+        foreach ($course->lessons as $lesson) {
+            if ($lesson->quiz && $lesson->quiz->status === 'pending') {
+                $contentChanges->push([
+                    'id' => $lesson->quiz->id,
+                    'type' => 'quiz',
+                    'field' => 'Quiz mới',
+                    'original_value' => 'Không có',
+                    'new_value' => $lesson->quiz->title,
+                    'status' => $lesson->quiz->status,
+                    'created_at' => $lesson->quiz->created_at,
+                    'lesson_id' => $lesson->id,
+                    'lesson_title' => $lesson->title,
+                    'quiz_data' => $lesson->quiz
+                ]);
+            }
+        }
 
         // Chuẩn bị dữ liệu cho tab tài nguyên
         $resourceChanges = collect();
@@ -442,6 +483,9 @@ class AdminCourseController extends Controller
             } elseif ($type === 'lesson') {
                 $this->approveLesson($lessonId);
                 $message = 'Đã phê duyệt bài giảng thành công!';
+            } elseif ($type === 'quiz') {
+                $this->approveQuiz($editId);
+                $message = 'Đã phê duyệt quiz thành công!';
             } elseif ($type === 'resource') {
                 // Kiểm tra xem có phải là delete request không
                 $edit = \App\Models\ResourceEdit::findOrFail($editId);
@@ -480,6 +524,8 @@ class AdminCourseController extends Controller
                 $this->rejectCourseEdit($editId, $note);
             } elseif ($type === 'lesson') {
                 $this->rejectLesson($lessonId, $note);
+            } elseif ($type === 'quiz') {
+                $this->rejectQuiz($editId, $note);
             } elseif ($type === 'resource') {
                 // Kiểm tra xem có phải là delete request không
                 $edit = \App\Models\ResourceEdit::findOrFail($editId);
@@ -703,6 +749,40 @@ class AdminCourseController extends Controller
     }
 
     /**
+     * Phê duyệt quiz
+     */
+    private function approveQuiz($quizId)
+    {
+        $quiz = \App\Models\Quiz::findOrFail($quizId);
+
+        // Chỉ approve quiz có status pending
+        if ($quiz->status === 'pending') {
+            $quiz->status = 'approved';
+            $quiz->save();
+            \Illuminate\Support\Facades\Log::info("Quiz {$quizId} approved successfully, new status: {$quiz->status}");
+        } else {
+            \Illuminate\Support\Facades\Log::warning("Quiz {$quizId} cannot be approved, current status: {$quiz->status}");
+        }
+    }
+
+    /**
+     * Từ chối quiz
+     */
+    private function rejectQuiz($quizId, $note)
+    {
+        $quiz = \App\Models\Quiz::findOrFail($quizId);
+
+        // Chỉ reject quiz có status pending
+        if ($quiz->status === 'pending') {
+            $quiz->status = 'rejected';
+            $quiz->save();
+            \Illuminate\Support\Facades\Log::info("Quiz {$quizId} rejected successfully");
+        } else {
+            \Illuminate\Support\Facades\Log::warning("Quiz {$quizId} cannot be rejected, current status: {$quiz->status}");
+        }
+    }
+
+    /**
      * Phê duyệt yêu cầu xóa resource (từ ResourceEdit với edited_file_url = null)
      */
     private function approveDeleteResource($editId)
@@ -711,7 +791,7 @@ class AdminCourseController extends Controller
         $resource = $edit->resource;
 
         // Kiểm tra nếu đây là yêu cầu xóa (edited_file_url = null)
-        if ($edit->edited_file_url === null && $edit->note === 'Yêu cầu xóa tài liệu' || $edit->note === 'Yêu cầu xóa video') {
+        if ($edit->edited_file_url === null && ($edit->note === 'Yêu cầu xóa tài liệu' || $edit->note === 'Yêu cầu xóa video')) {
             // Xóa file vật lý
             if ($resource->file_url && !filter_var($resource->file_url, FILTER_VALIDATE_URL)) {
                 try {

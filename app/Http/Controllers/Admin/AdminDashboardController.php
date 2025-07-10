@@ -18,15 +18,15 @@ class AdminDashboardController extends Controller
     {
         $today = Carbon::today();
 
-        // 📊 Thống kê doanh thu
-        $totalRevenue = Payment::where('status', 'completed')->sum('amount');
+        // 📊 Thống kê doanh thu (Admin nhận 20% từ mỗi khóa học)
+        $totalRevenue = Payment::where('status', 'completed')->sum('amount') * 0.2;
 
         // Doanh thu 7 ngày gần nhất
         $revenueBy7Days = Payment::where('status', 'completed')
             ->where('completed_at', '>=', $today->copy()->subDays(6))
             ->select(
                 DB::raw('DATE(completed_at) as date'),
-                DB::raw('SUM(amount) as revenue')
+                DB::raw('SUM(amount) * 0.2 as revenue')
             )
             ->groupBy('date')
             ->orderBy('date')
@@ -38,7 +38,7 @@ class AdminDashboardController extends Controller
             ->select(
                 DB::raw('YEAR(completed_at) as year'),
                 DB::raw('MONTH(completed_at) as month'),
-                DB::raw('SUM(amount) as revenue')
+                DB::raw('SUM(amount) * 0.2 as revenue')
             )
             ->groupBy('year', 'month')
             ->orderBy('year')
@@ -50,7 +50,7 @@ class AdminDashboardController extends Controller
             ->where('completed_at', '>=', $today->copy()->subYears(4)->startOfYear())
             ->select(
                 DB::raw('YEAR(completed_at) as year'),
-                DB::raw('SUM(amount) as revenue')
+                DB::raw('SUM(amount) * 0.2 as revenue')
             )
             ->groupBy('year')
             ->orderBy('year')
@@ -86,13 +86,13 @@ class AdminDashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // Top 5 khóa học bán chạy nhất (theo doanh thu)
+        // Top 5 khóa học bán chạy nhất (theo doanh thu admin - 20%)
         $bestSellingCourses = Course::with(['payments' => function ($query) {
             $query->where('status', 'completed');
         }])
             ->get()
             ->map(function ($course) {
-                $course->total_revenue = $course->payments->sum('amount');
+                $course->total_revenue = $course->payments->sum('amount') * 0.2; // Admin nhận 20%
                 $course->total_sales = $course->payments->count();
                 return $course;
             })

@@ -369,7 +369,106 @@ const CourseDetail = ({ course }) => {
             }
         });
     };
+    const hasApprovedResourcesOrQuiz = (lesson) => {
+        // Kiểm tra resources
+        if (lesson.resources && lesson.resources.length > 0) {
+            const hasApprovedResource = lesson.resources.some(resource => resource.status === 'approved');
+            if (hasApprovedResource) return true;
+        }
 
+        // Kiểm tra quiz
+        if (lesson.quiz && lesson.quiz.status === 'approved') {
+            return true;
+        }
+
+        return false;
+    };
+
+    // Cập nhật hàm handleUpdateStatusToDraft (thay thế hàm cũ từ dòng 373)
+    const handleUpdateStatusToDraft = (resourceType, resourceId, currentStatus) => {
+        if (currentStatus === 'draft') {
+            alert('Tài nguyên này đã ở trạng thái nháp!');
+            return;
+        }
+
+        // Kiểm tra điều kiện đặc biệt cho lesson
+        if (resourceType === 'lesson') {
+            const lesson = course.lessons.find(l => l.id === resourceId);
+            if (lesson && hasApprovedResourcesOrQuiz(lesson)) {
+                alert('Không thể chuyển bài giảng về nháp vì còn có tài liệu hoặc quiz đã được duyệt. Vui lòng chuyển tất cả tài liệu và quiz về nháp trước.');
+                return;
+            }
+        }
+
+        const confirmMessage = `Bạn có chắc chắn muốn chuyển ${resourceType === 'lesson' ? 'bài giảng' : resourceType === 'quiz' ? 'quiz' : 'tài liệu'} này về trạng thái nháp? Điều này sẽ ẩn nó khỏi học viên.`;
+
+        if (confirm(confirmMessage)) {
+            const routeName = getUpdateStatusRoute(resourceType);
+            const routeParams = getUpdateStatusRouteParams(resourceType, resourceId);
+
+            router.put(route(routeName, routeParams), {
+                status: 'draft'
+            }, {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    // Reload để cập nhật UI
+                    router.reload({ only: ['course'] });
+                },
+                onError: (errors) => {
+                    console.error('Lỗi cập nhật status:', errors);
+                    alert('Có lỗi xảy ra khi cập nhật trạng thái.');
+                }
+            });
+        }
+    };
+    // Helper function để lấy route name
+    const getUpdateStatusRoute = (resourceType) => {
+        switch (resourceType) {
+            case 'lesson':
+                return 'instructor.courses.lessons.update-status';
+            case 'quiz':
+                return 'instructor.courses.quizzes.update-status';
+            case 'video':
+                return 'instructor.courses.lessons.videos.update-status';
+            case 'document':
+                return 'instructor.courses.lessons.documents.update-status';
+            default:
+                throw new Error('Unknown resource type');
+        }
+    };
+
+    // Helper function để lấy route parameters
+    const getUpdateStatusRouteParams = (resourceType, resourceId) => {
+        switch (resourceType) {
+            case 'lesson':
+                return [course.id, resourceId];
+            case 'quiz':
+                return [course.id, resourceId];
+            case 'video':
+            case 'document':
+                // Cần tìm lesson ID cho resource này
+                const resource = findResourceInLessons(resourceId);
+                return [course.id, resource.lessonId, resourceId];
+            default:
+                throw new Error('Unknown resource type');
+        }
+    };
+
+    // Helper function để tìm resource trong lessons
+    const findResourceInLessons = (resourceId) => {
+        for (const lesson of course.lessons || []) {
+            for (const resource of lesson.resources || []) {
+                if (resource.id === resourceId) {
+                    return {
+                        ...resource,
+                        lessonId: lesson.id
+                    };
+                }
+            }
+        }
+        throw new Error('Resource not found');
+    };
     const handleUpdateResourceOrder = (resourceId, currentOrder) => {
         setEditingResourceOrder(resourceId);
         resourceOrderForm.setData('order', currentOrder);
@@ -1223,6 +1322,8 @@ const CourseDetail = ({ course }) => {
                                                                         <span>{lesson.order}</span>
                                                                         <PencilIcon className="h-3 w-3" />
                                                                     </button>
+
+
                                                                 )}
                                                                 <div className="flex-1">
                                                                     <div className="flex items-center space-x-3">
@@ -1265,14 +1366,28 @@ const CourseDetail = ({ course }) => {
                                                             >
                                                                 <QuestionMarkCircleIcon className="h-4 w-4" />
                                                             </button>
-                                                            {!hasLinkedFiles(lesson) && (
+                                                            {lesson.status !== 'draft' && (
                                                                 <button
-                                                                    onClick={() => handleDeleteLesson(lesson.id, lesson.title, lesson)}
-                                                                    className="text-red-600 hover:text-red-800 p-2"
-                                                                    title="Xóa bài giảng"
+                                                                    onClick={() => handleUpdateStatusToDraft('lesson', lesson.id, lesson.status)}
+                                                                    className="text-orange-600 hover:text-orange-800 p-1"
+                                                                    title="Chuyển về nháp"
                                                                 >
-                                                                    <TrashIcon className="h-4 w-4" />
+                                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
                                                                 </button>
+                                                            )}
+                                                            {!hasLinkedFiles(lesson) && (
+                                                                <>
+
+                                                                    <button
+                                                                        onClick={() => handleDeleteLesson(lesson.id, lesson.title, lesson)}
+                                                                        className="text-red-600 hover:text-red-800 p-2"
+                                                                        title="Xóa bài giảng"
+                                                                    >
+                                                                        <TrashIcon className="h-4 w-4" />
+                                                                    </button>
+                                                                </>
                                                             )}
                                                         </div>
                                                     </div>
@@ -1398,6 +1513,17 @@ const CourseDetail = ({ course }) => {
                                                                                             >
                                                                                                 <PencilIcon className="w-4 h-4" />
                                                                                             </button>
+                                                                                            {resource.status !== 'draft' && (
+                                                                                                <button
+                                                                                                    onClick={() => handleUpdateStatusToDraft(resource.type, resource.id, resource.status)}
+                                                                                                    className="text-orange-600 hover:text-orange-800 p-1"
+                                                                                                    title="Chuyển về nháp"
+                                                                                                >
+                                                                                                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                                                    </svg>
+                                                                                                </button>
+                                                                                            )}
                                                                                             <button
                                                                                                 onClick={() => handleDeleteResource(lesson.id, resource.id, resource.type, resource)}
                                                                                                 className="text-red-600 hover:text-red-800 p-1"
@@ -1599,6 +1725,17 @@ const CourseDetail = ({ course }) => {
                                                                                             >
                                                                                                 <PencilIcon className="w-4 h-4" />
                                                                                             </button>
+                                                                                            {resource.status !== 'draft' && (
+                                                                                                <button
+                                                                                                    onClick={() => handleUpdateStatusToDraft(resource.type, resource.id, resource.status)}
+                                                                                                    className="text-orange-600 hover:text-orange-800 p-1"
+                                                                                                    title="Chuyển về nháp"
+                                                                                                >
+                                                                                                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                                                    </svg>
+                                                                                                </button>
+                                                                                            )}
                                                                                             <button
                                                                                                 onClick={() => handleDeleteResource(lesson.id, resource.id, resource.type, resource)}
                                                                                                 className="text-red-600 hover:text-red-800 p-1"
@@ -1727,6 +1864,17 @@ const CourseDetail = ({ course }) => {
                                                                                 >
                                                                                     <PencilIcon className="h-4 w-4" />
                                                                                 </button>
+                                                                                {lesson.quiz.status !== 'draft' && (
+                                                                                    <button
+                                                                                        onClick={() => handleUpdateStatusToDraft('quiz', lesson.quiz.id, lesson.quiz.status)}
+                                                                                        className="text-orange-600 hover:text-orange-800 p-1"
+                                                                                        title="Chuyển về nháp"
+                                                                                    >
+                                                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                                        </svg>
+                                                                                    </button>
+                                                                                )}
                                                                                 <button
                                                                                     onClick={() => handleDeleteQuiz(lesson.quiz.id, lesson.quiz.title)}
                                                                                     className="text-red-600 hover:text-red-800 p-1"

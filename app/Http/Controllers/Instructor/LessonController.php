@@ -116,6 +116,20 @@ class LessonController extends Controller
             return redirect()->back()->withErrors(['general' => 'Có lỗi xảy ra khi xóa bài giảng.']);
         }
     }
+    public function updateStatus(InstructorRequest $request, $courseId, $lessonId)
+    {
+        // Kiểm tra quyền sở hữu khóa học
+        $course = Course::findOrFail($courseId);
+        if ($course->instructor_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền cập nhật trạng thái bài giảng cho khóa học này.');
+        }
+
+        $lesson = Lesson::findOrFail($lessonId);
+        $lesson->status = $request->status;
+        $lesson->save();
+
+        return redirect()->back()->with('success', 'Cập nhật trạng thái bài giảng thành công!');
+    }
     /**
      * Update the order of lessons.
      */

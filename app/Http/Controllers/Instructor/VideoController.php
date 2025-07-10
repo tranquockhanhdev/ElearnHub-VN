@@ -555,4 +555,45 @@ class VideoController extends Controller
             rmdir($tempDir);
         }
     }
+
+    /**
+     * Update the status of video.
+     */
+    public function updateStatus(Request $request, $courseId, $lessonId, $videoId)
+    {
+        try {
+            $request->validate([
+                'status' => 'required|in:draft,pending,approved,rejected'
+            ]);
+
+            // Kiểm tra quyền truy cập
+            $course = Course::where('instructor_id', Auth::id())->findOrFail($courseId);
+            $lesson = $course->lessons()->findOrFail($lessonId);
+
+            // Kiểm tra video thuộc lesson
+            $video = Resource::where('type', 'video')
+                ->where('lesson_id', $lessonId)
+                ->findOrFail($videoId);
+
+            $video->status = $request->status;
+            $video->save();
+
+            $statusText = [
+                'draft' => 'nháp',
+                'pending' => 'chờ phê duyệt',
+                'approved' => 'đã phê duyệt',
+                'rejected' => 'bị từ chối'
+            ];
+
+            return redirect()->back()->with('success', "Cập nhật trạng thái video thành '{$statusText[$request->status]}' thành công!");
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->back()
+                ->withErrors(['general' => 'Video không tồn tại.'])
+                ->with('error', 'Video không tồn tại.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withErrors(['general' => 'Có lỗi xảy ra khi cập nhật trạng thái video.'])
+                ->with('error', 'Có lỗi xảy ra khi cập nhật trạng thái video.');
+        }
+    }
 }
