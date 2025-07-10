@@ -384,7 +384,6 @@ const CourseDetail = ({ course }) => {
         return false;
     };
 
-    // Cập nhật hàm handleUpdateStatusToDraft (thay thế hàm cũ từ dòng 373)
     const handleUpdateStatusToDraft = (resourceType, resourceId, currentStatus) => {
         if (currentStatus === 'draft') {
             alert('Tài nguyên này đã ở trạng thái nháp!');

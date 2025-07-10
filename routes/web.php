@@ -6,7 +6,7 @@ use App\Http\Controllers\Public\CourseController;
 use App\Http\Controllers\Public\InstructorController;
 use Illuminate\Support\Facades\Artisan;
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/', [HomeController::class, 'index'])->middleware('redirect.if.authenticated')->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');

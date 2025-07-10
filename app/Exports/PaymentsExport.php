@@ -41,6 +41,7 @@ class PaymentsExport implements FromCollection, WithHeadings, WithMapping
             'Khóa học',
             'Phương thức',
             'Số tiền',
+            'số tiền thực nhận',
             'Trạng thái',
             'Thời gian thanh toán',
         ];
@@ -54,6 +55,7 @@ class PaymentsExport implements FromCollection, WithHeadings, WithMapping
             $payment->course?->title,
             $payment->method?->name,
             $payment->amount,
+            $payment->amount * 0.2,
             ucfirst($payment->status),
             $payment->payment_time
                 ? Carbon::parse($payment->payment_time)->format('d/m/Y H:i')

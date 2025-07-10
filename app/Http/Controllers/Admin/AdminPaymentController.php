@@ -49,19 +49,22 @@ class AdminPaymentController extends Controller
             ->sum('amount');
         $toBePaid = Payment::where('status', 'pending')->sum('amount');
 
+        $adminLifetimeEarnings = $totalEarnings * 0.2;
+        $adminMonthlyEarnings = $monthlyEarnings * 0.2;
+        $adminPendingEarnings = $toBePaid * 0.2;
+
         return Inertia::render('Admin/Payment/PaymentList', [
             'payments' => $payments,
             'students' => User::where('role_id', 3)->select('id', 'name')->get(),
             'courses' => Course::select('id', 'title')->get(),
             'filters' => $request->only(['student_id', 'course_id', 'status', 'start_date', 'end_date']),
             'stats' => [
-                'lifetime' => $totalEarnings,
-                'monthly' => $monthlyEarnings,
-                'pending' => $toBePaid,
+                'lifetime' => $adminLifetimeEarnings,
+                'monthly' => $adminMonthlyEarnings,
+                'pending' => $adminPendingEarnings,
             ],
         ]);
     }
-
     public function show($id)
     {
         $payment = \App\Models\Payment::with(['student', 'course', 'paymentMethod'])->findOrFail($id);
