@@ -24,7 +24,7 @@ Route::middleware(['auth', 'verified', 'role:3'])->prefix('student')->name('stud
     Route::get('/course/{id}', [CourseController::class, 'show'])->name('course.show');
 
     Route::middleware(['seb'])->group(function () {
-        Route::get('/course/{id}/learn', [CourseController::class, 'learn'])->name('course.learn'); //student.course.learn
+        Route::get('/course/{id}/learn', [CourseController::class, 'learn'])->name('course.learn');
 
         Route::get('/course/{courseId}/download/{documentId}', [
             CourseController::class,

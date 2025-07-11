@@ -137,6 +137,8 @@ const CourseDetail = ({ course }) => {
             onSuccess: () => {
                 setShowAddLesson(false);
                 lessonForm.reset();
+                lessonForm.setData('order', course.lessons.length + 2);
+                router.reload();
             }
         });
     };
