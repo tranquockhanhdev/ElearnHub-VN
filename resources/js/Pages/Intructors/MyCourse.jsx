@@ -117,7 +117,7 @@ const MyCourse = () => {
     const getStatusText = (status) => {
         switch (status) {
             case 'active':
-                return 'Đã duyệt';
+                return 'Đang hoạt động';
             case 'pending':
                 return 'Chờ duyệt';
             case 'inactive':
@@ -360,24 +360,6 @@ const MyCourse = () => {
                                             <i className="bi bi-book-half fs-1 text-primary"></i>
                                             <h4 className="text-primary">{courses.total}</h4>
                                             <p className="mb-0 h6 fw-light">Tổng khóa học</p>
-                                        </div>
-                                    </div>
-                                    <div className="col-sm-6 col-lg-4">
-                                        <div className="text-center p-4 bg-success bg-opacity-10 border border-success border-opacity-10 rounded-3">
-                                            <i className="bi bi-check-circle fs-1 text-success"></i>
-                                            <h4 className="text-success">
-                                                {courses.data.filter(course => course.status === 'active').length}
-                                            </h4>
-                                            <p className="mb-0 h6 fw-light">Đã duyệt</p>
-                                        </div>
-                                    </div>
-                                    <div className="col-sm-6 col-lg-4">
-                                        <div className="text-center p-4 bg-warning bg-opacity-10 border border-warning border-opacity-10 rounded-3">
-                                            <i className="bi bi-clock fs-1 text-warning"></i>
-                                            <h4 className="text-warning">
-                                                {courses.data.filter(course => course.status === 'pending').length}
-                                            </h4>
-                                            <p className="mb-0 h6 fw-light">Chờ duyệt</p>
                                         </div>
                                     </div>
                                 </div>

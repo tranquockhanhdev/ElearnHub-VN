@@ -15,7 +15,7 @@ const AdminCreateCourse = () => {
         description: old?.description || "",
         instructor_id: auth.user.id,
         course_image: null,
-        status: old?.status || "inactive",
+        status: old?.status || "active",
     });
 
     const {
@@ -270,16 +270,16 @@ const AdminCreateCourse = () => {
                                         {field === "title"
                                             ? "Tiêu đề"
                                             : field === "category_ids"
-                                            ? "Danh mục"
-                                            : field === "price"
-                                            ? "Giá"
-                                            : field === "description"
-                                            ? "Mô tả"
-                                            : field === "course_image"
-                                            ? "Hình ảnh"
-                                            : field === "general"
-                                            ? "Chung"
-                                            : field}
+                                                ? "Danh mục"
+                                                : field === "price"
+                                                    ? "Giá"
+                                                    : field === "description"
+                                                        ? "Mô tả"
+                                                        : field === "course_image"
+                                                            ? "Hình ảnh"
+                                                            : field === "general"
+                                                                ? "Chung"
+                                                                : field}
                                         :
                                     </strong>{" "}
                                     {Array.isArray(messages)
@@ -423,11 +423,10 @@ const AdminCreateCourse = () => {
                                                             Tiêu đề khoá học
                                                         </label>
                                                         <input
-                                                            className={`form-control ${
-                                                                errors?.title
-                                                                    ? "is-invalid"
-                                                                    : ""
-                                                            }`}
+                                                            className={`form-control ${errors?.title
+                                                                ? "is-invalid"
+                                                                : ""
+                                                                }`}
                                                             type="text"
                                                             placeholder="Enter course title"
                                                             value={
@@ -444,7 +443,7 @@ const AdminCreateCourse = () => {
                                                                     errors.title
                                                                 )
                                                                     ? errors
-                                                                          .title[0]
+                                                                        .title[0]
                                                                     : errors.title}
                                                             </div>
                                                         )}
@@ -579,63 +578,63 @@ const AdminCreateCourse = () => {
                                                         {/* Selected categories */}
                                                         {formData.category_ids
                                                             ?.length > 0 && (
-                                                            <div className="mb-3">
-                                                                <div
-                                                                    className="border rounded p-2 bg-light"
-                                                                    style={{
-                                                                        maxHeight:
-                                                                            "100px",
-                                                                        overflowY:
-                                                                            "auto",
-                                                                    }}
-                                                                >
-                                                                    <small className="text-muted d-block mb-1">
-                                                                        Đã chọn:
-                                                                    </small>
-                                                                    <div className="d-flex flex-wrap gap-1">
-                                                                        {formData.category_ids.map(
-                                                                            (
-                                                                                categoryId
-                                                                            ) => {
-                                                                                const category =
-                                                                                    categories?.find(
-                                                                                        (
-                                                                                            cat
-                                                                                        ) =>
-                                                                                            cat.id ===
-                                                                                            categoryId
-                                                                                    );
-                                                                                return category ? (
-                                                                                    <span
-                                                                                        key={
-                                                                                            categoryId
-                                                                                        }
-                                                                                        className="badge bg-primary"
-                                                                                    >
-                                                                                        {
-                                                                                            category.name
-                                                                                        }
-                                                                                        <button
-                                                                                            type="button"
-                                                                                            className="btn-close btn-close-white ms-1"
-                                                                                            style={{
-                                                                                                fontSize:
-                                                                                                    "8px",
-                                                                                            }}
-                                                                                            onClick={() =>
-                                                                                                handleCategoryChange(
-                                                                                                    categoryId
-                                                                                                )
+                                                                <div className="mb-3">
+                                                                    <div
+                                                                        className="border rounded p-2 bg-light"
+                                                                        style={{
+                                                                            maxHeight:
+                                                                                "100px",
+                                                                            overflowY:
+                                                                                "auto",
+                                                                        }}
+                                                                    >
+                                                                        <small className="text-muted d-block mb-1">
+                                                                            Đã chọn:
+                                                                        </small>
+                                                                        <div className="d-flex flex-wrap gap-1">
+                                                                            {formData.category_ids.map(
+                                                                                (
+                                                                                    categoryId
+                                                                                ) => {
+                                                                                    const category =
+                                                                                        categories?.find(
+                                                                                            (
+                                                                                                cat
+                                                                                            ) =>
+                                                                                                cat.id ===
+                                                                                                categoryId
+                                                                                        );
+                                                                                    return category ? (
+                                                                                        <span
+                                                                                            key={
+                                                                                                categoryId
                                                                                             }
-                                                                                        />
-                                                                                    </span>
-                                                                                ) : null;
-                                                                            }
-                                                                        )}
+                                                                                            className="badge bg-primary"
+                                                                                        >
+                                                                                            {
+                                                                                                category.name
+                                                                                            }
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                className="btn-close btn-close-white ms-1"
+                                                                                                style={{
+                                                                                                    fontSize:
+                                                                                                        "8px",
+                                                                                                }}
+                                                                                                onClick={() =>
+                                                                                                    handleCategoryChange(
+                                                                                                        categoryId
+                                                                                                    )
+                                                                                                }
+                                                                                            />
+                                                                                        </span>
+                                                                                    ) : null;
+                                                                                }
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        )}
+                                                            )}
 
                                                         {/* Categories grid */}
                                                         <div
@@ -648,7 +647,7 @@ const AdminCreateCourse = () => {
                                                             }}
                                                         >
                                                             {paginatedCategories.length >
-                                                            0 ? (
+                                                                0 ? (
                                                                 <>
                                                                     <div className="row g-2">
                                                                         {paginatedCategories.map(
@@ -662,13 +661,12 @@ const AdminCreateCourse = () => {
                                                                                     className="col-md-4 col-sm-6"
                                                                                 >
                                                                                     <div
-                                                                                        className={`card h-100 cursor-pointer border ${
-                                                                                            isCategorySelected(
-                                                                                                category.id
-                                                                                            )
-                                                                                                ? "border-primary bg-primary bg-opacity-10"
-                                                                                                : "border-light"
-                                                                                        }`}
+                                                                                        className={`card h-100 cursor-pointer border ${isCategorySelected(
+                                                                                            category.id
+                                                                                        )
+                                                                                            ? "border-primary bg-primary bg-opacity-10"
+                                                                                            : "border-light"
+                                                                                            }`}
                                                                                         onClick={() =>
                                                                                             handleCategoryChange(
                                                                                                 category.id
@@ -686,7 +684,7 @@ const AdminCreateCourse = () => {
                                                                                                     checked={isCategorySelected(
                                                                                                         category.id
                                                                                                     )}
-                                                                                                    onChange={() => {}}
+                                                                                                    onChange={() => { }}
                                                                                                     style={{
                                                                                                         pointerEvents:
                                                                                                             "none",
@@ -701,8 +699,8 @@ const AdminCreateCourse = () => {
                                                                                             {isCategorySelected(
                                                                                                 category.id
                                                                                             ) && (
-                                                                                                <i className="bi bi-check-circle-fill text-primary"></i>
-                                                                                            )}
+                                                                                                    <i className="bi bi-check-circle-fill text-primary"></i>
+                                                                                                )}
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
@@ -713,17 +711,16 @@ const AdminCreateCourse = () => {
                                                                     {/* Pagination */}
                                                                     {!showAll &&
                                                                         totalPages >
-                                                                            1 && (
+                                                                        1 && (
                                                                             <div className="d-flex justify-content-center mt-3">
                                                                                 <nav>
                                                                                     <ul className="pagination pagination-sm">
                                                                                         <li
-                                                                                            className={`page-item ${
-                                                                                                currentPage ===
+                                                                                            className={`page-item ${currentPage ===
                                                                                                 1
-                                                                                                    ? "disabled"
-                                                                                                    : ""
-                                                                                            }`}
+                                                                                                ? "disabled"
+                                                                                                : ""
+                                                                                                }`}
                                                                                         >
                                                                                             <button
                                                                                                 type="button"
@@ -731,7 +728,7 @@ const AdminCreateCourse = () => {
                                                                                                 onClick={() =>
                                                                                                     setCurrentPage(
                                                                                                         currentPage -
-                                                                                                            1
+                                                                                                        1
                                                                                                     )
                                                                                                 }
                                                                                                 disabled={
@@ -757,27 +754,26 @@ const AdminCreateCourse = () => {
                                                                                                     1;
                                                                                                 if (
                                                                                                     pageNumber ===
-                                                                                                        1 ||
+                                                                                                    1 ||
                                                                                                     pageNumber ===
-                                                                                                        totalPages ||
+                                                                                                    totalPages ||
                                                                                                     (pageNumber >=
                                                                                                         currentPage -
-                                                                                                            1 &&
+                                                                                                        1 &&
                                                                                                         pageNumber <=
-                                                                                                            currentPage +
-                                                                                                                1)
+                                                                                                        currentPage +
+                                                                                                        1)
                                                                                                 ) {
                                                                                                     return (
                                                                                                         <li
                                                                                                             key={
                                                                                                                 pageNumber
                                                                                                             }
-                                                                                                            className={`page-item ${
-                                                                                                                currentPage ===
+                                                                                                            className={`page-item ${currentPage ===
                                                                                                                 pageNumber
-                                                                                                                    ? "active"
-                                                                                                                    : ""
-                                                                                                            }`}
+                                                                                                                ? "active"
+                                                                                                                : ""
+                                                                                                                }`}
                                                                                                         >
                                                                                                             <button
                                                                                                                 type="button"
@@ -796,11 +792,11 @@ const AdminCreateCourse = () => {
                                                                                                     );
                                                                                                 } else if (
                                                                                                     pageNumber ===
-                                                                                                        currentPage -
-                                                                                                            2 ||
+                                                                                                    currentPage -
+                                                                                                    2 ||
                                                                                                     pageNumber ===
-                                                                                                        currentPage +
-                                                                                                            2
+                                                                                                    currentPage +
+                                                                                                    2
                                                                                                 ) {
                                                                                                     return (
                                                                                                         <li
@@ -820,12 +816,11 @@ const AdminCreateCourse = () => {
                                                                                         )}
 
                                                                                         <li
-                                                                                            className={`page-item ${
-                                                                                                currentPage ===
+                                                                                            className={`page-item ${currentPage ===
                                                                                                 totalPages
-                                                                                                    ? "disabled"
-                                                                                                    : ""
-                                                                                            }`}
+                                                                                                ? "disabled"
+                                                                                                : ""
+                                                                                                }`}
                                                                                         >
                                                                                             <button
                                                                                                 type="button"
@@ -833,7 +828,7 @@ const AdminCreateCourse = () => {
                                                                                                 onClick={() =>
                                                                                                     setCurrentPage(
                                                                                                         currentPage +
-                                                                                                            1
+                                                                                                        1
                                                                                                     )
                                                                                                 }
                                                                                                 disabled={
@@ -900,7 +895,7 @@ const AdminCreateCourse = () => {
                                                                         errors.category_ids
                                                                     )
                                                                         ? errors
-                                                                              .category_ids[0]
+                                                                            .category_ids[0]
                                                                         : errors.category_ids}
                                                                 </small>
                                                             </div>
@@ -915,11 +910,10 @@ const AdminCreateCourse = () => {
                                                         <div className="input-group">
                                                             <input
                                                                 type="text"
-                                                                className={`form-control ${
-                                                                    errors?.price
-                                                                        ? "is-invalid"
-                                                                        : ""
-                                                                }`}
+                                                                className={`form-control ${errors?.price
+                                                                    ? "is-invalid"
+                                                                    : ""
+                                                                    }`}
                                                                 value={formatCurrency(
                                                                     formData.price
                                                                 )}
@@ -937,7 +931,7 @@ const AdminCreateCourse = () => {
                                                                         errors.price
                                                                     )
                                                                         ? errors
-                                                                              .price[0]
+                                                                            .price[0]
                                                                         : errors.price}
                                                                 </div>
                                                             )}
@@ -965,11 +959,10 @@ const AdminCreateCourse = () => {
                                                         </label>
                                                         <select
                                                             name="instructor_id"
-                                                            className={`form-select ${
-                                                                errors?.instructor_id
-                                                                    ? "is-invalid"
-                                                                    : ""
-                                                            }`}
+                                                            className={`form-select ${errors?.instructor_id
+                                                                ? "is-invalid"
+                                                                : ""
+                                                                }`}
                                                             value={
                                                                 formData.instructor_id
                                                             }
@@ -1006,50 +999,8 @@ const AdminCreateCourse = () => {
                                                                     errors.instructor_id
                                                                 )
                                                                     ? errors
-                                                                          .instructor_id[0]
+                                                                        .instructor_id[0]
                                                                     : errors.instructor_id}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="col-md-6">
-                                                        <label className="form-label">
-                                                            Trạng thái khóa học
-                                                        </label>
-                                                        <select
-                                                            name="status"
-                                                            className={`form-select ${
-                                                                errors?.status
-                                                                    ? "is-invalid"
-                                                                    : ""
-                                                            }`}
-                                                            value={
-                                                                formData.status
-                                                            }
-                                                            onChange={
-                                                                handleInputChange
-                                                            }
-                                                        >
-                                                            <option value="pending">
-                                                                Chờ duyệt
-                                                            </option>
-                                                            <option value="active">
-                                                                Đang hoạt động
-                                                            </option>
-                                                            <option value="inactive">
-                                                                Không hoạt động
-                                                            </option>
-                                                            <option value="suspended">
-                                                                Tạm khóa
-                                                            </option>
-                                                        </select>
-                                                        {errors?.status && (
-                                                            <div className="invalid-feedback">
-                                                                {Array.isArray(
-                                                                    errors.status
-                                                                )
-                                                                    ? errors
-                                                                          .status[0]
-                                                                    : errors.status}
                                                             </div>
                                                         )}
                                                     </div>
@@ -1127,7 +1078,7 @@ const AdminCreateCourse = () => {
                                                                         errors.description
                                                                     )
                                                                         ? errors
-                                                                              .description[0]
+                                                                            .description[0]
                                                                         : errors.description}
                                                                 </small>
                                                             </div>
@@ -1170,7 +1121,7 @@ const AdminCreateCourse = () => {
                                                             errors.course_image
                                                         )
                                                             ? errors
-                                                                  .course_image[0]
+                                                                .course_image[0]
                                                             : errors.course_image}
                                                     </div>
                                                 )}
@@ -1179,13 +1130,12 @@ const AdminCreateCourse = () => {
                                                     <div className="col-12">
                                                         {!imagePreview ? (
                                                             <div
-                                                                className={`text-center justify-content-center align-items-center p-4 p-sm-5 border-2 border-dashed position-relative rounded-3 ${
-                                                                    errors?.course_image
-                                                                        ? "bg-danger bg-opacity-10 border-danger"
-                                                                        : isDragging
+                                                                className={`text-center justify-content-center align-items-center p-4 p-sm-5 border-2 border-dashed position-relative rounded-3 ${errors?.course_image
+                                                                    ? "bg-danger bg-opacity-10 border-danger"
+                                                                    : isDragging
                                                                         ? "bg-primary bg-opacity-10 border-primary"
                                                                         : "bg-light border-secondary"
-                                                                }`}
+                                                                    }`}
                                                                 onDragOver={
                                                                     handleDragOver
                                                                 }
@@ -1233,13 +1183,12 @@ const AdminCreateCourse = () => {
                                                                 ) : (
                                                                     <div>
                                                                         <i
-                                                                            className={`bi bi-cloud-upload fs-1 mb-3 ${
-                                                                                errors?.course_image
-                                                                                    ? "text-danger"
-                                                                                    : isDragging
+                                                                            className={`bi bi-cloud-upload fs-1 mb-3 ${errors?.course_image
+                                                                                ? "text-danger"
+                                                                                : isDragging
                                                                                     ? "text-primary"
                                                                                     : "text-secondary"
-                                                                            }`}
+                                                                                }`}
                                                                         ></i>
                                                                         <h6 className="my-2">
                                                                             {isDragging
@@ -1497,11 +1446,10 @@ const AdminCreateCourse = () => {
                                                             Quay lại
                                                         </button>
                                                         <button
-                                                            className={`btn next-btn mb-0 ${
-                                                                !formData.course_image
-                                                                    ? "btn-outline-primary"
-                                                                    : "btn-primary"
-                                                            }`}
+                                                            className={`btn next-btn mb-0 ${!formData.course_image
+                                                                ? "btn-outline-primary"
+                                                                : "btn-primary"
+                                                                }`}
                                                             disabled={
                                                                 !formData.course_image
                                                             }
@@ -1590,7 +1538,7 @@ const AdminCreateCourse = () => {
                                                                             }
                                                                         ).format(
                                                                             formData.price ||
-                                                                                0
+                                                                            0
                                                                         )}
                                                                     </li>
                                                                     <li>
@@ -1629,11 +1577,10 @@ const AdminCreateCourse = () => {
                                                         <div className="text-end">
                                                             <button
                                                                 type="submit"
-                                                                className={`btn mb-0 ${
-                                                                    !formData.course_image
-                                                                        ? "btn-outline-success"
-                                                                        : "btn-success"
-                                                                }`}
+                                                                className={`btn mb-0 ${!formData.course_image
+                                                                    ? "btn-outline-success"
+                                                                    : "btn-success"
+                                                                    }`}
                                                                 disabled={
                                                                     !formData.course_image
                                                                 }

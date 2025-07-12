@@ -116,22 +116,6 @@ const AdminCourseList = ({
                 <div
                     className="p-4 rounded text-center h-100"
                     style={{
-                        backgroundColor: "#fff9eb",
-                        border: "1px solid #f6c23e",
-                        color: "#f6c23e",
-                    }}
-                >
-                    <div className="mb-2">
-                        <i className="bi bi-hourglass-split fs-2"></i>
-                    </div>
-                    <h6 className="fw-bold mb-1 text-muted">Chờ duyệt</h6>
-                    <h2 className="fw-bold m-0">{stats.pending}</h2>
-                </div>
-            </div>
-            <div className="col-md-3">
-                <div
-                    className="p-4 rounded text-center h-100"
-                    style={{
                         backgroundColor: "#f4f4f4",
                         border: "1px solid #6c757d",
                         color: "#6c757d",

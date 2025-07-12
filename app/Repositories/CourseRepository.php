@@ -57,7 +57,10 @@ class CourseRepository
     public function getCoursesWithFilters($filters = [], $perPage = 12)
     {
         $query = $this->course->with(['categories', 'instructor'])
-            ->where('status', self::STATUS_ACTIVE);
+            ->where('status', self::STATUS_ACTIVE)
+            ->whereHas('lessons', function ($query) {
+                $query->where('status', 'approved');
+            });
 
         $this->applySearchFilter($query, $filters['search'] ?? null);
         $this->applyCategoryFilter($query, $filters['category'] ?? null);
@@ -77,6 +80,9 @@ class CourseRepository
         return $this->course->with(['categories', 'instructor'])
             ->where('slug', $slug)
             ->where('status', self::STATUS_ACTIVE)
+            ->whereHas('lessons', function ($query) {
+                $query->where('status', 'approved');
+            })
             ->first();
     }
 
