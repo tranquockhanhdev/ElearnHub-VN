@@ -36,7 +36,12 @@ class AdminSettingController extends Controller
      */
     public function update(UpdateWebsiteSettingRequest $request)
     {
-        $this->service->update($request->validated());
+        $data = $request->validated();
+
+        // Thêm user_id của admin hiện tại
+        $data['user_id'] = Auth::id();
+
+        $this->service->update($data);
 
         return redirect()->back()->with('success', 'Cập nhật cấu hình thành công.');
     }
@@ -46,7 +51,10 @@ class AdminSettingController extends Controller
      */
     public function uploadLogo(UploadLogoRequest $request)
     {
-        $url = $this->service->uploadLogo($request->file('site_logo'));
+        $url = $this->service->uploadLogo(
+            $request->file('site_logo'),
+            Auth::id() // Thêm user_id của admin hiện tại
+        );
 
         return redirect()->back()->with('success', 'Cập nhật logo thành công.');
     }
@@ -56,7 +64,7 @@ class AdminSettingController extends Controller
      */
     public function removeLogo()
     {
-        $this->service->removeLogo();
+        $this->service->removeLogo(Auth::id()); // Thêm user_id của admin hiện tại
 
         return redirect()->back()->with('success', 'Logo đã được xóa.');
     }

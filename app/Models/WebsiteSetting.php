@@ -14,6 +14,7 @@ class WebsiteSetting extends Model
     // protected $guarded = []; // Mở nếu muốn tắt bảo vệ mass assignment
 
     protected $fillable = [
+        'user_id',
         'site_name',
         'contact_email',
         'site_logo_url',
@@ -24,5 +25,17 @@ class WebsiteSetting extends Model
         'maintenance_mode',
     ];
 
+    protected $casts = [
+        'maintenance_mode' => 'boolean',
+    ];
+
     public $timestamps = true;
+
+    /**
+     * Get the user that owns the website setting.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

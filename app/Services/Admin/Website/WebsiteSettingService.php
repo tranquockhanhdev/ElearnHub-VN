@@ -15,10 +15,27 @@ class WebsiteSettingService
     {
         $this->repository = $repository;
     }
-public function getOrCreate()
-{
-    return $this->repository->getOrCreate();
-}
+    public function getOrCreate()
+    {
+        return $this->repository->getOrCreate();
+    }
+
+    /**
+     * Lấy cấu hình theo user_id
+     */
+    public function getByUserId(int $userId)
+    {
+        return $this->repository->getByUserId($userId);
+    }
+
+    /**
+     * Lấy cấu hình chung (global settings)
+     */
+    public function getGlobalSettings()
+    {
+        return $this->repository->getGlobalSettings();
+    }
+
     /**
      * Cập nhật thông tin cấu hình website
      */
@@ -28,9 +45,17 @@ public function getOrCreate()
     }
 
     /**
+     * Cập nhật cấu hình theo user_id
+     */
+    public function updateByUserId(int $userId, array $data)
+    {
+        return $this->repository->updateByUserId($userId, $data);
+    }
+
+    /**
      * Upload và lưu logo, trả về URL logo mới
      */
-    public function uploadLogo(UploadedFile $file): string
+    public function uploadLogo(UploadedFile $file, int $userId = null): string
     {
         // Lưu file vào thư mục storage/app/public/site_logos
         $path = $file->store('site_logos', 'public');
@@ -39,7 +64,7 @@ public function getOrCreate()
         $url = '/storage/' . $path;
 
         // Cập nhật vào DB
-        $this->repository->updateLogoUrl($url);
+        $this->repository->updateLogoUrl($url, $userId);
 
         return $url;
     }
@@ -47,11 +72,15 @@ public function getOrCreate()
     /**
      * Xóa logo khỏi storage và database
      */
-    public function removeLogo(): void
+    public function removeLogo(int $userId = null): void
     {
-        $setting = $this->repository->getOrCreate();
+        if ($userId) {
+            $setting = $this->repository->getByUserId($userId);
+        } else {
+            $setting = $this->repository->getOrCreate();
+        }
 
-        if ($setting->site_logo_url) {
+        if ($setting && $setting->site_logo_url) {
             $fileName = basename($setting->site_logo_url);
             $filePath = 'site_logos/' . $fileName;
 
@@ -62,7 +91,7 @@ public function getOrCreate()
                 Log::warning("Logo not found: " . $filePath);
             }
 
-            $this->repository->removeLogo();
+            $this->repository->removeLogo($userId);
         }
     }
 }

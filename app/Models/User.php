@@ -59,4 +59,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(CourseEdit::class, 'submitted_by');
     }
+
+    public function websiteSettings()
+    {
+        return $this->hasMany(WebsiteSetting::class);
+    }
 }

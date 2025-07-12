@@ -22,6 +22,22 @@ class WebsiteSettingRepository
     }
 
     /**
+     * Lấy cấu hình theo user_id
+     */
+    public function getByUserId(int $userId): ?WebsiteSetting
+    {
+        return $this->model->where('user_id', $userId)->first();
+    }
+
+    /**
+     * Lấy cấu hình chung (global settings)
+     */
+    public function getGlobalSettings(): ?WebsiteSetting
+    {
+        return $this->model->whereNull('user_id')->first();
+    }
+
+    /**
      * Cập nhật dữ liệu cài đặt website
      */
     public function update(array $data): WebsiteSetting
@@ -34,11 +50,38 @@ class WebsiteSettingRepository
     }
 
     /**
+     * Cập nhật cấu hình theo user_id
+     */
+    public function updateByUserId(int $userId, array $data): WebsiteSetting
+    {
+        $setting = $this->getByUserId($userId);
+
+        if (!$setting) {
+            $setting = new WebsiteSetting();
+            $setting->user_id = $userId;
+        }
+
+        $setting->fill($data);
+        $setting->save();
+
+        return $setting;
+    }
+
+    /**
      * Cập nhật URL logo
      */
-    public function updateLogoUrl(string $url): WebsiteSetting
+    public function updateLogoUrl(string $url, int $userId = null): WebsiteSetting
     {
-        $setting = $this->getOrCreate();
+        if ($userId) {
+            $setting = $this->getByUserId($userId);
+            if (!$setting) {
+                $setting = new WebsiteSetting();
+                $setting->user_id = $userId;
+            }
+        } else {
+            $setting = $this->getOrCreate();
+        }
+
         $setting->site_logo_url = $url;
         $setting->save();
 
@@ -48,9 +91,18 @@ class WebsiteSettingRepository
     /**
      * Xóa logo
      */
-    public function removeLogo(): WebsiteSetting
+    public function removeLogo(int $userId = null): WebsiteSetting
     {
-        $setting = $this->getOrCreate();
+        if ($userId) {
+            $setting = $this->getByUserId($userId);
+            if (!$setting) {
+                $setting = new WebsiteSetting();
+                $setting->user_id = $userId;
+            }
+        } else {
+            $setting = $this->getOrCreate();
+        }
+
         $setting->site_logo_url = null;
         $setting->save();
 
