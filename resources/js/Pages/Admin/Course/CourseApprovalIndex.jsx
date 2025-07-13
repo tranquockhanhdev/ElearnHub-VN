@@ -214,7 +214,7 @@ const CourseApprovalIndex = () => {
 
     return (
         <AdminLayout>
-            <Head title="Khóa học chờ phê duyệt" />
+            <Head title="Phê duyệt cập nhật khóa họct" />
 
             <div className="min-h-screen bg-gray-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -229,7 +229,7 @@ const CourseApprovalIndex = () => {
                                 </div>
                                 <div className="flex-1">
                                     <h1 className="text-xl lg:text-2xl font-bold text-gray-900">
-                                        Khóa học chờ phê duyệt
+                                        Phê duyệt cập nhật khóa học
                                     </h1>
                                     <p className="mt-1 text-sm text-gray-600">
                                         Quản lý các yêu cầu chỉnh sửa khóa học từ giảng viên
