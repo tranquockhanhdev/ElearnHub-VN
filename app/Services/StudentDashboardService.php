@@ -243,7 +243,7 @@ class StudentDashboardService
 
         foreach ($course->lessons as $lesson) {
             // Đếm chỉ video resources đã approved
-            $approvedVideos = $lesson->resources->where('type', 'video')
+            $approvedVideos = $lesson->resources->whereIn('type', ['video', 'document'])
                 ->where('status', 'approved');
             $totalItems += $approvedVideos->count();
 
@@ -261,7 +261,7 @@ class StudentDashboardService
                     $query->where('course_id', $course->id);
                 })
                 ->whereHas('resource', function ($query) {
-                    $query->where('type', 'video')
+                    $query->whereIn('type', ['video', 'document'])
                         ->where('status', 'approved');
                 })
                 ->where('is_complete', true)
@@ -284,7 +284,6 @@ class StudentDashboardService
 
             $completedItems = $completedResources + $completedQuizzes;
         }
-
         // Tính progress an toàn
         $progress = $totalItems > 0 ? min(round(($completedItems / $totalItems) * 100), 100) : 0;
 

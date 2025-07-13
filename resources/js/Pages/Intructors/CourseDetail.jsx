@@ -2569,7 +2569,7 @@ const CourseDetail = ({ course }) => {
                                             {course.enrollments.map((enrollment) => (
                                                 <li key={enrollment.id}>
                                                     <div className="px-4 py-4 flex items-center justify-between">
-                                                        <div className="flex items-center">
+                                                        <div className="flex items-center flex-1">
                                                             <div className="flex-shrink-0 h-10 w-10">
                                                                 <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                                                                     <span className="text-sm font-medium text-gray-700">
@@ -2577,17 +2577,40 @@ const CourseDetail = ({ course }) => {
                                                                     </span>
                                                                 </div>
                                                             </div>
-                                                            <div className="ml-4">
-                                                                <div className="text-sm font-medium text-gray-900">
-                                                                    {enrollment.student?.name}
-                                                                </div>
-                                                                <div className="text-sm text-gray-500">
-                                                                    {enrollment.student?.email}
+                                                            <div className="ml-4 flex-1">
+                                                                <div className="flex justify-between items-start">
+                                                                    <div>
+                                                                        <div className="text-sm font-medium text-gray-900">
+                                                                            {enrollment.student?.name}
+                                                                        </div>
+                                                                        <div className="text-sm text-gray-500">
+                                                                            {enrollment.student?.email}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="text-right ml-4">
+                                                                        <div className="text-sm text-gray-500 mb-1">
+                                                                            Đăng ký: {new Date(enrollment.created_at).toLocaleDateString('vi-VN')}
+                                                                        </div>
+                                                                        <div className="flex items-center space-x-2">
+                                                                            <div className="w-24 bg-gray-200 rounded-full h-2">
+                                                                                <div
+                                                                                    className={`h-2 rounded-full ${enrollment.progress >= 75 ? 'bg-green-500' :
+                                                                                            enrollment.progress >= 50 ? 'bg-yellow-500' :
+                                                                                                enrollment.progress >= 25 ? 'bg-blue-500' : 'bg-gray-400'
+                                                                                        }`}
+                                                                                    style={{ width: `${enrollment.progress}%` }}
+                                                                                ></div>
+                                                                            </div>
+                                                                            <span className={`text-xs font-medium ${enrollment.progress >= 75 ? 'text-green-600' :
+                                                                                    enrollment.progress >= 50 ? 'text-yellow-600' :
+                                                                                        enrollment.progress >= 25 ? 'text-blue-600' : 'text-gray-600'
+                                                                                }`}>
+                                                                                {enrollment.progress}%
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                        <div className="text-sm text-gray-500">
-                                                            Đăng ký: {new Date(enrollment.created_at).toLocaleDateString('vi-VN')}
                                                         </div>
                                                     </div>
                                                 </li>

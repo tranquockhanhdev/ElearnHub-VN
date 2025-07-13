@@ -192,11 +192,15 @@ class CourseController extends Controller
             ->pluck('lesson_id')
             ->toArray();
 
+        // Tính toán progress percentage từ backend
+        $progressPercentage = $this->calculateCourseProgress($studentId, $courseId);
+
         return [
             'completedResources' => $completedResources,
             'completedQuizzes' => $passedQuizzes,
             'completedLessons' => $completedLessons,
-            'quizAttempts' => $quizAttempts
+            'quizAttempts' => $quizAttempts,
+            'progressPercentage' => $progressPercentage
         ];
     }
 
@@ -205,43 +209,72 @@ class CourseController extends Controller
      */
     private function calculateCourseProgress($studentId, $courseId)
     {
-        // Lấy tất cả lessons của khóa học với video resources đã approved
-        $lessons = \App\Models\Lesson::where('course_id', $courseId)
-            ->with([
-                'resources' => function ($query) {
-                    $query->where('type', 'video')
-                        ->where('status', 'approved');
-                },
-                'quiz'
-            ])
-            ->get();
+        // Lấy course với lessons và resources
+        $course = \App\Models\Course::with([
+            'lessons' => function ($query) {
+                $query->with([
+                    'resources' => function ($query) {
+                        $query->whereIn('type', ['video', 'document'])
+                            ->where('status', 'approved');
+                    },
+                    'quiz'
+                ]);
+            }
+        ])->find($courseId);
 
-        if ($lessons->isEmpty()) {
+        if (!$course) {
             return 0;
         }
 
+        return $this->calculateStudentProgress($studentId, $course);
+    }
+
+    /**
+     * Tính toán progress của học viên
+     */
+    private function calculateStudentProgress($studentId, $course)
+    {
         $totalItems = 0;
         $completedItems = 0;
 
-        // Lấy progress data
-        $progress = $this->getStudentProgress($studentId, $courseId);
+        foreach ($course->lessons as $lesson) {
+            // Đếm video resources đã approved
+            $approvedVideos = $lesson->resources->where('type', 'video')
+                ->where('status', 'approved');
+            $approvedDocuments = $lesson->resources->where('type', 'document')
+                ->where('status', 'approved');
+            $totalItems += $approvedVideos->count() + $approvedDocuments->count();
 
-        foreach ($lessons as $lesson) {
-            // Đếm chỉ video resources đã approved
-            foreach ($lesson->resources as $resource) {
+            // Đếm quiz nếu có
+            if ($lesson->quiz && $lesson->quiz->status === 'approved') {
                 $totalItems++;
-                if (in_array($resource->id, $progress['completedResources'])) {
-                    $completedItems++;
-                }
             }
+        }
 
-            // Đếm quiz
-            if ($lesson->quiz) {
-                $totalItems++;
-                if (in_array($lesson->quiz->id, $progress['completedQuizzes'])) {
-                    $completedItems++;
-                }
-            }
+        if ($totalItems > 0) {
+            // Đếm video resources đã hoàn thành
+            $completedResources = \App\Models\LessonProgress::where('student_id', $studentId)
+                ->whereHas('lesson', function ($query) use ($course) {
+                    $query->where('course_id', $course->id);
+                })
+                ->whereHas('resource', function ($query) {
+                    $query->whereIn('type', ['video', 'document'])
+                        ->where('status', 'approved');
+                })
+                ->where('is_complete', 1)
+                ->count();
+
+            // Đếm quiz đã hoàn thành
+            $completedQuizzes = \App\Models\QuizAttempt::where('student_id', $studentId)
+                ->whereHas('quiz.lesson', function ($query) use ($course) {
+                    $query->where('course_id', $course->id);
+                })
+                ->whereHas('quiz', function ($query) {
+                    $query->where('status', 'approved');
+                })
+                ->count();
+
+            $completedItems = $completedResources + $completedQuizzes;
         }
 
         return $totalItems > 0 ? round(($completedItems / $totalItems) * 100) : 0;

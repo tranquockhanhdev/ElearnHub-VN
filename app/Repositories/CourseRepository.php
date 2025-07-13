@@ -194,7 +194,8 @@ class CourseRepository
             ->whereHas('enrollments', function ($q) use ($studentId) {
                 $q->where('student_id', $studentId);
             })
-            ->where('status', self::STATUS_ACTIVE);
+            ->where('status', self::STATUS_ACTIVE)
+            ->whereHas('lessons');
 
         // Tìm kiếm
         if (!empty($filters['search'])) {
@@ -227,6 +228,7 @@ class CourseRepository
     {
         return $this->course->with(['categories', 'instructor'])
             ->where('status', self::STATUS_ACTIVE)
+            ->whereHas('lessons')
             ->whereNotIn('id', $excludeCourseIds)
             ->withCount('enrollments')
             ->orderBy('enrollments_count', 'desc')
@@ -244,6 +246,7 @@ class CourseRepository
     {
         return $this->course->with(['instructor:id,name', 'categories:id,name'])
             ->where('status', 'active')
+            ->whereHas('lessons')
             ->withCount('enrollments') // Đếm số lượng enrollments
             ->orderBy('enrollments_count', 'desc')
             ->limit($limit)
@@ -260,6 +263,7 @@ class CourseRepository
     {
         return $this->course->with(['instructor:id,name', 'categories:id,name'])
             ->where('status', 'active')
+            ->whereHas('lessons')
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get();
@@ -275,6 +279,7 @@ class CourseRepository
     {
         return $this->course->with(['instructor:id,name', 'categories:id,name'])
             ->where('status', 'active')
+            ->whereHas('lessons')
             ->withCount('enrollments')
             ->orderBy('enrollments_count', 'desc')
             ->limit($limit)
@@ -357,6 +362,7 @@ class CourseRepository
         ])
             ->where('slug', $slug)
             ->where('status', 'active') // Chỉ lấy course đã approved
+            ->whereHas('lessons')
             ->first();
     }
 
@@ -382,7 +388,8 @@ class CourseRepository
             }
         ])
             ->where('id', $courseId)
-            ->where('status', 'active');
+            ->where('status', 'active')
+            ->whereHas('lessons');
         return $query->first();
     }
 

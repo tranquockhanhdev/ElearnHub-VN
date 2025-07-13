@@ -105,9 +105,61 @@ class CourseController extends Controller
             abort(403, 'Bạn không có quyền truy cập khóa học này.');
         }
 
+        // Tính progress cho từng enrollment
+        $course->enrollments->each(function ($enrollment) use ($course) {
+            $enrollment->progress = $this->calculateStudentProgress($enrollment->student_id, $course);
+        });
+
         return Inertia::render('Intructors/CourseDetail', [
             'course' => $course,
         ]);
+    }
+
+    /**
+     * Tính toán progress của học viên
+     */
+    private function calculateStudentProgress($studentId, $course)
+    {
+        $totalItems = 0;
+        $completedItems = 0;
+
+        foreach ($course->lessons as $lesson) {
+            // Đếm video resources đã approved
+            $approvedVideos = $lesson->resources->where('type', 'video')
+                ->where('status', 'approved');
+            $approvedDocuments = $lesson->resources->where('type', 'document')
+                ->where('status', 'approved');
+            $totalItems += $approvedVideos->count() + $approvedDocuments->count();
+
+            // Đếm quiz nếu có
+            if ($lesson->quiz && $lesson->quiz->status === 'approved') {
+                $totalItems++;
+            }
+        }
+        if ($totalItems > 0) {
+            // Đếm video resources đã hoàn thành
+            $completedResources = \App\Models\LessonProgress::where('student_id', $studentId)
+                ->whereHas('lesson', function ($query) use ($course) {
+                    $query->where('course_id', $course->id);
+                })
+                ->whereHas('resource', function ($query) {
+                    $query->whereIn('type', ['video', 'document'])
+                        ->where('status', 'approved');
+                })
+                ->where('is_complete', 1)
+                ->count();
+            // Đếm quiz đã hoàn thành
+            $completedQuizzes = \App\Models\QuizAttempt::where('student_id', $studentId)
+                ->whereHas('quiz.lesson', function ($query) use ($course) {
+                    $query->where('course_id', $course->id);
+                })
+                ->whereHas('quiz', function ($query) {
+                    $query->where('status', 'approved');
+                })
+                ->count();
+            $completedItems = $completedResources + $completedQuizzes;
+        }
+        return $totalItems > 0 ? round(($completedItems / $totalItems) * 100) : 0;
     }
 
 
@@ -182,8 +234,11 @@ class CourseController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Course $course)
+    public function destroy($id)
     {
+        // Lấy thông tin khóa học
+        $course = Course::findOrFail($id);
+
         // Kiểm tra quyền sở hữu
         if ($course->instructor_id !== Auth::id()) {
             abort(403, 'Bạn không có quyền xóa khóa học này.');

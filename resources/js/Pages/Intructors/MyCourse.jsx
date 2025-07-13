@@ -84,7 +84,7 @@ const MyCourse = () => {
 
     const confirmDelete = () => {
         if (courseToDelete) {
-            router.delete(route('instructor.courses.destroy', courseToDelete.id), {
+            router.delete(route('instructor.courses.delete', courseToDelete.id), {
                 onSuccess: () => {
                     setShowDeleteModal(false);
                     setCourseToDelete(null);
