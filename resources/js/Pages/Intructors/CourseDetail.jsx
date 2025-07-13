@@ -645,7 +645,7 @@ const CourseDetail = ({ course }) => {
             is_preview: document.is_preview || 0,
             uploadProgress: 0
         });
-        console.log('Editing document:', document);
+        // console.log('Editing document:', document);
     };
 
     // Function để bắt đầu chỉnh sửa video
@@ -2595,15 +2595,15 @@ const CourseDetail = ({ course }) => {
                                                                             <div className="w-24 bg-gray-200 rounded-full h-2">
                                                                                 <div
                                                                                     className={`h-2 rounded-full ${enrollment.progress >= 75 ? 'bg-green-500' :
-                                                                                            enrollment.progress >= 50 ? 'bg-yellow-500' :
-                                                                                                enrollment.progress >= 25 ? 'bg-blue-500' : 'bg-gray-400'
+                                                                                        enrollment.progress >= 50 ? 'bg-yellow-500' :
+                                                                                            enrollment.progress >= 25 ? 'bg-blue-500' : 'bg-gray-400'
                                                                                         }`}
                                                                                     style={{ width: `${enrollment.progress}%` }}
                                                                                 ></div>
                                                                             </div>
                                                                             <span className={`text-xs font-medium ${enrollment.progress >= 75 ? 'text-green-600' :
-                                                                                    enrollment.progress >= 50 ? 'text-yellow-600' :
-                                                                                        enrollment.progress >= 25 ? 'text-blue-600' : 'text-gray-600'
+                                                                                enrollment.progress >= 50 ? 'text-yellow-600' :
+                                                                                    enrollment.progress >= 25 ? 'text-blue-600' : 'text-gray-600'
                                                                                 }`}>
                                                                                 {enrollment.progress}%
                                                                             </span>

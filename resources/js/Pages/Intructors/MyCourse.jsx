@@ -283,12 +283,7 @@ const MyCourse = () => {
                                     <div className="col-12">
                                         <div className="d-sm-flex justify-content-between align-items-center mb-4">
                                             <h1 className="h3 mb-2 mb-sm-0">Khóa học của tôi</h1>
-                                            <Link
-                                                href="/instructor/courses/create"
-                                                className="btn btn-primary-soft mb-0"
-                                            >
-                                                <i className="bi bi-plus-circle me-2"></i>Tạo khóa học mới
-                                            </Link>
+
                                         </div>
                                     </div>
                                 </div>

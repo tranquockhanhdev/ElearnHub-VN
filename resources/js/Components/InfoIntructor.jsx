@@ -71,13 +71,7 @@ const InfoIntructor = () => {
                                             <i className="bi bi-pencil me-1"></i>
                                             Chỉnh sửa
                                         </Link>
-                                        <Link
-                                            href={route('instructor.courses.create')}
-                                            className="btn btn-primary btn-sm mb-0"
-                                        >
-                                            <i className="bi bi-plus me-1"></i>
-                                            Tạo khóa học
-                                        </Link>
+
                                     </div>
                                 </div>
                             </div>

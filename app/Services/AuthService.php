@@ -23,7 +23,6 @@ class AuthService
     {
         $user =  $this->AuthRepository->createUser($data);
         $sendMail = $this->AuthRepository->sendMailVerify($user);
-        dump($sendMail);
         if (!$sendMail) {
             return [
                 'success' => false,

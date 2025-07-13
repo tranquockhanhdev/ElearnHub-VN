@@ -136,7 +136,7 @@ const CourseDetail = () => {
 
     // Process and sort lesson content by type and order
     const processLessonContent = (lesson) => {
-        console.log(lesson);
+        // console.log(lesson);
         const content = [];
 
         // 1. Add videos first (sorted by order)
@@ -172,7 +172,7 @@ const CourseDetail = () => {
                 });
             });
         }
-        console.log(lesson.quiz);
+        // console.log(lesson.quiz);
         // 3. Add quiz last
         if (lesson.quiz) {
             content.push({
