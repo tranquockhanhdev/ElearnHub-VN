@@ -1,10 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, router, usePage } from "@inertiajs/react";
 import { route } from "ziggy-js";
 import "../../../public/css/style.css";
 import "../../../public/js/functions.js";
 const UserLayout = ({ children }) => {
     const { auth, flash_success, flash_error, setting } = usePage().props;
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const roleName = {
+        1: "Admin",
+        2: "Giảng viên",
+        3: "Học viên",
+    };
+
+    const navLinks = [
+        { href: "/", label: "Trang Chủ" },
+        { href: "/about", label: "Giới Thiệu" },
+        { href: "/courses", label: "Khóa Học" },
+        { href: "/terms", label: "Điều Khoản & Điều Kiện" },
+        { href: "/guideseb", label: "Hướng Dẫn SEB" },
+    ];
 
     return (
         <>
@@ -38,12 +53,9 @@ const UserLayout = ({ children }) => {
 
                         {/* Responsive navbar toggler */}
                         <button
-                            className="navbar-toggler ms-auto"
+                            className="navbar-toggler ms-auto d-xl-none" // Ẩn nút toggle ở desktop
                             type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#navbarCollapse"
-                            aria-controls="navbarCollapse"
-                            aria-expanded="false"
+                            onClick={() => setMenuOpen(!menuOpen)}
                             aria-label="Toggle navigation"
                         >
                             <span className="navbar-toggler-animation">
@@ -52,122 +64,127 @@ const UserLayout = ({ children }) => {
                                 <span></span>
                             </span>
                         </button>
+                        <div
+                            className={`${menuOpen ? "d-block" : "d-none"
+                                } d-xl-flex navbar-collapse`}
+                            id="navbarCollapse"
+                        >
+                            {/* Nav Main menu START */}
+                            <ul className="navbar-nav navbar-nav-scroll mx-auto">
+                                {/* Hiển thị cho người dùng chưa đăng nhập */}
+                                {!auth.user && (
+                                    <>
+                                        <li className="nav-item">
+                                            <Link className="nav-link" href="/">
+                                                Trang Chủ
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link"
+                                                href="/about"
+                                            >
+                                                Giới Thiệu
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link"
+                                                href="/courses"
+                                            >
+                                                Khóa Học
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link"
+                                                href="/terms"
+                                            >
+                                                Điều Khoản & Điều Kiện
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link"
+                                                href="/guideseb"
+                                            >
+                                                Hướng Dẫn SEB
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link"
+                                                href="/login"
+                                            >
+                                                Đăng Nhập
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link"
+                                                href="/register"
+                                            >
+                                                Đăng Ký
+                                            </Link>
+                                        </li>
+                                    </>
+                                )}
 
-                        {/* Nav Main menu START */}
-                        <ul className="navbar-nav navbar-nav-scroll mx-auto">
-                            {/* Hiển thị cho người dùng chưa đăng nhập */}
-                            {!auth.user && (
-                                <>
-                                    <li className="nav-item">
-                                        <Link className="nav-link" href="/">
-                                            Trang Chủ
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item">
-                                        <Link
-                                            className="nav-link"
-                                            href="/about"
-                                        >
-                                            Giới Thiệu
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item">
-                                        <Link
-                                            className="nav-link"
-                                            href="/courses"
-                                        >
-                                            Khóa Học
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item">
-                                        <Link
-                                            className="nav-link"
-                                            href="/terms"
-                                        >
-                                            Điều Khoản & Điều Kiện
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item">
-                                        <Link
-                                            className="nav-link"
-                                            href="/guideseb"
-                                        >
-                                            Hướng Dẫn SEB
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item">
-                                        <Link
-                                            className="nav-link"
-                                            href="/login"
-                                        >
-                                            Đăng Nhập
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item">
-                                        <Link
-                                            className="nav-link"
-                                            href="/register"
-                                        >
-                                            Đăng Ký
-                                        </Link>
-                                    </li>
-                                </>
-                            )}
+                                {/* Hiển thị cho học viên (role 3) */}
+                                {auth.user?.role === 3 && (
+                                    <>
+                                        <li className="nav-item">
+                                            <Link className="nav-link" href="/">
+                                                Trang Chủ
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link"
+                                                href="/about"
+                                            >
+                                                Giới Thiệu
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link"
+                                                href="/courses"
+                                            >
+                                                Khóa Học
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link"
+                                                href="/terms"
+                                            >
+                                                Điều Khoản & Điều Kiện
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link"
+                                                href="/guideseb"
+                                            >
+                                                Hướng Dẫn SEB
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link"
+                                                href="/student/courselist"
+                                            >
+                                                Khóa Học Của Tôi
+                                            </Link>
+                                        </li>
+                                    </>
+                                )}
 
-                            {/* Hiển thị cho học viên (role 3) */}
-                            {auth.user?.role === 3 && (
-                                <>
-                                    <li className="nav-item">
-                                        <Link className="nav-link" href="/">
-                                            Trang Chủ
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item">
-                                        <Link
-                                            className="nav-link"
-                                            href="/about"
-                                        >
-                                            Giới Thiệu
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item">
-                                        <Link
-                                            className="nav-link"
-                                            href="/courses"
-                                        >
-                                            Khóa Học
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item">
-                                        <Link
-                                            className="nav-link"
-                                            href="/terms"
-                                        >
-                                            Điều Khoản & Điều Kiện
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item">
-                                        <Link
-                                            className="nav-link"
-                                            href="/guideseb"
-                                        >
-                                            Hướng Dẫn SEB
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item">
-                                        <Link
-                                            className="nav-link"
-                                            href="/student/courselist"
-                                        >
-                                            Khóa Học Của Tôi
-                                        </Link>
-                                    </li>
-                                </>
-                            )}
-
-                            {/* Ẩn tất cả cho giảng viên (role 2) */}
-                            {auth.user?.role === 2 && null}
-                        </ul>
+                                {/* Ẩn tất cả cho giảng viên (role 2) */}
+                                {auth.user?.role === 2 && null}
+                            </ul>
+                        </div>
                         {/* Nav Main menu END */}
 
                         {/* Profile START */}
@@ -294,7 +311,7 @@ const UserLayout = ({ children }) => {
                     </div>
                 </nav>
                 {/* Logo Nav END */}
-            </header>
+            </header >
             {/* Header END */}
 
             {/* Main Content */}
