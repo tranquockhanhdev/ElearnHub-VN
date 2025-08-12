@@ -1,0 +1,74 @@
+import React from 'react';
+import { Link, usePage } from '@inertiajs/react';
+
+const InfoStudent = () => {
+    const { auth, flash_success, flash_error } = usePage().props;
+
+    return (
+        <section className="pt-0">
+            <div className="container-fluid px-0">
+                <div
+                    className="card bg-blue h-100px h-md-200px rounded-0"
+                    style={{
+                        background: 'url(assets/images/pattern/04.png) no-repeat center center',
+                        backgroundSize: 'cover',
+                    }}
+                ></div>
+            </div>
+            <div className="container mt-n4">
+                <div className="row">
+                    <div className="col-12">
+                        <div className="card bg-transparent card-body pb-0 ps-0 mt-2 mt-sm-0">
+                            <div className="row d-sm-flex justify-sm-content-between mt-2 mt-md-0">
+                                {/* Avatar */}
+                                <div className="col-auto">
+                                    <div className="avatar avatar-xxl position-relative mt-n3">
+                                        <img
+                                            className="avatar-img rounded-circle border-white border-3 shadow"
+                                            src="https://www.svgrepo.com/show/384670/account-avatar-profile-user.svg"
+                                            alt=""
+                                        />
+                                    </div>
+                                </div>
+                                {/* Profile info */}
+                                <div className="col d-sm-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h1 className="my-1 fs-4">{auth.user.name}</h1>
+
+                                    </div>
+                                    {/* Button */}
+                                    <div className="mt-2 mt-sm-0">
+                                        <a href="/student/courselist" className="btn btn-outline-primary mb-0">
+                                            Xem danh sách khóa học
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Advanced filter responsive toggler START */}
+                        {/* Divider */}
+                        <hr className="d-xl-none" />
+                        <div className="col-12 col-xl-3 d-flex justify-content-between align-items-center">
+                            <a className="h6 mb-0 fw-bold d-xl-none" href="#">
+                                Menu
+                            </a>
+                            <button
+                                className="btn btn-primary d-xl-none"
+                                type="button"
+                                data-bs-toggle="offcanvas"
+                                data-bs-target="#offcanvasNavbar"
+                                aria-controls="offcanvasNavbar"
+                            >
+                                <i className="fas fa-sliders-h"></i>
+                            </button>
+                        </div>
+                        {/* Advanced filter responsive toggler END */}
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+};
+
+export default InfoStudent;
